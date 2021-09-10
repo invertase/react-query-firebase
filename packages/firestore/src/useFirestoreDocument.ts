@@ -7,6 +7,7 @@ import {
   UseQueryOptions,
 } from "react-query";
 import {
+  DocumentData,
   DocumentReference,
   DocumentSnapshot,
   getDoc,
@@ -20,7 +21,7 @@ import { UseFirestoreHookOptions } from "./index";
 
 type ResultType<T> = DocumentSnapshot<T>;
 
-export function useFirestoreDocument<T>(
+export function useFirestoreDocument<T = DocumentData>(
   key: QueryKey,
   ref: DocumentReference<T>,
   options?: UseFirestoreHookOptions,
