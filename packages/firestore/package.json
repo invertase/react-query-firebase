@@ -1,0 +1,16 @@
+{
+  "name": "@react-query-firebase/firestore",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "peerDependencies": {
+    "firebase": "^9.0.1",
+    "react": "^17.0.2",
+    "react-query": "^3.23.2"
+  }
+}

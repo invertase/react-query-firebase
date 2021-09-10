@@ -1,0 +1,15 @@
+{
+  "name": "@react-query-firebase/root",
+  "private": true,
+  "description": "",
+  "workspaces": [
+    "example",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@types/react": "^17.0.20",
+    "firebase": "^9.0.1",
+    "react": "^17.0.2",
+    "react-query": "^3.23.2"
+  }
+}
