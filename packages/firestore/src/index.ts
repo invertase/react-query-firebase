@@ -18,4 +18,4 @@ export type UseFirestoreHookOptions =
 
 export * from "./useFirestoreDocument";
 export * from "./useFirestoreQuery";
-export * from "./useFirestoreDocumentMutation";
+export * from "./useFirestoreMutation";
