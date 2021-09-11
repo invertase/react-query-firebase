@@ -14,14 +14,23 @@ import { init } from "./helpers";
 describe("useFirestoreDocumentMutation", () => {
   let client: QueryClient;
   let wrapper: React.FC<{ children: React.ReactNode }>;
-  let ref: DocumentReference;
+  let firestore: Firestore;
 
   beforeEach(() => {
-    let { client, wrapper } = init();
-    ref = doc({} as Firestore, "foo");
+    const config = init();
+    client = config.client;
+    wrapper = config.wrapper;
+    firestore = config.firestore;
   });
 
-  test("it returns a cached snapshot", async () => {
+  afterEach(() => {
+    client.clear();
+  });
+
+  test("it returns a DocumentSnapshot", async () => {
+    const id = "bar";
+    const ref = doc(firestore, "foo", id);
+
     const { result, waitFor } = renderHook(
       () => useFirestoreDocument("foo", ref),
       { wrapper }
@@ -32,6 +41,20 @@ describe("useFirestoreDocumentMutation", () => {
     expect(result.current.data).toBeDefined();
     expect(result.current.data).toBeInstanceOf(DocumentSnapshot);
     const snapshot = result.current.data;
-    expect(snapshot.metadata.fromCache).toBe(true);
+    expect(snapshot.id).toBe(id);
   });
+
+  // test("it returns a cached snapshot", async () => {
+  //   // const { result, waitFor } = renderHook(
+  //   //   () => useFirestoreDocument("foo", ref),
+  //   //   { wrapper }
+  //   // );
+
+  //   // await waitFor(() => result.current.isSuccess);
+
+  //   // expect(result.current.data).toBeDefined();
+  //   // expect(result.current.data).toBeInstanceOf(DocumentSnapshot);
+  //   // const snapshot = result.current.data;
+  //   // expect(snapshot.metadata.fromCache).toBe(true);
+  // });
 });

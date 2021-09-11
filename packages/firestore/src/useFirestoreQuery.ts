@@ -125,9 +125,9 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
     async () => {
       let snapshot: QuerySnapshot<T>;
 
-      if (options.source === "cache") {
+      if (options?.source === "cache") {
         snapshot = await getDocsFromCache(resolvedQuery);
-      } else if (options.source === "server") {
+      } else if (options?.source === "server") {
         snapshot = await getDocsFromServer(resolvedQuery);
       } else {
         snapshot = await getDocs(resolvedQuery);
@@ -143,7 +143,7 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
   );
 }
 
-export function useFirestoreQueryData<T = unknown>(
+export function useFirestoreQueryData<T = DocumentData>(
   key: QueryKey,
   query: QueryType<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions,

@@ -63,9 +63,9 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
     async () => {
       let snapshot: DocumentSnapshot<T>;
 
-      if (options.source === "cache") {
+      if (options?.source === "cache") {
         snapshot = await getDocFromCache(ref);
-      } else if (options.source === "server") {
+      } else if (options?.source === "server") {
         snapshot = await getDocFromServer(ref);
       } else {
         snapshot = await getDoc(ref);
@@ -77,7 +77,7 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
   );
 }
 
-export function useFirestoreDocumentData<T = unknown>(
+export function useFirestoreDocumentData<T = DocumentData>(
   key: QueryKey,
   ref: DocumentReference<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions,
