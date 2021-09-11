@@ -3,7 +3,6 @@ import {
   useQuery,
   useQueryClient,
   QueryKey,
-  UseQueryResult,
   UseQueryOptions,
 } from "react-query";
 import {

@@ -3,7 +3,6 @@ import {
   useQuery,
   useQueryClient,
   QueryKey,
-  UseQueryResult,
   UseQueryOptions,
 } from "react-query";
 import {
@@ -18,13 +17,12 @@ import {
   namedQuery as firestoreNamedQuery,
   DocumentData,
   Firestore,
+  SnapshotOptions,
 } from "firebase/firestore";
 import { usePrevious } from "./usePrevious";
 import { UseFirestoreHookOptions } from "./index";
 
 const namedQueryCache: { [key: string]: Query } = {};
-
-type ResultType<T> = QuerySnapshot<T>;
 
 type NamedQueryPromise<T> = () => Promise<Query<T> | null>;
 
@@ -57,12 +55,12 @@ export function namedQuery<T>(
     });
 }
 
-export function useFirestoreQuery<T = DocumentData>(
+export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
   key: QueryKey,
   query: QueryType<T>,
   options?: UseFirestoreHookOptions,
-  useQueryOptions?: UseQueryOptions<ResultType<T>, Error>
-): UseQueryResult<ResultType<T>, Error> {
+  useQueryOptions?: UseQueryOptions<QuerySnapshot<T>, Error, R>
+) {
   const client = useQueryClient();
   const subscribe = options?.subscribe ?? false;
 
@@ -107,7 +105,7 @@ export function useFirestoreQuery<T = DocumentData>(
             : undefined,
         },
         (snapshot) => {
-          client.setQueryData<ResultType<T>>(key, snapshot);
+          client.setQueryData<QuerySnapshot<T>>(key, snapshot);
         }
       );
     }
@@ -122,7 +120,7 @@ export function useFirestoreQuery<T = DocumentData>(
     }
   }, [unsubscribe, isEqual, previousQuery]);
 
-  return useQuery<ResultType<T>, Error>(
+  return useQuery<QuerySnapshot<T>, Error, R>(
     key,
     async () => {
       let snapshot: QuerySnapshot<T>;
@@ -138,8 +136,30 @@ export function useFirestoreQuery<T = DocumentData>(
       return snapshot;
     },
     {
-      ...useQueryOptions,
-      enabled: !!resolvedQuery,
+      ...(useQueryOptions || {}),
+      // If there is a resolved query, use the users option (or default), otherwise it is false.
+      enabled: !!resolvedQuery ? useQueryOptions?.enabled ?? undefined : false,
     }
   );
+}
+
+export function useFirestoreQueryData<T = unknown>(
+  key: QueryKey,
+  query: QueryType<T>,
+  options?: UseFirestoreHookOptions & SnapshotOptions,
+  useQueryOptions?: UseQueryOptions<QuerySnapshot<T>, Error, T[]>
+) {
+  const { select, ...queryOptions } = useQueryOptions || {};
+
+  return useFirestoreQuery<T, T[]>(key, query, options, {
+    ...queryOptions,
+    select(snapshot) {
+      return (
+        select?.(snapshot) ??
+        snapshot.docs.map((doc) =>
+          doc.data({ serverTimestamps: options.serverTimestamps })
+        )
+      );
+    },
+  });
 }
