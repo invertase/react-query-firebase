@@ -14,19 +14,18 @@ import {
   getDocFromCache,
   getDocFromServer,
   onSnapshot,
+  SnapshotOptions,
   Unsubscribe,
 } from "firebase/firestore";
 import { usePrevious } from "./usePrevious";
 import { UseFirestoreHookOptions } from "./index";
 
-type ResultType<T> = DocumentSnapshot<T>;
-
-export function useFirestoreDocument<T = DocumentData>(
+export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
   key: QueryKey,
   ref: DocumentReference<T>,
   options?: UseFirestoreHookOptions,
-  useQueryOptions?: UseQueryOptions<ResultType<T>, Error>
-): UseQueryResult<ResultType<T>, Error> {
+  useQueryOptions?: UseQueryOptions<DocumentSnapshot<T>, Error, R>
+) {
   const client = useQueryClient();
   const { subscribe } = options || {};
 
@@ -45,7 +44,7 @@ export function useFirestoreDocument<T = DocumentData>(
             : undefined,
         },
         (snapshot) => {
-          client.setQueryData<ResultType<T>>(key, snapshot);
+          client.setQueryData<DocumentSnapshot<T>>(key, snapshot);
         }
       );
     }
@@ -60,7 +59,7 @@ export function useFirestoreDocument<T = DocumentData>(
     }
   }, [unsubscribe, isEqual, previousRef]);
 
-  return useQuery<ResultType<T>, Error>(
+  return useQuery<DocumentSnapshot<T>, Error, R>(
     key,
     async () => {
       let snapshot: DocumentSnapshot<T>;
@@ -77,4 +76,23 @@ export function useFirestoreDocument<T = DocumentData>(
     },
     useQueryOptions
   );
+}
+
+export function useFirestoreDocumentData<T = unknown>(
+  key: QueryKey,
+  ref: DocumentReference<T>,
+  options?: UseFirestoreHookOptions & SnapshotOptions,
+  useQueryOptions?: UseQueryOptions<DocumentSnapshot<T>, Error, T | undefined>
+) {
+  const { select, ...queryOptions } = useQueryOptions || {};
+
+  return useFirestoreDocument<T, T | undefined>(key, ref, options, {
+    ...queryOptions,
+    select(snapshot) {
+      return (
+        select?.(snapshot) ??
+        snapshot.data({ serverTimestamps: options.serverTimestamps })
+      );
+    },
+  });
 }
