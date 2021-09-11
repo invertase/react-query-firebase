@@ -49,6 +49,7 @@ export function namedQuery<T>(
   return () =>
     firestoreNamedQuery(firestore, name).then((query) => {
       if (query) {
+        namedQueryCache[key] = query;
         return query as Query<T>;
       }
 
