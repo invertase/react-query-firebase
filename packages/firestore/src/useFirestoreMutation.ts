@@ -11,7 +11,11 @@ import { useMutation, UseMutationOptions } from "react-query";
 
 export function useFirestoreCollectionMutation<T = DocumentData>(
   ref: CollectionReference<T>,
-  useMutationOptions?: UseMutationOptions<DocumentReference<T>, Error, WithFieldValue<T>>
+  useMutationOptions?: UseMutationOptions<
+    DocumentReference<T>,
+    Error,
+    WithFieldValue<T>
+  >
 ) {
   return useMutation<DocumentReference<T>, Error, WithFieldValue<T>>((data) => {
     return addDoc<T>(ref, data);
@@ -24,6 +28,10 @@ export function useFirestoreDocumentMutation<T = DocumentData>(
   useMutationOptions?: UseMutationOptions<void, Error, WithFieldValue<T>>
 ) {
   return useMutation<void, Error, WithFieldValue<T>>((data) => {
-    return setDoc<T>(ref, data, options);
+    if (!!options) {
+      return setDoc<T>(ref, data, options);
+    }
+
+    return setDoc<T>(ref, data);
   }, useMutationOptions);
 }

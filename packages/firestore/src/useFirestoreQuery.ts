@@ -81,7 +81,7 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
   }
 
   const previousQuery = usePrevious(queryFn);
-  const isEqual = !!previousQuery && queryEqual(previousQuery, queryFn);
+  const isEqual = !!previousQuery && queryEqual(previousQuery, queryFn!);
   const [resolvedQuery, setResolvedQuery] = useState<Query<T> | null>(null);
 
   const unsubscribe = useRef<Unsubscribe>();
@@ -138,11 +138,11 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
       let snapshot: QuerySnapshot<T>;
 
       if (options?.source === "cache") {
-        snapshot = await getDocsFromCache(resolvedQuery);
+        snapshot = await getDocsFromCache(resolvedQuery!);
       } else if (options?.source === "server") {
-        snapshot = await getDocsFromServer(resolvedQuery);
+        snapshot = await getDocsFromServer(resolvedQuery!);
       } else {
-        snapshot = await getDocs(resolvedQuery);
+        snapshot = await getDocs(resolvedQuery!);
       }
 
       return snapshot;

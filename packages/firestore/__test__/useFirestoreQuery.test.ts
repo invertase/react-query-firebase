@@ -49,7 +49,7 @@ describe("useFirestoreQuery", () => {
       expect(result.current.data).toBeDefined();
       expect(result.current.data).toBeInstanceOf(QuerySnapshot);
       const snapshot = result.current.data;
-      expect(snapshot.size).toBe(0);
+      expect(snapshot!.size).toBe(0);
     });
 
     test("it returns a QuerySnapshot using a data cache source", async () => {
@@ -70,7 +70,7 @@ describe("useFirestoreQuery", () => {
       await waitFor(() => result.current.isSuccess);
 
       const snapshot = result.current.data;
-      expect(snapshot.metadata.fromCache).toBe(true);
+      expect(snapshot!.metadata.fromCache).toBe(true);
     });
 
     test("it returns a QuerySnapshot using a data server source", async () => {
@@ -91,7 +91,7 @@ describe("useFirestoreQuery", () => {
       await waitFor(() => result.current.isSuccess);
 
       const snapshot = result.current.data;
-      expect(snapshot.metadata.fromCache).toBe(false);
+      expect(snapshot!.metadata.fromCache).toBe(false);
     });
 
     test("it overrides DocumentData generic", async () => {
@@ -117,8 +117,8 @@ describe("useFirestoreQuery", () => {
       await waitFor(() => result.current.isSuccess);
 
       const snapshot = result.current.data;
-      expect(snapshot.size).toBe(1);
-      expect(snapshot.docs[0].data().bar).toBe(123);
+      expect(snapshot!.size).toBe(1);
+      expect(snapshot!.docs[0].data().bar).toBe(123);
       // @ts-expect-error
       expect(snapshot.docs[0].data().baz).toBe(undefined);
     });
@@ -157,7 +157,7 @@ describe("useFirestoreQuery", () => {
       await waitFor(() => result.current.isSuccess);
 
       const data = result.current.data;
-      expect(data.bar).toBe("123");
+      expect(data!.bar).toBe("123");
       // @ts-expect-error
       expect(data.baz).toBe(undefined);
     });
@@ -354,7 +354,7 @@ describe("useFirestoreQuery", () => {
       );
 
       await waitFor(() => result.current.isSuccess);
-      expect(result.current.data.length).toBeGreaterThan(0);
+      expect(result.current.data!.length).toBeGreaterThan(0);
     });
   });
 });
