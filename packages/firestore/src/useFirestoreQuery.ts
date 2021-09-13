@@ -157,7 +157,7 @@ export function useFirestoreQueryData<T = DocumentData>(
       return (
         select?.(snapshot) ??
         snapshot.docs.map((doc) =>
-          doc.data({ serverTimestamps: options.serverTimestamps })
+          doc.data({ serverTimestamps: options?.serverTimestamps })
         )
       );
     },

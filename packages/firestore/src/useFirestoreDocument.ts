@@ -26,7 +26,7 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
   useQueryOptions?: UseQueryOptions<DocumentSnapshot<T>, Error, R>
 ) {
   const client = useQueryClient();
-  const { subscribe } = options || {};
+  const subscribe = options?.subscribe ?? false;
 
   const previousRef = usePrevious(ref);
   const isEqual = !!previousRef && ref.id === previousRef.id;
@@ -57,6 +57,13 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
       };
     }
   }, [unsubscribe, isEqual, previousRef]);
+
+  // Unsubscribe when the hook is no longer in use.
+  useEffect(() => {
+    return () => {
+      unsubscribe.current?.();
+    };
+  }, []);
 
   return useQuery<DocumentSnapshot<T>, Error, R>(
     key,
@@ -90,7 +97,7 @@ export function useFirestoreDocumentData<T = DocumentData>(
     select(snapshot) {
       return (
         select?.(snapshot) ??
-        snapshot.data({ serverTimestamps: options.serverTimestamps })
+        snapshot.data({ serverTimestamps: options?.serverTimestamps })
       );
     },
   });

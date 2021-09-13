@@ -1,4 +1,5 @@
-import React from 'react';
+import React from "react";
+import axios from "axios";
 import { QueryClient, QueryClientProvider, setLogger } from "react-query";
 import { initializeApp } from "firebase/app";
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
@@ -39,4 +40,13 @@ export function init() {
   );
 
   return { client, wrapper, firebase, firestore };
+}
+
+export async function wipe() {
+  await axios(
+    "http://localhost:8080/emulator/v1/projects/test-project/databases/(default)/documents",
+    {
+      method: "DELETE",
+    }
+  );
 }

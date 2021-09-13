@@ -13,7 +13,7 @@ export type UseFirestoreHookOptions =
     } & SnapshotListenOptions &
       GetSnapshotOptions)
   | ({
-      subscribe: false;
+      subscribe?: false;
     } & GetSnapshotOptions);
 
 export * from "./useFirestoreDocument";
