@@ -28,13 +28,14 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
   const client = useQueryClient();
   const subscribe = options?.subscribe ?? false;
 
+  const enabled = useQueryOptions?.enabled ?? true;
   const previousRef = usePrevious(ref);
   const isEqual = !!previousRef && ref.id === previousRef.id;
   const unsubscribe = useRef<Unsubscribe>();
 
   // Subscribes to the ref (if enabled) and and if the ref has changed.
   useEffect(() => {
-    if (subscribe && !isEqual) {
+    if (enabled && subscribe && !isEqual) {
       unsubscribe.current = onSnapshot(
         ref,
         {
@@ -47,7 +48,7 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
         }
       );
     }
-  }, [subscribe, isEqual, ref]);
+  }, [enabled, subscribe, isEqual, ref]);
 
   // Unsubscribes the ref subscription when the ref changes.
   useEffect(() => {

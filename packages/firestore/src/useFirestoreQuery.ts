@@ -80,6 +80,7 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
     queryFn = query;
   }
 
+  const enabled = useQueryOptions?.enabled ?? true;
   const previousQuery = usePrevious(queryFn);
   const isEqual = !!previousQuery && queryEqual(previousQuery, queryFn!);
   const [resolvedQuery, setResolvedQuery] = useState<Query<T> | null>(null);
@@ -102,7 +103,7 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
 
   // Subscribes to the resolved query.
   useEffect(() => {
-    if (resolvedQuery && subscribe) {
+    if (enabled && resolvedQuery && subscribe) {
       unsubscribe.current = onSnapshot(
         resolvedQuery,
         {
@@ -115,7 +116,7 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
         }
       );
     }
-  }, [resolvedQuery, subscribe]);
+  }, [enabled, resolvedQuery, subscribe]);
 
   // Unsubscribes the query subscription when the query changes.
   useEffect(() => {
