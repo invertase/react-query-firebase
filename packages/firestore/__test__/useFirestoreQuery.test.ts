@@ -2,20 +2,26 @@ import React from "react";
 import { QueryClient } from "react-query";
 import { renderHook, act } from "@testing-library/react-hooks";
 import {
-  doc,
-  DocumentReference,
+  addDoc,
+  collection,
+  CollectionReference,
   DocumentSnapshot,
   Firestore,
-  setDoc,
+  loadBundle,
+  orderBy,
+  query,
+  QuerySnapshot,
 } from "firebase/firestore";
 
-import {
-  useFirestoreDocument,
-  useFirestoreDocumentData,
-} from "../src/useFirestoreDocument";
+import bundles from "./bundles";
 import { genId, init, wipe } from "./helpers";
+import {
+  useFirestoreQuery,
+  useFirestoreQueryData,
+  namedQuery,
+} from "../src/useFirestoreQuery";
 
-describe("useFirestoreDocument", () => {
+describe("useFirestoreQuery", () => {
   let client: QueryClient;
   let wrapper: React.FC<{ children: React.ReactNode }>;
   let firestore: Firestore;
@@ -27,36 +33,35 @@ describe("useFirestoreDocument", () => {
     firestore = config.firestore;
   });
 
-  describe("useFirestoreDocument", () => {
-    test("it returns a DocumentSnapshot", async () => {
+  describe("useFirestoreQuery", () => {
+    test("it returns a QuerySnapshot", async () => {
       const hookId = genId();
       const id = genId();
-      const ref = doc(firestore, genId(), id);
+      const ref = collection(firestore, id);
 
       const { result, waitFor } = renderHook(
-        () => useFirestoreDocument(hookId, ref),
+        () => useFirestoreQuery(hookId, ref),
         { wrapper }
       );
 
       await waitFor(() => result.current.isSuccess);
 
       expect(result.current.data).toBeDefined();
-      expect(result.current.data).toBeInstanceOf(DocumentSnapshot);
+      expect(result.current.data).toBeInstanceOf(QuerySnapshot);
       const snapshot = result.current.data;
-      expect(snapshot.id).toBe(id);
+      expect(snapshot.size).toBe(0);
     });
 
-    // TODO(ehesp): cached query never resolves.
-    xtest("it returns a DocumentSnapshot using a data cache source", async () => {
+    test("it returns a QuerySnapshot using a data cache source", async () => {
       const hookId = genId();
       const id = genId();
-      const ref = doc(firestore, genId(), id);
+      const ref = collection(firestore, id);
 
-      await setDoc(ref, { foo: "bar" });
+      await addDoc(ref, { foo: "bar" });
 
       const { result, waitFor } = renderHook(
         () =>
-          useFirestoreDocument(hookId, ref, {
+          useFirestoreQuery(hookId, ref, {
             source: "cache",
           }),
         { wrapper }
@@ -68,14 +73,16 @@ describe("useFirestoreDocument", () => {
       expect(snapshot.metadata.fromCache).toBe(true);
     });
 
-    test("it returns a DocumentSnapshot using a data server source", async () => {
+    test("it returns a QuerySnapshot using a data server source", async () => {
       const hookId = genId();
       const id = genId();
-      const ref = doc(firestore, genId(), id);
+      const ref = collection(firestore, id);
+
+      await addDoc(ref, { foo: "bar" });
 
       const { result, waitFor } = renderHook(
         () =>
-          useFirestoreDocument(hookId, ref, {
+          useFirestoreQuery(hookId, ref, {
             source: "server",
           }),
         { wrapper }
@@ -89,19 +96,19 @@ describe("useFirestoreDocument", () => {
 
     test("it overrides DocumentData generic", async () => {
       const hookId = genId();
-      const id = genId();
 
       type Foo = {
         bar: number;
       };
 
       // Quick cast a reference.
-      const ref = doc(firestore, genId(), id) as DocumentReference<Foo>;
+      const id = genId();
+      const ref = collection(firestore, id) as CollectionReference<Foo>;
 
-      await setDoc(ref, { bar: 123 });
+      await addDoc(ref, { bar: 123 });
 
       const { result, waitFor } = renderHook(
-        () => useFirestoreDocument(hookId, ref),
+        () => useFirestoreQuery(hookId, ref),
         {
           wrapper,
         }
@@ -110,15 +117,14 @@ describe("useFirestoreDocument", () => {
       await waitFor(() => result.current.isSuccess);
 
       const snapshot = result.current.data;
-
-      expect(snapshot.data().bar).toBe(123);
+      expect(snapshot.size).toBe(1);
+      expect(snapshot.docs[0].data().bar).toBe(123);
       // @ts-expect-error
-      expect(snapshot.data().baz).toBe(undefined);
+      expect(snapshot.docs[0].data().baz).toBe(undefined);
     });
 
     test("it overrides ReturnType generic", async () => {
       const hookId = genId();
-      const id = genId();
 
       type Foo = {
         bar: number;
@@ -129,16 +135,17 @@ describe("useFirestoreDocument", () => {
       };
 
       // Quick cast a reference.
-      const ref = doc(firestore, genId(), id) as DocumentReference<Foo>;
+      const id = genId();
+      const ref = collection(firestore, id) as CollectionReference<Foo>;
 
-      await setDoc(ref, { bar: 123 });
+      await addDoc(ref, { bar: 123 });
 
       const { result, waitFor } = renderHook(
         () =>
-          useFirestoreDocument<Foo, Bar>(hookId, ref, undefined, {
+          useFirestoreQuery<Foo, Bar>(hookId, ref, undefined, {
             select(snapshot) {
               return {
-                bar: snapshot.data().bar.toString(),
+                bar: snapshot.docs[0].data().bar.toString(),
               };
             },
           }),
@@ -157,13 +164,15 @@ describe("useFirestoreDocument", () => {
 
     test("it subscribes and unsubscribes to data events", async () => {
       const hookId = genId();
-      const id = genId();
-      const ref = doc(firestore, genId(), id);
 
+      const id = genId();
+      const col = collection(firestore, id);
+      const ref = query(col, orderBy("order", "asc"));
       const mock = jest.fn();
+
       const { result, waitFor, unmount } = renderHook(
         () =>
-          useFirestoreDocument(
+          useFirestoreQuery(
             hookId,
             ref,
             {
@@ -171,8 +180,8 @@ describe("useFirestoreDocument", () => {
             },
             {
               onSuccess(snapshot) {
-                if (snapshot.exists()) {
-                  mock(snapshot.data());
+                if (snapshot.size > 0) {
+                  mock(snapshot);
                 }
               },
             }
@@ -185,8 +194,8 @@ describe("useFirestoreDocument", () => {
       await waitFor(() => result.current.isSuccess);
 
       await act(async () => {
-        await setDoc(ref, { foo: "bar" });
-        await setDoc(ref, { foo: "baz" });
+        await addDoc(col, { foo: "bar", order: 0 });
+        await addDoc(col, { foo: "baz", order: 1 });
       });
 
       // Trigger an  unmount - this should unsubscribe the listener.
@@ -194,32 +203,45 @@ describe("useFirestoreDocument", () => {
 
       // Trigger an update to ensure the mock wasn't called again.
       await act(async () => {
-        await setDoc(ref, { foo: "..." });
+        await addDoc(col, { foo: "..." });
       });
 
+      // getDocs, onSubscribe, onSubscribe (add), onSubscribe (add),
       expect(mock).toHaveBeenCalledTimes(2);
-      expect(mock.mock.calls[0][0]).toEqual({ foo: "bar" });
-      expect(mock.mock.calls[1][0]).toEqual({ foo: "baz" });
+
+      const call1 = mock.mock.calls[0][0];
+      const call2 = mock.mock.calls[1][0];
+      expect(call1.size).toEqual(1);
+      expect(call1.docs[0].data().foo).toEqual("bar");
+      expect(call2.size).toEqual(2);
+
+      // New should be first, previous last.
+      expect(call2.docs[0].data().foo).toEqual("bar");
+      expect(call2.docs[1].data().foo).toEqual("baz");
     });
 
     test("it re-subscribes when the ref changes", async () => {
       const hookId = genId();
+
       const id1 = `1-${genId()}`;
       const id2 = `2-${genId()}`;
 
-      const ref1 = doc(firestore, genId(), id1);
-      const ref2 = doc(firestore, genId(), id2);
+      const ref1 = collection(firestore, id1);
+      const ref2 = collection(firestore, id2);
+
+      await addDoc(ref1, { foo: "bar" });
+      await addDoc(ref2, { foo: "bar" });
 
       const mock = jest.fn();
       const { result, waitFor, unmount, rerender, waitForNextUpdate } =
         renderHook<
           {
-            reference: DocumentReference;
+            reference: CollectionReference;
           },
           any
         >(
           ({ reference }) =>
-            useFirestoreDocument(
+            useFirestoreQuery(
               hookId,
               reference,
               {
@@ -241,17 +263,23 @@ describe("useFirestoreDocument", () => {
 
       await waitFor(() => result.current.isSuccess);
 
-      // Get call
-      expect(mock.mock.calls[0][0].id).toBe(id1);
+      function getDoc(value: any): DocumentSnapshot {
+        return value as DocumentSnapshot;
+      }
 
-      // Subscription call
-      expect(mock.mock.calls[1][0].id).toBe(id1);
+      expect(mock.mock.calls[0][0].size).toBe(1);
+
+      // Get call
+      expect(getDoc(mock.mock.calls[0][0].docs[0]).ref.parent.id).toBe(id1);
+
+      // Subscribe 1
+      expect(getDoc(mock.mock.calls[1][0].docs[0]).ref.parent.id).toBe(id1);
 
       rerender({ reference: ref2 });
 
       await waitForNextUpdate();
 
-      expect(mock.mock.calls[2][0].id).toBe(id2);
+      expect(getDoc(mock.mock.calls[2][0].docs[0]).ref.parent.id).toBe(id2);
 
       // Trigger an  unmount - this should unsubscribe the listener.
       unmount();
@@ -260,39 +288,44 @@ describe("useFirestoreDocument", () => {
     });
   });
 
-  describe("useFirestoreDocumentData", () => {
+  describe("useFirestoreQueryData", () => {
     test("it returns document data and not a snapshot", async () => {
       const hookId = genId();
-      const id = genId();
-      const ref = doc(firestore, genId(), id);
 
-      await setDoc(ref, { foo: "bar" });
+      const id = genId();
+      const ref = collection(firestore, id);
+
+      await addDoc(ref, { foo: "bar" });
 
       const { result, waitFor } = renderHook(
-        () => useFirestoreDocumentData(hookId, ref),
+        () => useFirestoreQueryData(hookId, ref),
         { wrapper }
       );
 
       await waitFor(() => result.current.isSuccess);
 
-      expect(result.current.data).toBeDefined();
-      expect(result.current.data).toEqual({ foo: "bar" });
+      expect(result.current.data).toEqual(
+        expect.arrayContaining([{ foo: "bar" }])
+      );
     });
 
     test("it overrides the select option", async () => {
       const hookId = genId();
-      const id = genId();
-      const ref = doc(firestore, genId(), id);
 
-      await setDoc(ref, { foo: "bar" });
+      const id = genId();
+      const ref = collection(firestore, id);
+
+      await addDoc(ref, { foo: "bar" });
 
       const { result, waitFor } = renderHook(
         () =>
-          useFirestoreDocumentData(hookId, ref, undefined, {
+          useFirestoreQueryData(hookId, ref, undefined, {
             select() {
-              return {
-                baz: "ben",
-              };
+              return [
+                {
+                  baz: "ben",
+                },
+              ];
             },
           }),
         { wrapper }
@@ -300,8 +333,28 @@ describe("useFirestoreDocument", () => {
 
       await waitFor(() => result.current.isSuccess);
 
-      expect(result.current.data).toBeDefined();
-      expect(result.current.data).toEqual({ baz: "ben" });
+      expect(result.current.data).toEqual(
+        expect.arrayContaining([{ baz: "ben" }])
+      );
+    });
+  });
+
+  // TODO(ehesp): Test works, but Jest throws an "unimplemented" error when calling loadBundle.
+  // The test passes but this error throws causing the test to fail.
+  xdescribe("useFirestoreQuery Named Query", () => {
+    it("uses a named query fn", async () => {
+      const bundle = "named-bundle-test-1";
+      await loadBundle(firestore, bundles[bundle]);
+
+      const hookId = genId();
+
+      const { result, waitFor } = renderHook(
+        () => useFirestoreQueryData(hookId, namedQuery(firestore, bundle)),
+        { wrapper }
+      );
+
+      await waitFor(() => result.current.isSuccess);
+      expect(result.current.data.length).toBeGreaterThan(0);
     });
   });
 });

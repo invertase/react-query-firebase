@@ -82,21 +82,27 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
 
   const previousQuery = usePrevious(queryFn);
   const isEqual = !!previousQuery && queryEqual(previousQuery, queryFn);
-  const [resolvedQuery, setResolvedQuery] = useState<Query<T> | null>(
-    queryFn || null
-  );
+  const [resolvedQuery, setResolvedQuery] = useState<Query<T> | null>(null);
 
   const unsubscribe = useRef<Unsubscribe>();
 
+  // Anytime the query changes, update the resolved query.
   useEffect(() => {
-    if (!resolvedQuery && namedQueryFn) {
+    if (!isEqual && !!queryFn) {
+      setResolvedQuery(queryFn);
+    }
+  }, [isEqual, queryFn]);
+
+  // If a named query is provided, resolve it.
+  useEffect(() => {
+    if (!resolvedQuery && !!namedQueryFn) {
       namedQueryFn().then(setResolvedQuery);
     }
   }, [resolvedQuery, namedQueryFn]);
 
-  // Subscribes to the query (if enabled) and and if the query has changed new.
+  // Subscribes to the resolved query.
   useEffect(() => {
-    if (resolvedQuery && subscribe && !isEqual) {
+    if (resolvedQuery && subscribe) {
       unsubscribe.current = onSnapshot(
         resolvedQuery,
         {
@@ -109,7 +115,7 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
         }
       );
     }
-  }, [subscribe, isEqual, resolvedQuery]);
+  }, [resolvedQuery, subscribe]);
 
   // Unsubscribes the query subscription when the query changes.
   useEffect(() => {
@@ -119,6 +125,12 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
       };
     }
   }, [unsubscribe, isEqual, previousQuery]);
+
+  useEffect(() => {
+    return () => {
+      unsubscribe.current?.();
+    };
+  }, []);
 
   return useQuery<QuerySnapshot<T>, Error, R>(
     key,

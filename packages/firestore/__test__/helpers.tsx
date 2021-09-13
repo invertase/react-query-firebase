@@ -13,6 +13,14 @@ setLogger({
 
 let emulatorsStarted = false;
 
+export function genId(): string {
+  return Math.random().toString(32);
+}
+
+export function genInt(): number {
+  return Math.floor(Math.random() * (5000 - 1 + 1) + 1)
+}
+
 export function init() {
   const firebase = initializeApp({
     projectId: "test-project",
