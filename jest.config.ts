@@ -18,5 +18,7 @@ export default {
 
   testEnvironment: "<rootDir>/config/custom-jest-env.js",
 
-  setupFilesAfterEnv: ['./config/setup-tests.ts'],
+  setupFilesAfterEnv: ["./config/setup-tests.ts"],
+
+  forceExit: true,
 };

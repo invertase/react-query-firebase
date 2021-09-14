@@ -47,7 +47,7 @@
     "prettier": "^2.3.2"
   },
   "scripts": {
-    "test": "firebase emulators:exec --project test-project 'jest --forceExit'",
+    "test": "firebase emulators:exec --project test-project 'jest'",
     "test:coverage": "firebase emulators:exec --project test-project 'jest --coverage && codecov'",
     "lint": "eslint \"**/*.{js,ts,tsx,jsx}\"",
     "lint:fix": "eslint \"**/*.{js,ts,tsx,jsx}\" --fix",
