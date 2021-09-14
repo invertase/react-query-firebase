@@ -18,6 +18,7 @@ import {
 } from "firebase/firestore";
 import { usePrevious } from "./usePrevious";
 import { GetSnapshotSource, UseFirestoreHookOptions } from "./index";
+import { getClientKey } from "./utils";
 
 function useSubscription<T>(
   enabled: boolean,
@@ -88,11 +89,13 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
     ? options?.includeMetadataChanges ?? undefined
     : undefined;
 
+  const compareKey = getClientKey(key);
+
   const onSnapshotEvent = useCallback(
     (snapshot: DocumentSnapshot<T>) => {
       client.setQueryData<DocumentSnapshot<T>>(key, snapshot);
     },
-    [key]
+    [compareKey]
   );
 
   useSubscription<T>(
@@ -122,6 +125,8 @@ export function useFirestoreDocumentData<T = DocumentData>(
     ? options?.includeMetadataChanges ?? undefined
     : undefined;
 
+  const compareKey = getClientKey(key);
+
   const onSnapshotEvent = useCallback(
     (snapshot: DocumentSnapshot<T>) => {
       client.setQueryData<T | undefined>(
@@ -131,7 +136,7 @@ export function useFirestoreDocumentData<T = DocumentData>(
         })
       );
     },
-    [key]
+    [compareKey]
   );
 
   useSubscription<T>(

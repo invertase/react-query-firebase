@@ -21,6 +21,7 @@ import {
 } from "firebase/firestore";
 import { usePrevious } from "./usePrevious";
 import { GetSnapshotSource, UseFirestoreHookOptions } from "./index";
+import { getClientKey } from "./utils";
 
 const namedQueryCache: { [key: string]: Query } = {};
 
@@ -154,11 +155,13 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
     ? options?.includeMetadataChanges ?? undefined
     : undefined;
 
+  const compareKey = getClientKey(key);
+
   const onSnapshotEvent = useCallback(
     (snapshot: QuerySnapshot<T>) => {
       client.setQueryData<QuerySnapshot<T>>(key, snapshot);
     },
-    [key]
+    [compareKey]
   );
 
   const resolvedQuery = useQueryResolver(
@@ -192,6 +195,8 @@ export function useFirestoreQueryData<T = DocumentData>(
     ? options?.includeMetadataChanges ?? undefined
     : undefined;
 
+  const compareKey = getClientKey(key);
+
   const onSnapshotEvent = useCallback(
     (snapshot: QuerySnapshot<T>) => {
       client.setQueryData<T[]>(
@@ -203,7 +208,7 @@ export function useFirestoreQueryData<T = DocumentData>(
         )
       );
     },
-    [key]
+    [compareKey]
   );
 
   const resolvedQuery = useQueryResolver(
