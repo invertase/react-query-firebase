@@ -10,6 +10,21 @@
     "LICENSE",
     "README.md"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/invertase/react-query-firebase.git"
+  },
+  "keywords": [
+    "react query",
+    "react",
+    "firebase",
+    "firestore",
+    "query",
+    "document",
+    "collection",
+    "mutate",
+    "cloud firestore"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npm run clean && rollup -c",
@@ -17,7 +32,11 @@
     "clean": "rimraf dist",
     "prepublishOnly": "npm run build"
   },
-  "author": "",
+  "author": {
+    "name": "Invertase",
+    "email": "oss@invertase.io",
+    "url": "https://github.com/invertase/"
+  },
   "license": "Apache-2.0",
   "peerDependencies": {
     "firebase": "^9.0.1",
