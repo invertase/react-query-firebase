@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { renderHook, act } from "@testing-library/react-hooks";
 import {
   collection,
@@ -40,7 +40,7 @@ describe("useFirestoreMutation", () => {
         result.current.mutate({ foo: "bar" });
       });
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       const snapshot = await getDocs(ref);
 
@@ -66,7 +66,7 @@ describe("useFirestoreMutation", () => {
         result.current.mutate({ foo: "bar" });
       });
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       const snapshot = await getDoc(ref);
       expect(snapshot.data()).toEqual({ foo: "bar" });
@@ -88,7 +88,7 @@ describe("useFirestoreMutation", () => {
         result.current.mutate({ bar: "baz" });
       });
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       const snapshot = await getDoc(ref);
 

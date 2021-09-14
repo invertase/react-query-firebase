@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { renderHook, act } from "@testing-library/react-hooks";
 import {
   addDoc,
@@ -14,11 +14,7 @@ import {
 
 import bundles from "./bundles";
 import { genId, init } from "./helpers";
-import {
-  useFirestoreQuery,
-  useFirestoreQueryData,
-  namedQuery,
-} from "../src";
+import { useFirestoreQuery, useFirestoreQueryData, namedQuery } from "../src";
 
 describe("useFirestoreQuery", () => {
   let wrapper: React.FC<{ children: React.ReactNode }>;
@@ -41,7 +37,7 @@ describe("useFirestoreQuery", () => {
         { wrapper }
       );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       expect(result.current.data).toBeDefined();
       expect(result.current.data).toBeInstanceOf(QuerySnapshot);
@@ -64,7 +60,7 @@ describe("useFirestoreQuery", () => {
         { wrapper }
       );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       const snapshot = result.current.data;
       expect(snapshot!.metadata.fromCache).toBe(true);
@@ -85,7 +81,7 @@ describe("useFirestoreQuery", () => {
         { wrapper }
       );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       const snapshot = result.current.data;
       expect(snapshot!.metadata.fromCache).toBe(false);
@@ -111,7 +107,7 @@ describe("useFirestoreQuery", () => {
         }
       );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       const snapshot = result.current.data;
       expect(snapshot!.size).toBe(1);
@@ -151,7 +147,7 @@ describe("useFirestoreQuery", () => {
         }
       );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       const data = result.current.data;
       expect(data!.bar).toBe("123");
@@ -188,7 +184,7 @@ describe("useFirestoreQuery", () => {
         }
       );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       await act(async () => {
         await addDoc(col, { foo: "bar", order: 0 });
@@ -258,7 +254,7 @@ describe("useFirestoreQuery", () => {
           }
         );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       function getDoc(value: any): DocumentSnapshot {
         return value as DocumentSnapshot;
@@ -299,7 +295,7 @@ describe("useFirestoreQuery", () => {
         { wrapper }
       );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       expect(result.current.data).toEqual(
         expect.arrayContaining([{ foo: "bar" }])
@@ -328,7 +324,7 @@ describe("useFirestoreQuery", () => {
         { wrapper }
       );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       expect(result.current.data).toEqual(
         expect.arrayContaining([{ baz: "ben" }])
@@ -350,7 +346,7 @@ describe("useFirestoreQuery", () => {
         { wrapper }
       );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
       expect(result.current.data!.length).toBeGreaterThan(0);
     });
   });

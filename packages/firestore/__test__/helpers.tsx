@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import axios from "axios";
 import { QueryClient, QueryClientProvider, setLogger } from "react-query";
 import { initializeApp } from "firebase/app";
