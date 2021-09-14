@@ -1,5 +1,4 @@
 import { SnapshotListenOptions } from "firebase/firestore";
-import { UseQueryOptions } from "react-query";
 
 export type GetSnapshotSource = "server" | "cache";
 

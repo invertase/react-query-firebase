@@ -18,7 +18,7 @@ export function genId(): string {
 }
 
 export function genInt(): number {
-  return Math.floor(Math.random() * (5000 - 1 + 1) + 1)
+  return Math.floor(Math.random() * (5000 - 1 + 1) + 1);
 }
 
 export function init() {

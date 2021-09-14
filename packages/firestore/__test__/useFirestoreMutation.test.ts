@@ -1,5 +1,4 @@
 import React from "react";
-import { QueryClient } from "react-query";
 import { renderHook, act } from "@testing-library/react-hooks";
 import {
   collection,
@@ -10,20 +9,18 @@ import {
   setDoc,
 } from "firebase/firestore";
 
-import { genId, init, wipe } from "./helpers";
+import { genId, init } from "./helpers";
 import {
   useFirestoreCollectionMutation,
   useFirestoreDocumentMutation,
 } from "../src";
 
 describe("useFirestoreMutation", () => {
-  let client: QueryClient;
   let wrapper: React.FC<{ children: React.ReactNode }>;
   let firestore: Firestore;
 
   beforeEach(() => {
     const config = init();
-    client = config.client;
     wrapper = config.wrapper;
     firestore = config.firestore;
   });
