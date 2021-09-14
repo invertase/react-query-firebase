@@ -1,8 +1,10 @@
 import { SnapshotListenOptions } from "firebase/firestore";
 import { UseQueryOptions } from "react-query";
 
+export type GetSnapshotSource = "server" | "cache";
+
 export type GetSnapshotOptions = {
-  source?: "cache" | "server";
+  source?: GetSnapshotSource;
 };
 
 export type BaseUseFirestoreHookOptions = {};

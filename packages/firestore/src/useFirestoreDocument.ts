@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import {
   useQuery,
   useQueryClient,
@@ -17,7 +17,63 @@ import {
   Unsubscribe,
 } from "firebase/firestore";
 import { usePrevious } from "./usePrevious";
-import { UseFirestoreHookOptions } from "./index";
+import { GetSnapshotSource, UseFirestoreHookOptions } from "./index";
+
+function useSubscription<T>(
+  enabled: boolean,
+  ref: DocumentReference<T>,
+  includeMetadataChanges: boolean | undefined,
+  onSnapshotEvent: (snapshot: DocumentSnapshot<T>) => void
+): void {
+  const previousRef = usePrevious(ref);
+  const isEqual = !!previousRef && ref.id === previousRef.id;
+  const unsubscribe = useRef<Unsubscribe>();
+
+  useEffect(() => {
+    if (enabled && !isEqual) {
+      unsubscribe.current = onSnapshot(
+        ref,
+        {
+          includeMetadataChanges,
+        },
+        onSnapshotEvent
+      );
+    }
+  }, [enabled, isEqual, ref, includeMetadataChanges, onSnapshotEvent]);
+
+  // Unsubscribes the ref subscription when the ref changes.
+  useEffect(() => {
+    if (!isEqual && !!previousRef) {
+      return () => {
+        unsubscribe.current?.();
+      };
+    }
+  }, [isEqual, previousRef]);
+
+  // Unsubscribe when the hook is no longer in use.
+  useEffect(() => {
+    return () => {
+      unsubscribe.current?.();
+    };
+  }, []);
+}
+
+async function getSnapshot<T>(
+  ref: DocumentReference<T>,
+  source?: GetSnapshotSource
+): Promise<DocumentSnapshot<T>> {
+  let snapshot: DocumentSnapshot<T>;
+
+  if (source === "cache") {
+    snapshot = await getDocFromCache(ref);
+  } else if (source === "server") {
+    snapshot = await getDocFromServer(ref);
+  } else {
+    snapshot = await getDoc(ref);
+  }
+
+  return snapshot;
+}
 
 export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
   key: QueryKey,
@@ -27,60 +83,28 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
 ) {
   const client = useQueryClient();
   const subscribe = options?.subscribe ?? false;
-
   const enabled = useQueryOptions?.enabled ?? true;
-  const previousRef = usePrevious(ref);
-  const isEqual = !!previousRef && ref.id === previousRef.id;
-  const unsubscribe = useRef<Unsubscribe>();
+  const includeMetadataChanges = options?.subscribe
+    ? options?.includeMetadataChanges ?? undefined
+    : undefined;
 
-  // Subscribes to the ref (if enabled) and and if the ref has changed.
-  useEffect(() => {
-    if (enabled && subscribe && !isEqual) {
-      unsubscribe.current = onSnapshot(
-        ref,
-        {
-          includeMetadataChanges: options?.subscribe
-            ? options?.includeMetadataChanges ?? undefined
-            : undefined,
-        },
-        (snapshot) => {
-          client.setQueryData<DocumentSnapshot<T>>(key, snapshot);
-        }
-      );
-    }
-  }, [enabled, subscribe, isEqual, ref]);
+  const onSnapshotEvent = useCallback(
+    (snapshot: DocumentSnapshot<T>) => {
+      client.setQueryData<DocumentSnapshot<T>>(key, snapshot);
+    },
+    [key]
+  );
 
-  // Unsubscribes the ref subscription when the ref changes.
-  useEffect(() => {
-    if (!isEqual && !!previousRef) {
-      return () => {
-        unsubscribe.current?.();
-      };
-    }
-  }, [unsubscribe, isEqual, previousRef]);
-
-  // Unsubscribe when the hook is no longer in use.
-  useEffect(() => {
-    return () => {
-      unsubscribe.current?.();
-    };
-  }, []);
+  useSubscription<T>(
+    subscribe && enabled,
+    ref,
+    includeMetadataChanges,
+    onSnapshotEvent
+  );
 
   return useQuery<DocumentSnapshot<T>, Error, R>(
     key,
-    async () => {
-      let snapshot: DocumentSnapshot<T>;
-
-      if (options?.source === "cache") {
-        snapshot = await getDocFromCache(ref);
-      } else if (options?.source === "server") {
-        snapshot = await getDocFromServer(ref);
-      } else {
-        snapshot = await getDoc(ref);
-      }
-
-      return snapshot;
-    },
+    () => getSnapshot(ref, options?.source),
     useQueryOptions
   );
 }
@@ -89,17 +113,43 @@ export function useFirestoreDocumentData<T = DocumentData>(
   key: QueryKey,
   ref: DocumentReference<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions,
-  useQueryOptions?: UseQueryOptions<DocumentSnapshot<T>, Error, T | undefined>
+  useQueryOptions?: UseQueryOptions<T | undefined, Error>
 ) {
-  const { select, ...queryOptions } = useQueryOptions || {};
+  const client = useQueryClient();
+  const subscribe = options?.subscribe ?? false;
+  const enabled = useQueryOptions?.enabled ?? true;
+  const includeMetadataChanges = options?.subscribe
+    ? options?.includeMetadataChanges ?? undefined
+    : undefined;
 
-  return useFirestoreDocument<T, T | undefined>(key, ref, options, {
-    ...queryOptions,
-    select(snapshot) {
-      return (
-        select?.(snapshot) ??
-        snapshot.data({ serverTimestamps: options?.serverTimestamps })
+  const onSnapshotEvent = useCallback(
+    (snapshot: DocumentSnapshot<T>) => {
+      client.setQueryData<T | undefined>(
+        key,
+        snapshot.data({
+          serverTimestamps: options?.serverTimestamps,
+        })
       );
     },
-  });
+    [key]
+  );
+
+  useSubscription<T>(
+    subscribe && enabled,
+    ref,
+    includeMetadataChanges,
+    onSnapshotEvent
+  );
+
+  return useQuery<T | undefined, Error>(
+    key,
+    async () => {
+      const snapshot = await getSnapshot(ref, options?.source);
+
+      return snapshot.data({
+        serverTimestamps: options?.serverTimestamps,
+      });
+    },
+    useQueryOptions
+  );
 }
