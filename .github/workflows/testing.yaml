@@ -37,6 +37,6 @@ jobs:
       - name: Install Firebase CLI
         run: npm i -g firebase-tools
       - name: Run tests
-        run: yarn run test:coverage
+        run: yarn run test:ci
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
