@@ -6,6 +6,11 @@ import {
   UseQueryOptions,
 } from "react-query";
 import { Auth, onIdTokenChanged, User } from "firebase/auth";
+import {
+  Completer,
+  usePrevious,
+  getClientKey,
+} from "@react-query-firebase/utils";
 
 export function useAuthUser(
   key: QueryKey,
@@ -13,16 +18,27 @@ export function useAuthUser(
   useQueryOptions?: UseQueryOptions<User | null, Error>
 ) {
   const client = useQueryClient();
-  const initialUser = useRef<User | null>(auth.currentUser);
-  const [ready, setReady] = useState<boolean>(!!initialUser.current);
-
+  const completer = useRef<Completer<User | null>>(new Completer());
   const app = auth.app.name;
+  const newKey = getClientKey(key);
+  const previousKey = usePrevious(getClientKey(key));
+
+  const keyHasChanged = newKey !== previousKey;
+
+  // If there is an auth user, add it straight away rather than waiting for the
+  // listener to subscribe.
+  if (!completer.current.complete && !!auth.currentUser) {
+    completer.current.resolve(auth.currentUser);
+  }
+
+  useEffect(() => {
+    completer.current = new Completer();
+  }, [keyHasChanged]);
 
   useEffect(() => {
     return onIdTokenChanged(auth, (state) => {
-      if (!ready) {
-        initialUser.current = state;
-        setReady(true);
+      if (!completer.current.complete) {
+        completer.current.resolve(auth.currentUser);
       } else {
         client.setQueryData<User | null>(key, state);
       }
@@ -32,11 +48,10 @@ export function useAuthUser(
   return useQuery<User | null, Error>(
     key,
     () => {
-      return initialUser.current;
+      return completer.current.promise;
     },
     {
       ...(useQueryOptions || {}),
-      enabled: !ready ? false : useQueryOptions?.enabled ?? true,
     }
   );
 }
