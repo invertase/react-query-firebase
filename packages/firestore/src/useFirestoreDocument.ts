@@ -129,11 +129,11 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
   );
 }
 
-export function useFirestoreDocumentData<T = DocumentData>(
+export function useFirestoreDocumentData<T = DocumentData, R = T>(
   key: QueryKey,
   ref: DocumentReference<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions,
-  useQueryOptions?: UseQueryOptions<T | undefined, Error>
+  useQueryOptions?: UseQueryOptions<T | undefined, Error, R>
 ) {
   const client = useQueryClient();
   const subscribe = options?.subscribe ?? false;
@@ -163,7 +163,7 @@ export function useFirestoreDocumentData<T = DocumentData>(
     onSnapshotEvent
   );
 
-  return useQuery<T | undefined, Error>(
+  return useQuery<T | undefined, Error, R>(
     key,
     async () => {
       const snapshot = await getSnapshot(ref, options?.source);
