@@ -5,7 +5,13 @@ import {
   useQueryClient,
   UseQueryOptions,
 } from "react-query";
-import { Auth, onIdTokenChanged, User, Unsubscribe } from "firebase/auth";
+import {
+  Auth,
+  onIdTokenChanged,
+  User,
+  Unsubscribe,
+  IdTokenResult,
+} from "firebase/auth";
 
 export function useAuthUser(
   key: QueryKey,
@@ -22,13 +28,14 @@ export function useAuthUser(
   }, []);
 
   return useQuery<User | null, Error>({
+    ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
     async queryFn() {
       unsubscribe.current?.();
 
       let resolved = false;
 
-      return new Promise<User | null>((resolve) => {
+      return new Promise<User | null>((resolve, reject) => {
         unsubscribe.current = onIdTokenChanged(auth, (user) => {
           if (!resolved) {
             resolved = true;
@@ -36,7 +43,55 @@ export function useAuthUser(
           } else {
             client.setQueryData<User | null>(key, user);
           }
-        });
+        }, reject);
+      });
+    },
+  });
+}
+
+export function useAuthIdToken(
+  key: QueryKey,
+  auth: Auth,
+  options?: {
+    forceRefresh?: boolean;
+  },
+  useQueryOptions?: Omit<
+    UseQueryOptions<IdTokenResult | null, Error>,
+    "queryFn"
+  >
+) {
+  const client = useQueryClient();
+  const unsubscribe = useRef<Unsubscribe>();
+
+  useEffect(() => {
+    return () => {
+      unsubscribe.current?.();
+    };
+  }, []);
+
+  return useQuery<IdTokenResult | null, Error>({
+    ...useQueryOptions,
+    queryKey: useQueryOptions?.queryKey ?? key,
+    async queryFn() {
+      unsubscribe.current?.();
+
+      let resolved = false;
+
+      return new Promise<IdTokenResult | null>((resolve, reject) => {
+        unsubscribe.current = onIdTokenChanged(auth, async (user) => {
+          let token: IdTokenResult | null = null;
+
+          if (user) {
+            token = await user.getIdTokenResult(options?.forceRefresh);
+          }
+
+          if (!resolved) {
+            resolved = true;
+            resolve(token);
+          } else {
+            client.setQueryData<IdTokenResult | null>(key, token);
+          }
+        }, reject);
       });
     },
   });
