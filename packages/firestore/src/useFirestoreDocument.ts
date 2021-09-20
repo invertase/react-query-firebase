@@ -80,7 +80,7 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
 
       let resolved = false;
 
-      return new Promise<DocumentSnapshot<T>>((resolve) => {
+      return new Promise<DocumentSnapshot<T>>((resolve, reject) => {
         unsubscribe.current = onSnapshot(
           ref,
           {
@@ -93,7 +93,8 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
             } else {
               client.setQueryData<DocumentSnapshot<T>>(key, snapshot);
             }
-          }
+          },
+          reject
         );
       });
     },
@@ -129,7 +130,7 @@ export function useFirestoreDocumentData<T = DocumentData, R = T>(
 
       let resolved = false;
 
-      return new Promise<T | undefined>((resolve) => {
+      return new Promise<T | undefined>((resolve, reject) => {
         unsubscribe.current = onSnapshot(
           ref,
           {
@@ -151,7 +152,8 @@ export function useFirestoreDocumentData<T = DocumentData, R = T>(
                 })
               );
             }
-          }
+          },
+          reject
         );
       });
     },
