@@ -22,6 +22,7 @@
     "@types/react": "^17.0.20",
     "axios": "^0.21.4",
     "babel-jest": "^27.1.1",
+    "codecov": "^3.8.3",
     "firebase": "^9.0.1",
     "jest": "^27.1.1",
     "jest-environment-jsdom": "^27.2.0",
@@ -33,10 +34,23 @@
     "rollup": "^2.56.3",
     "rollup-plugin-typescript2": "^0.30.0",
     "ts-node": "^10.2.1",
-    "typescript": "^4.4.3"
+    "typescript": "^4.4.3",
+    "@typescript-eslint/eslint-plugin": "^4.29.3",
+    "@typescript-eslint/parser": "^4.29.3",
+    "eslint": "^7.32.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-import": "^2.24.1",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-prettier": "^3.4.1",
+    "eslint-plugin-react": "^7.24.0",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "prettier": "^2.3.2"
   },
   "scripts": {
-    "test": "jest --forceExit",
-    "emulators": "firebase emulators:start --project test-project"
+    "test": "firebase emulators:exec --project test-project 'jest'",
+    "test:ci": "firebase emulators:exec --project test-project 'sleep 5 && jest --coverage && codecov'",
+    "lint": "eslint \"**/*.{js,ts,tsx,jsx}\"",
+    "lint:fix": "eslint \"**/*.{js,ts,tsx,jsx}\" --fix",
+    "emulators": "firebase emulators:exec --project test-project"
   }
 }

@@ -6,3 +6,4 @@ firestore-debug.log
 ui-debug.log
 dist
 *.log
+.idea

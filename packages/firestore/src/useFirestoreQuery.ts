@@ -1,4 +1,21 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+/*
+ * Copyright (c) 2016-present Invertase Limited & Contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this library except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+import { useEffect, useRef } from "react";
 import {
   useQuery,
   useQueryClient,
@@ -9,7 +26,6 @@ import {
   getDocs,
   Query,
   onSnapshot,
-  queryEqual,
   Unsubscribe,
   QuerySnapshot,
   getDocsFromCache,
@@ -19,9 +35,7 @@ import {
   Firestore,
   SnapshotOptions,
 } from "firebase/firestore";
-import { usePrevious } from "./usePrevious";
 import { GetSnapshotSource, UseFirestoreHookOptions } from "./index";
-import { getClientKey } from "./utils";
 
 const namedQueryCache: { [key: string]: Query } = {};
 
@@ -35,76 +49,24 @@ function isNamedQuery<T>(query: QueryType<T>): query is NamedQuery<T> {
   return typeof query === "function";
 }
 
-function useQueryResolver<T>(
-  enabled: boolean,
-  query: QueryType<T>,
-  includeMetadataChanges: boolean | undefined,
-  onSnapshotEvent: (snapshot: QuerySnapshot<T>) => void
-): Query<T> | null {
-  // Separate the query and named query types.
-  let queryFn: Query<T> | undefined;
-  let namedQueryFn: NamedQueryPromise<T> | undefined;
-
-  // If the user passed a named query function.
+export async function resolveQuery<T>(query: QueryType<T>): Promise<Query<T>> {
   if (isNamedQuery(query)) {
-    // Check whether result is a promise or query.
     if (typeof query === "function") {
-      namedQueryFn = query;
-    } else {
-      queryFn = query;
+      const resolved = await query();
+
+      if (!resolved) {
+        throw new Error(
+          "A named query returned no response. Ensure you have loaded the remote bundle containing the same named key."
+        );
+      }
+
+      return resolved;
     }
-  } else {
-    queryFn = query;
+
+    return query;
   }
 
-  const previousQuery = usePrevious(queryFn);
-  const isEqual = !!previousQuery && queryEqual(previousQuery, queryFn!);
-  const [resolvedQuery, setResolvedQuery] = useState<Query<T> | null>(null);
-  const unsubscribe = useRef<Unsubscribe>();
-
-  // Anytime the query changes, update the resolved query.
-  useEffect(() => {
-    if (!isEqual && !!queryFn) {
-      setResolvedQuery(queryFn);
-    }
-  }, [isEqual, queryFn]);
-
-  // If a named query is provided, resolve it.
-  useEffect(() => {
-    if (!resolvedQuery && !!namedQueryFn) {
-      namedQueryFn().then(setResolvedQuery);
-    }
-  }, [resolvedQuery, namedQueryFn]);
-
-  // Subscribes to the resolved query.
-  useEffect(() => {
-    if (enabled && resolvedQuery) {
-      unsubscribe.current = onSnapshot(
-        resolvedQuery,
-        {
-          includeMetadataChanges,
-        },
-        onSnapshotEvent
-      );
-    }
-  }, [enabled, resolvedQuery, includeMetadataChanges, onSnapshotEvent]);
-
-  // Unsubscribes the query subscription when the query changes.
-  useEffect(() => {
-    if (!isEqual && !!previousQuery) {
-      return () => {
-        unsubscribe.current?.();
-      };
-    }
-  }, [unsubscribe, isEqual, previousQuery]);
-
-  useEffect(() => {
-    return () => {
-      unsubscribe.current?.();
-    };
-  }, []);
-
-  return resolvedQuery;
+  return query;
 }
 
 async function getSnapshot<T>(query: Query<T>, source?: GetSnapshotSource) {
@@ -146,93 +108,111 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
   key: QueryKey,
   query: QueryType<T>,
   options?: UseFirestoreHookOptions,
-  useQueryOptions?: UseQueryOptions<QuerySnapshot<T>, Error, R>
+  useQueryOptions?: Omit<UseQueryOptions<QuerySnapshot<T>, Error, R>, "queryFn">
 ) {
   const client = useQueryClient();
-  const subscribe = options?.subscribe ?? false;
-  const enabled = useQueryOptions?.enabled ?? true;
-  const includeMetadataChanges = options?.subscribe
-    ? options?.includeMetadataChanges ?? undefined
-    : undefined;
+  const unsubscribe = useRef<Unsubscribe>();
 
-  const compareKey = getClientKey(key);
+  useEffect(() => {
+    return () => unsubscribe.current?.();
+  }, []);
 
-  const onSnapshotEvent = useCallback(
-    (snapshot: QuerySnapshot<T>) => {
-      client.setQueryData<QuerySnapshot<T>>(key, snapshot);
+  return useQuery<QuerySnapshot<T>, Error, R>({
+    ...useQueryOptions,
+    queryKey: useQueryOptions?.queryKey ?? key,
+    async queryFn() {
+      unsubscribe.current?.();
+
+      const _query = await resolveQuery(query);
+
+      if (!options?.subscribe) {
+        return getSnapshot(_query, options?.source);
+      }
+
+      let resolved = false;
+
+      return new Promise<QuerySnapshot<T>>((resolve) => {
+        unsubscribe.current = onSnapshot(
+          _query,
+          {
+            includeMetadataChanges: options?.includeMetadataChanges,
+          },
+          (snapshot) => {
+            if (!resolved) {
+              resolved = true;
+              return resolve(snapshot);
+            } else {
+              client.setQueryData<QuerySnapshot<T>>(key, snapshot);
+            }
+          }
+        );
+      });
     },
-    [compareKey]
-  );
-
-  const resolvedQuery = useQueryResolver(
-    subscribe && enabled,
-    query,
-    includeMetadataChanges,
-    onSnapshotEvent
-  );
-
-  return useQuery<QuerySnapshot<T>, Error, R>(
-    key,
-    () => getSnapshot(resolvedQuery!, options?.source),
-    {
-      ...(useQueryOptions || {}),
-      // If there is a resolved query, use the users option (or default), otherwise it is false.
-      enabled: !!resolvedQuery ? useQueryOptions?.enabled ?? undefined : false,
-    }
-  );
+  });
 }
 
-export function useFirestoreQueryData<T = DocumentData>(
+export function useFirestoreQueryData<T = DocumentData, R = T[]>(
   key: QueryKey,
   query: QueryType<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions,
-  useQueryOptions?: UseQueryOptions<T[], Error>
+  useQueryOptions?: Omit<UseQueryOptions<T[], Error, R>, "queryFn">
 ) {
   const client = useQueryClient();
-  const subscribe = options?.subscribe ?? false;
-  const enabled = useQueryOptions?.enabled ?? true;
-  const includeMetadataChanges = options?.subscribe
-    ? options?.includeMetadataChanges ?? undefined
-    : undefined;
+  const unsubscribe = useRef<Unsubscribe>();
 
-  const compareKey = getClientKey(key);
+  useEffect(() => {
+    return () => unsubscribe.current?.();
+  }, []);
 
-  const onSnapshotEvent = useCallback(
-    (snapshot: QuerySnapshot<T>) => {
-      client.setQueryData<T[]>(
-        key,
-        snapshot.docs.map((doc) =>
+  return useQuery<T[], Error, R>({
+    ...useQueryOptions,
+    queryKey: useQueryOptions?.queryKey ?? key,
+    async queryFn() {
+      unsubscribe.current?.();
+
+      const _query = await resolveQuery(query);
+
+      if (!options?.subscribe) {
+        const snapshot = await getSnapshot(_query, options?.source);
+
+        return snapshot.docs.map((doc) =>
           doc.data({
             serverTimestamps: options?.serverTimestamps,
           })
-        )
-      );
+        );
+      }
+
+      let resolved = false;
+
+      return new Promise<T[]>((resolve) => {
+        unsubscribe.current = onSnapshot(
+          _query,
+          {
+            includeMetadataChanges: options?.includeMetadataChanges,
+          },
+          (snapshot) => {
+            if (!resolved) {
+              resolved = true;
+              return resolve(
+                snapshot.docs.map((doc) =>
+                  doc.data({
+                    serverTimestamps: options?.serverTimestamps,
+                  })
+                )
+              );
+            } else {
+              client.setQueryData<T[]>(
+                key,
+                snapshot.docs.map((doc) =>
+                  doc.data({
+                    serverTimestamps: options?.serverTimestamps,
+                  })
+                )
+              );
+            }
+          }
+        );
+      });
     },
-    [compareKey]
-  );
-
-  const resolvedQuery = useQueryResolver(
-    subscribe && enabled,
-    query,
-    includeMetadataChanges,
-    onSnapshotEvent
-  );
-
-  return useQuery<T[], Error>(
-    key,
-    async () => {
-      const snapshot = await getSnapshot(resolvedQuery!, options?.source);
-
-      return snapshot.docs.map((doc) =>
-        doc.data({
-          serverTimestamps: options?.serverTimestamps,
-        })
-      );
-    },
-    {
-      ...(useQueryOptions || {}),
-      // If there is a resolved query, use the users option (or default), otherwise it is false.
-      enabled: !!resolvedQuery ? useQueryOptions?.enabled ?? undefined : false,
-    }
-  );
+  });
 }

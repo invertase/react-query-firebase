@@ -1,5 +1,21 @@
-import React from "react";
-import { QueryClient } from "react-query";
+/*
+ * Copyright (c) 2016-present Invertase Limited & Contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this library except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+import * as React from "react";
 import { renderHook, act } from "@testing-library/react-hooks";
 import {
   addDoc,
@@ -14,21 +30,15 @@ import {
 } from "firebase/firestore";
 
 import bundles from "./bundles";
-import { genId, init, wipe } from "./helpers";
-import {
-  useFirestoreQuery,
-  useFirestoreQueryData,
-  namedQuery,
-} from "../src/useFirestoreQuery";
+import { genId, init } from "./helpers";
+import { useFirestoreQuery, useFirestoreQueryData, namedQuery } from "../src";
 
 describe("useFirestoreQuery", () => {
-  let client: QueryClient;
   let wrapper: React.FC<{ children: React.ReactNode }>;
   let firestore: Firestore;
 
   beforeEach(() => {
     const config = init();
-    client = config.client;
     wrapper = config.wrapper;
     firestore = config.firestore;
   });
@@ -44,7 +54,7 @@ describe("useFirestoreQuery", () => {
         { wrapper }
       );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       expect(result.current.data).toBeDefined();
       expect(result.current.data).toBeInstanceOf(QuerySnapshot);
@@ -67,7 +77,7 @@ describe("useFirestoreQuery", () => {
         { wrapper }
       );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       const snapshot = result.current.data;
       expect(snapshot!.metadata.fromCache).toBe(true);
@@ -88,7 +98,7 @@ describe("useFirestoreQuery", () => {
         { wrapper }
       );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       const snapshot = result.current.data;
       expect(snapshot!.metadata.fromCache).toBe(false);
@@ -114,7 +124,7 @@ describe("useFirestoreQuery", () => {
         }
       );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       const snapshot = result.current.data;
       expect(snapshot!.size).toBe(1);
@@ -154,7 +164,7 @@ describe("useFirestoreQuery", () => {
         }
       );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       const data = result.current.data;
       expect(data!.bar).toBe("123");
@@ -191,7 +201,7 @@ describe("useFirestoreQuery", () => {
         }
       );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       await act(async () => {
         await addDoc(col, { foo: "bar", order: 0 });
@@ -220,8 +230,9 @@ describe("useFirestoreQuery", () => {
       expect(call2.docs[1].data().foo).toEqual("baz");
     });
 
-    test("it re-subscribes when the ref changes", async () => {
-      const hookId = genId();
+    test("it re-subscribes when the key changes", async () => {
+      const hookId1 = genId();
+      const hookId2 = genId();
 
       const id1 = `1-${genId()}`;
       const id2 = `2-${genId()}`;
@@ -233,35 +244,36 @@ describe("useFirestoreQuery", () => {
       await addDoc(ref2, { foo: "bar" });
 
       const mock = jest.fn();
-      const { result, waitFor, unmount, rerender, waitForNextUpdate } =
-        renderHook<
-          {
-            reference: CollectionReference;
-          },
-          any
-        >(
-          ({ reference }) =>
-            useFirestoreQuery(
-              hookId,
-              reference,
-              {
-                subscribe: true,
-              },
-              {
-                onSuccess(snapshot) {
-                  mock(snapshot);
-                },
-              }
-            ),
-          {
-            wrapper: (props) => wrapper({ children: props.children }),
-            initialProps: {
-              reference: ref1,
+      const { result, waitFor, unmount, rerender } = renderHook<
+        {
+          id: string;
+          reference: CollectionReference;
+        },
+        any
+      >(
+        ({ id, reference }) =>
+          useFirestoreQuery(
+            id,
+            reference,
+            {
+              subscribe: true,
             },
-          }
-        );
+            {
+              onSuccess(snapshot) {
+                mock(snapshot);
+              },
+            }
+          ),
+        {
+          wrapper: (props) => wrapper({ children: props.children }),
+          initialProps: {
+            id: hookId1,
+            reference: ref1,
+          },
+        }
+      );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       function getDoc(value: any): DocumentSnapshot {
         return value as DocumentSnapshot;
@@ -269,22 +281,19 @@ describe("useFirestoreQuery", () => {
 
       expect(mock.mock.calls[0][0].size).toBe(1);
 
-      // Get call
+      // Subscribe 1
       expect(getDoc(mock.mock.calls[0][0].docs[0]).ref.parent.id).toBe(id1);
 
-      // Subscribe 1
-      expect(getDoc(mock.mock.calls[1][0].docs[0]).ref.parent.id).toBe(id1);
+      rerender({ id: hookId2, reference: ref2 });
 
-      rerender({ reference: ref2 });
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
-      await waitForNextUpdate();
-
-      expect(getDoc(mock.mock.calls[2][0].docs[0]).ref.parent.id).toBe(id2);
+      expect(getDoc(mock.mock.calls[1][0].docs[0]).ref.parent.id).toBe(id2);
 
       // Trigger an  unmount - this should unsubscribe the listener.
       unmount();
 
-      expect(mock).toHaveBeenCalledTimes(3);
+      expect(mock).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -302,7 +311,7 @@ describe("useFirestoreQuery", () => {
         { wrapper }
       );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       expect(result.current.data).toEqual(
         expect.arrayContaining([{ foo: "bar" }])
@@ -331,7 +340,7 @@ describe("useFirestoreQuery", () => {
         { wrapper }
       );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       expect(result.current.data).toEqual(
         expect.arrayContaining([{ baz: "ben" }])
@@ -353,7 +362,7 @@ describe("useFirestoreQuery", () => {
         { wrapper }
       );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
       expect(result.current.data!.length).toBeGreaterThan(0);
     });
   });
