@@ -10,9 +10,9 @@ If you haven't done so already, install `react` and `react-query`:
 npm i --save react react-query
 ```
 
-Before using this library, ensure React Query is setup by following the [Installation](https://react-query.tanstack.com/quick-start) guide.
+Before using this library, ensure React Query is setup on your project by following the [Installation](https://react-query.tanstack.com/quick-start) guide.
 
-Next install one of the React Query Firebase packages:
+Next install one of the React Query Firebase packages, e.g:
 
 ```bash
 npm i --save @react-query-firebase/firestore
@@ -30,10 +30,12 @@ See below for a full list of available packages.
   - useFirestoreCollectionMutation
   - useFirestoreDocumentMutation
 
-## Example
+## Examples
 
 The library provides a set of un-opinionated hooks to integrate with Firebase. You provide the
 Firebase instances, the library does the rest.
+
+### Subscribe to a collection
 
 ```jsx
 import React from "react";
@@ -57,7 +59,7 @@ function App() {
   }
 
   if (products.isError) {
-    return <div>Error!</div>;
+    return <div>{products.data.error}</div>;
   }
 
   return (
