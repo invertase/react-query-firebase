@@ -23,13 +23,10 @@ export type GetSnapshotOptions = {
   source?: GetSnapshotSource;
 };
 
-export type BaseUseFirestoreHookOptions = {};
-
 export type UseFirestoreHookOptions =
   | ({
       subscribe: true;
-    } & SnapshotListenOptions &
-      GetSnapshotOptions)
+    } & SnapshotListenOptions)
   | ({
       subscribe?: false;
     } & GetSnapshotOptions);

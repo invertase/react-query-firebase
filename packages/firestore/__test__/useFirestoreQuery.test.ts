@@ -230,8 +230,9 @@ describe("useFirestoreQuery", () => {
       expect(call2.docs[1].data().foo).toEqual("baz");
     });
 
-    test("it re-subscribes when the ref changes", async () => {
-      const hookId = genId();
+    test("it re-subscribes when the key changes", async () => {
+      const hookId1 = genId();
+      const hookId2 = genId();
 
       const id1 = `1-${genId()}`;
       const id2 = `2-${genId()}`;
@@ -243,33 +244,34 @@ describe("useFirestoreQuery", () => {
       await addDoc(ref2, { foo: "bar" });
 
       const mock = jest.fn();
-      const { result, waitFor, unmount, rerender, waitForNextUpdate } =
-        renderHook<
-          {
-            reference: CollectionReference;
-          },
-          any
-        >(
-          ({ reference }) =>
-            useFirestoreQuery(
-              hookId,
-              reference,
-              {
-                subscribe: true,
-              },
-              {
-                onSuccess(snapshot) {
-                  mock(snapshot);
-                },
-              }
-            ),
-          {
-            wrapper: (props) => wrapper({ children: props.children }),
-            initialProps: {
-              reference: ref1,
+      const { result, waitFor, unmount, rerender } = renderHook<
+        {
+          id: string;
+          reference: CollectionReference;
+        },
+        any
+      >(
+        ({ id, reference }) =>
+          useFirestoreQuery(
+            id,
+            reference,
+            {
+              subscribe: true,
             },
-          }
-        );
+            {
+              onSuccess(snapshot) {
+                mock(snapshot);
+              },
+            }
+          ),
+        {
+          wrapper: (props) => wrapper({ children: props.children }),
+          initialProps: {
+            id: hookId1,
+            reference: ref1,
+          },
+        }
+      );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
@@ -279,22 +281,19 @@ describe("useFirestoreQuery", () => {
 
       expect(mock.mock.calls[0][0].size).toBe(1);
 
-      // Get call
+      // Subscribe 1
       expect(getDoc(mock.mock.calls[0][0].docs[0]).ref.parent.id).toBe(id1);
 
-      // Subscribe 1
-      expect(getDoc(mock.mock.calls[1][0].docs[0]).ref.parent.id).toBe(id1);
+      rerender({ id: hookId2, reference: ref2 });
 
-      rerender({ reference: ref2 });
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
-      await waitForNextUpdate();
-
-      expect(getDoc(mock.mock.calls[2][0].docs[0]).ref.parent.id).toBe(id2);
+      expect(getDoc(mock.mock.calls[1][0].docs[0]).ref.parent.id).toBe(id2);
 
       // Trigger an  unmount - this should unsubscribe the listener.
       unmount();
 
-      expect(mock).toHaveBeenCalledTimes(3);
+      expect(mock).toHaveBeenCalledTimes(2);
     });
   });
 

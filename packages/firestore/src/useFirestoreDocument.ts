@@ -15,7 +15,7 @@
  *
  */
 
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
   useQuery,
   useQueryClient,
@@ -33,48 +33,7 @@ import {
   SnapshotOptions,
   Unsubscribe,
 } from "firebase/firestore";
-import { usePrevious } from "./usePrevious";
 import { GetSnapshotSource, UseFirestoreHookOptions } from "./index";
-import { getClientKey } from "./utils";
-
-function useSubscription<T>(
-  enabled: boolean,
-  ref: DocumentReference<T>,
-  includeMetadataChanges: boolean | undefined,
-  onSnapshotEvent: (snapshot: DocumentSnapshot<T>) => void
-): void {
-  const previousRef = usePrevious(ref);
-  const isEqual = !!previousRef && ref.id === previousRef.id;
-  const unsubscribe = useRef<Unsubscribe>();
-
-  useEffect(() => {
-    if (enabled && !isEqual) {
-      unsubscribe.current = onSnapshot(
-        ref,
-        {
-          includeMetadataChanges,
-        },
-        onSnapshotEvent
-      );
-    }
-  }, [enabled, isEqual, ref, includeMetadataChanges, onSnapshotEvent]);
-
-  // Unsubscribes the ref subscription when the ref changes.
-  useEffect(() => {
-    if (!isEqual && !!previousRef) {
-      return () => {
-        unsubscribe.current?.();
-      };
-    }
-  }, [isEqual, previousRef]);
-
-  // Unsubscribe when the hook is no longer in use.
-  useEffect(() => {
-    return () => {
-      unsubscribe.current?.();
-    };
-  }, []);
-}
 
 async function getSnapshot<T>(
   ref: DocumentReference<T>,
@@ -97,81 +56,104 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
   key: QueryKey,
   ref: DocumentReference<T>,
   options?: UseFirestoreHookOptions,
-  useQueryOptions?: UseQueryOptions<DocumentSnapshot<T>, Error, R>
+  useQueryOptions?: Omit<
+    UseQueryOptions<DocumentSnapshot<T>, Error, R>,
+    "queryFn"
+  >
 ) {
   const client = useQueryClient();
-  const subscribe = options?.subscribe ?? false;
-  const enabled = useQueryOptions?.enabled ?? true;
-  const includeMetadataChanges = options?.subscribe
-    ? options?.includeMetadataChanges ?? undefined
-    : undefined;
+  const unsubscribe = useRef<Unsubscribe>();
 
-  const compareKey = getClientKey(key);
+  useEffect(() => {
+    return () => unsubscribe.current?.();
+  }, []);
 
-  const onSnapshotEvent = useCallback(
-    (snapshot: DocumentSnapshot<T>) => {
-      client.setQueryData<DocumentSnapshot<T>>(key, snapshot);
+  return useQuery<DocumentSnapshot<T>, Error, R>({
+    ...useQueryOptions,
+    queryKey: useQueryOptions?.queryKey ?? key,
+    async queryFn() {
+      unsubscribe.current?.();
+
+      if (!options?.subscribe) {
+        return getSnapshot(ref, options?.source);
+      }
+
+      let resolved = false;
+
+      return new Promise<DocumentSnapshot<T>>((resolve) => {
+        unsubscribe.current = onSnapshot(
+          ref,
+          {
+            includeMetadataChanges: options?.includeMetadataChanges,
+          },
+          (snapshot) => {
+            if (!resolved) {
+              resolved = true;
+              return resolve(snapshot);
+            } else {
+              client.setQueryData<DocumentSnapshot<T>>(key, snapshot);
+            }
+          }
+        );
+      });
     },
-    [compareKey]
-  );
-
-  useSubscription<T>(
-    subscribe && enabled,
-    ref,
-    includeMetadataChanges,
-    onSnapshotEvent
-  );
-
-  return useQuery<DocumentSnapshot<T>, Error, R>(
-    key,
-    () => getSnapshot(ref, options?.source),
-    useQueryOptions
-  );
+  });
 }
 
 export function useFirestoreDocumentData<T = DocumentData, R = T>(
   key: QueryKey,
   ref: DocumentReference<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions,
-  useQueryOptions?: UseQueryOptions<T | undefined, Error, R>
+  useQueryOptions?: Omit<UseQueryOptions<T | undefined, Error, R>, "queryFn">
 ) {
   const client = useQueryClient();
-  const subscribe = options?.subscribe ?? false;
-  const enabled = useQueryOptions?.enabled ?? true;
-  const includeMetadataChanges = options?.subscribe
-    ? options?.includeMetadataChanges ?? undefined
-    : undefined;
+  const unsubscribe = useRef<Unsubscribe>();
 
-  const compareKey = getClientKey(key);
+  useEffect(() => {
+    return () => unsubscribe.current?.();
+  }, []);
 
-  const onSnapshotEvent = useCallback(
-    (snapshot: DocumentSnapshot<T>) => {
-      client.setQueryData<T | undefined>(
-        key,
-        snapshot.data({
+  return useQuery<T | undefined, Error, R>({
+    ...useQueryOptions,
+    queryKey: useQueryOptions?.queryKey ?? key,
+    async queryFn() {
+      unsubscribe.current?.();
+
+      if (!options?.subscribe) {
+        const snapshot = await getSnapshot(ref, options?.source);
+
+        return snapshot.data({
           serverTimestamps: options?.serverTimestamps,
-        })
-      );
-    },
-    [compareKey]
-  );
+        });
+      }
 
-  useSubscription<T>(
-    subscribe && enabled,
-    ref,
-    includeMetadataChanges,
-    onSnapshotEvent
-  );
+      let resolved = false;
 
-  return useQuery<T | undefined, Error, R>(
-    key,
-    async () => {
-      const snapshot = await getSnapshot(ref, options?.source);
-
-      return snapshot.data({
-        serverTimestamps: options?.serverTimestamps,
+      return new Promise<T | undefined>((resolve) => {
+        unsubscribe.current = onSnapshot(
+          ref,
+          {
+            includeMetadataChanges: options?.includeMetadataChanges,
+          },
+          (snapshot) => {
+            if (!resolved) {
+              resolved = true;
+              return resolve(
+                snapshot.data({
+                  serverTimestamps: options?.serverTimestamps,
+                })
+              );
+            } else {
+              client.setQueryData<T | undefined>(
+                key,
+                snapshot.data({
+                  serverTimestamps: options?.serverTimestamps,
+                })
+              );
+            }
+          }
+        );
       });
     },
-    useQueryOptions
-  );
+  });
 }

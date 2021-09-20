@@ -213,8 +213,9 @@ describe("useFirestoreDocument", () => {
       expect(mock.mock.calls[1][0]).toEqual({ foo: "baz" });
     });
 
-    test("it re-subscribes when the ref changes", async () => {
-      const hookId = genId();
+    test("it re-subscribes when the key changes", async () => {
+      const hookId1 = genId();
+      const hookId2 = genId();
       const id1 = `1-${genId()}`;
       const id2 = `2-${genId()}`;
 
@@ -222,52 +223,50 @@ describe("useFirestoreDocument", () => {
       const ref2 = doc(firestore, genId(), id2);
 
       const mock = jest.fn();
-      const { result, waitFor, unmount, rerender, waitForNextUpdate } =
-        renderHook<
-          {
-            reference: DocumentReference;
-          },
-          any
-        >(
-          ({ reference }) =>
-            useFirestoreDocument(
-              hookId,
-              reference,
-              {
-                subscribe: true,
-              },
-              {
-                onSuccess(snapshot) {
-                  mock(snapshot);
-                },
-              }
-            ),
-          {
-            wrapper: (props) => wrapper({ children: props.children }),
-            initialProps: {
-              reference: ref1,
+      const { result, waitFor, unmount, rerender } = renderHook<
+        {
+          id: string;
+          reference: DocumentReference;
+        },
+        any
+      >(
+        ({ id, reference }) =>
+          useFirestoreDocument(
+            id,
+            reference,
+            {
+              subscribe: true,
             },
-          }
-        );
+            {
+              onSuccess(snapshot) {
+                mock(snapshot);
+              },
+            }
+          ),
+        {
+          wrapper: (props) => wrapper({ children: props.children }),
+          initialProps: {
+            id: hookId1,
+            reference: ref1,
+          },
+        }
+      );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
-      // Get call
+      // Subscription call
       expect(mock.mock.calls[0][0].id).toBe(id1);
 
-      // Subscription call
-      expect(mock.mock.calls[1][0].id).toBe(id1);
+      rerender({ id: hookId2, reference: ref2 });
 
-      rerender({ reference: ref2 });
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
-      await waitForNextUpdate();
-
-      expect(mock.mock.calls[2][0].id).toBe(id2);
+      expect(mock.mock.calls[1][0].id).toBe(id2);
 
       // Trigger an  unmount - this should unsubscribe the listener.
       unmount();
 
-      expect(mock).toHaveBeenCalledTimes(3);
+      expect(mock).toHaveBeenCalledTimes(2);
     });
   });
 
