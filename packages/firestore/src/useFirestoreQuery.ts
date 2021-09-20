@@ -199,7 +199,7 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
   );
 }
 
-export function useFirestoreQueryData<T = DocumentData, R = T>(
+export function useFirestoreQueryData<T = DocumentData, R = T[]>(
   key: QueryKey,
   query: QueryType<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions,
