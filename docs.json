@@ -1,0 +1,11 @@
+{
+  "name": "React Query Firebase",
+  "twitter": "invertaseio",
+  "theme": "#FF4154",
+  "sidebar": [
+    ["Getting Started", "/"],
+    ["Authentication", "/auth"],
+    ["Firestore", "/firestore"],
+    ["Functions", "/functions"]
+  ]
+}
