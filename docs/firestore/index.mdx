@@ -3,13 +3,48 @@ title: Firestore | React Query Firebase
 description: Hooks for integrating with Firestore.
 ---
 
-## General concepts
+The `@react-query-firebase/firestore` package provides hooks querying, subscribing and modifying collections and documents.
 
-- Query Keys refetch data, not query/ref changes.
-- If using prefetching, useXData is better since data can be serialized.
-- Typescript
+## Installation
 
-## Queries
+```bash
+npm i --save @react-query-firebase/firestore
+```
 
-## Documents
+## Usage
+
+To use the hooks, export your `Firestore` instance, e.g:
+
+```js
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+
+const firebase = initializeApp({
+  ...
+});
+
+export const firestore = getFirestore(firebase);
+```
+
+**Important**:
+
+When providing [Query](https://firebase.google.com/docs/reference/js/firestore_.query) 
+and [Document Reference](https://firebase.google.com/docs/reference/js/firestore_.documentreference) instances
+to the hooks, it is important to remember the hooks will only refetch the data when the Query Key changes and not
+the instance. If your data is shared across your application, ensure you provide a unique key for each instance type.
+
+## Hooks
+
+**Query Hooks:**
+
+- [`useFirestoreQuery`](/firestore/query#useFirestoreQuery)
+- [`useFirestoreQueryData`](/firestore/query#useFirestoreQueryData)
+- [`useFirestoreDocument`](/firestore/doc#useFirestoreDocument)
+- [`useFirestoreDocumentData`](/firestore/doc#useFirestoreDocumentData)
+
+**Mutation Hooks:**
+
+- [`useFirestoreCollectionMutation`](/firestore/mutation#useFirestoreCollectionMutation)
+- [`useFirestoreDocumentMutation`](/firestore/mutation#useFirestoreDocumentMutation)
+
 

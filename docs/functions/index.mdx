@@ -1,0 +1,219 @@
+---
+title: Functions | React Query Firebase
+description: Hooks for integrating with Functions.
+---
+
+The `@react-query-firebase/functions` package provides hooks for calling [Callable Cloud Functions](https://firebase.google.com/docs/functions).
+
+## Installation
+
+```bash
+npm i --save @react-query-firebase/functions
+```
+
+## Usage
+
+The package provides hooks for calling data as a query (`useFunctionsQuery`) or as a mutation (`useFunctionsMutation`).
+
+To use the hooks, export your `Functions` instance, e.g:
+
+```js
+import { initializeApp } from 'firebase/app';
+import { getFunctions } from 'firebase/functions';
+
+const firebase = initializeApp({
+  ...
+});
+
+export const functions = getFunctions(firebase);
+```
+
+### `useFunctionsQuery`
+
+The `useFunctionsQuery` hook can be used to query a Callable Cloud Function using the [`useQuery`](https://react-query.tanstack.com/reference/useQuery) hook.
+
+```jsx
+import React from "react";
+import { useFunctionsQuery } from "@react-query-firebase/functions";
+import { functions } from "../firebase";
+
+function Product({ id }: { id: string }) {
+  const query = useFunctionsQuery(["product", id], functions, "product", {
+    id,
+  });
+
+  if (query.isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  return <h1>{query.data.name}</h1>;
+}
+```
+
+#### TypeScript
+
+TypeScript users can provide a custom `RequestData` and `ResponseData` types:
+
+```ts
+type RequestData = {
+  // Product ID
+  id: string;
+};
+
+type ResponseData = Product;
+
+useFunctionsQuery<RequestData, ResponseData>(...);
+```
+
+### `HttpsCallableOptions`
+
+The hook also accepts an [`HttpsCallableOptions`(https://firebase.google.com/docs/reference/js/functions.httpscallableoptions)] argument, which
+can be provided to the request:
+
+```js
+useFunctionsQuery(
+  ["product", id],
+  functions,
+  "product",
+  {
+    id,
+  },
+  {
+    timeout: 5000,
+  }
+);
+```
+
+### `UseQueryOptions`
+
+Since the library wraps React Query, we can also hook onto the `useQuery` hook options.
+For example, to select a specific part of the data and be notified on success:
+
+```tsx
+// Specify the data returned is instead a string
+const query = useFunctionsQuery<RequestData, ResponseData, string>(
+  ["product", id],
+  functions,
+  "product",
+  {
+    id,
+  },
+  undefined,
+  {
+    // Select the `name` property fron the response.
+    select(product: ResponseData): string {
+      return product.name;
+    },
+    // Log on success.
+    onSuccess(name: string): void {
+      console.log("Got product: ", name);
+    },
+  }
+);
+
+if (query.isSuccess) {
+  return <div>Product Name: {query.data}</div>;
+}
+```
+
+### `useFunctionsMutation`
+
+The `useFunctionsMutation` hooks can be used to query a Callable Cloud Function on demand using the [`useMutation`](https://react-query.tanstack.com/reference/useMutation) hook.
+
+```jsx
+import React from "react";
+import { useFunctionsQuery } from "@react-query-firebase/functions";
+import { functions } from "../firebase";
+
+function Product({ id }: { id: string }) {
+  const mutation = useFunctionsMutation(functions, "product");
+
+  return (
+    <button
+      disabled={mutation.isLoading}
+      onClick={() => {
+        mutation.mutate({
+          id,
+          name: "A new product name!",
+        });
+      }}
+    >
+      Edit Product
+    </button>
+  );
+}
+```
+
+#### TypeScript
+
+TypeScript users can provide a custom `RequestData` and `ResponseData` types:
+
+```ts
+type RequestData = {
+  // Product ID
+  id: string;
+  // New product name
+  name: string;
+};
+
+type ResponseData = Product;
+
+useFunctionsMutation<RequestData, ResponseData>(...);
+```
+
+### `HttpsCallableOptions`
+
+The hook also accepts an [`HttpsCallableOptions`(https://firebase.google.com/docs/reference/js/functions.httpscallableoptions)] argument, which
+can be provided to the request:
+
+```js
+useFunctionsMutation(functions, "product", {
+  timeout: 5000,
+});
+```
+
+### `UseMutationOptions`
+
+Since the library wraps React Query, we can also hook onto the `useMutation` hook options.
+For example, to be notified on success or error:
+
+```tsx
+type RequestData = {
+  // Product ID
+  id: string;
+  // New product name
+  name: string;
+};
+
+type ResponseData = Product;
+
+function Product({ id }: { id: string }) {
+  const mutation = useFunctionsMutation<RequestData, ResponseData>(
+    functions,
+    "product",
+    undefined,
+    {
+      onSuccess(product) {
+        console.log("Product updated! ", product);
+      },
+      onError(error) {
+        console.error("Something went wrong updating the product! ", error);
+      },
+    }
+  );
+
+  return (
+    <button
+      disabled={mutation.isLoading}
+      onClick={() => {
+        mutation.mutate({
+          id,
+          name: "A new product name!",
+        });
+      }}
+    >
+      Edit Product
+    </button>
+  );
+}
+```

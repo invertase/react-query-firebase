@@ -3,3 +3,39 @@ title: React Query Firebase
 description: A set of React Query hooks integrating with Firebase.
 ---
 
+React Query Firebase provides a set of easy to use hooks for common Firebase usecases. Each hook wraps around React Query, allowing to easily integrate the hooks into a new or existing project, whilst enjoying the powerful benefits React Query offers.
+
+The exported hooks do not manage Query Keys or Firebase instances, giving you full control over integration.
+
+## Installation
+
+If you haven't done so already, install `react`, `react-query` & `firebase` (v9):
+
+```bash
+npm i --save react react-query firebase
+```
+
+Before using this library, ensure React Query is setup on your project by following the [Installation](https://react-query.tanstack.com/quick-start) guide.
+
+Next install one of the React Query Firebase packages, e.g:
+
+```bash
+npm i --save @react-query-firebase/firestore
+```
+
+## Core Concepts
+
+Each package behaves with the same core concepts which are important to understand:
+
+- Query based hooks are fetched according to your [React Query Defaults](https://react-query.tanstack.com/guides/important-defaults) or per-hook configuration (as expected!).
+- Query based hooks will refetch on [Query Key](https://react-query.tanstack.com/guides/query-keys) changes, not on Firebase argument changes. For example, if you change a Firestore Query argument you should also update the Query Key to ensure the hook is re-fetched.
+
+## Packages
+
+- [`@react-query-firebase/auth`](/auth)
+- [`@react-query-firebase/firestore`](/firestore)
+- [`@react-query-firebase/functions`](/functions)
+
+## Miscellaneous
+
+- React Query Firebase vs [ReactFire](https://github.com/FirebaseExtended/reactfire).

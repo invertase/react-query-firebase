@@ -1,0 +1,139 @@
+---
+title: Authentication | React Query Firebase
+description: Hooks for integrating with Authentication.
+---
+
+The `@react-query-firebase/auth` package provides hooks subscribing to a users state.
+
+## Installation
+
+```bash
+npm i --save @react-query-firebase/auth
+```
+
+## Usage
+
+The package provides hooks for subscribing to a users state.
+
+To use the hooks, export your `Auth` instance, e.g:
+
+```js
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/functions';
+
+const firebase = initializeApp({
+  ...
+});
+
+export const auth = getAuth(firebase);
+```
+
+### `useAuthUser`
+
+The `useAuthUser` hook can be used to query a users authentication state using the [`useQuery`](https://react-query.tanstack.com/reference/useQuery) hook.
+
+```jsx
+import React from "react";
+import { useAuthUser } from "@react-query-firebase/auth";
+import { functions } from "../firebase";
+
+function Profile() {
+  const query = useAuthUser("user", auth);
+
+  if (query.isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  const user = query.data;
+
+  if (!user) {
+    return <div>Please sign-in!</div>;
+  }
+
+  return <div>Welcome {user.displayName}</div>;
+}
+```
+
+### `UseQueryOptions`
+
+Since the library wraps React Query, we can also hook onto the `useQuery` hook options.
+For example, to be notified on success:
+
+```tsx
+const query = useAuthUser("user", auth, {
+  onSuccess(user: User | null) {
+    if (user) {
+      console.log(user.displayName);
+    } else {
+      console.log('No user signed in.');
+    }
+  }
+});
+```
+
+### `useAuthIdToken`
+
+The `useAuthIdToken` hooks can be used to query the users ID Token using the [`useQuery`](https://react-query.tanstack.com/reference/useQuery) hook.
+The query returns an [`IdTokenResult`](https://firebase.google.com/docs/reference/js/auth.idtokenresult) if the user is authenticated.
+
+```jsx
+import React from "react";
+import { useAuthIdToken } from "@react-query-firebase/auth";
+import { functions } from "../firebase";
+
+function Profile() {
+  const query = useAuthIdToken(["user", "token"], auth);
+
+  if (query.isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!query.data) {
+    return <div>User not authenticated</div>;
+  }
+
+  return <div>ID Token: {query.data.token}</div>;
+}
+```
+
+### Force Refresh
+
+To force a refresh regardless of token expiration, provide the `forceRefresh` option:
+
+```js
+useAuthIdToken(["user", "token"], auth, {
+  forceRefresh: true,
+});
+```
+
+### `UseQueryOptions`
+
+Since the library wraps React Query, we can also hook onto the `useQuery` hook options.
+For example, to only the token:
+
+```jsx
+import React from "react";
+import { useAuthIdToken } from "@react-query-firebase/auth";
+import { functions } from "../firebase";
+
+function Profile() {
+  const query = useAuthIdToken<string | null>(["user", "token"], auth, {
+    forceRefresh: true,
+  }, {
+    // Return the token if the result is returned.
+    select(result: IdTokenResult | null): string | null {
+      return result?.token;
+    }
+  });
+
+  if (query.isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!query.data) {
+    return <div>User not authenticated</div>;
+  }
+
+  return <div>ID Token: {query.data}</div>;
+}
+```
