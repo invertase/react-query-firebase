@@ -1,9 +1,9 @@
-# @react-query-firebase/firestore
+# @react-query-firebase/auth
 
-React Query Firebase hooks for Firestore.
+React Query Firebase hooks for Authentication.
 
-- [Documentation](#)
-- [GitHub Repository](#)
+- [Documentation](https://docs.page/invertase/react-query-firebase)
+- [GitHub Repository](https://github.com/invertase/react-query-firebase)
 
 ## License
 

@@ -11,6 +11,7 @@ import {
   User,
   Unsubscribe,
   IdTokenResult,
+  onAuthStateChanged,
 } from "firebase/auth";
 
 export function useAuthUser(
@@ -36,14 +37,18 @@ export function useAuthUser(
       let resolved = false;
 
       return new Promise<User | null>((resolve, reject) => {
-        unsubscribe.current = onIdTokenChanged(auth, (user) => {
-          if (!resolved) {
-            resolved = true;
-            resolve(user);
-          } else {
-            client.setQueryData<User | null>(key, user);
-          }
-        }, reject);
+        unsubscribe.current = onAuthStateChanged(
+          auth,
+          (user) => {
+            if (!resolved) {
+              resolved = true;
+              resolve(user);
+            } else {
+              client.setQueryData<User | null>(key, user);
+            }
+          },
+          reject
+        );
       });
     },
   });
@@ -78,20 +83,24 @@ export function useAuthIdToken(
       let resolved = false;
 
       return new Promise<IdTokenResult | null>((resolve, reject) => {
-        unsubscribe.current = onIdTokenChanged(auth, async (user) => {
-          let token: IdTokenResult | null = null;
+        unsubscribe.current = onIdTokenChanged(
+          auth,
+          async (user) => {
+            let token: IdTokenResult | null = null;
 
-          if (user) {
-            token = await user.getIdTokenResult(options?.forceRefresh);
-          }
+            if (user) {
+              token = await user.getIdTokenResult(options?.forceRefresh);
+            }
 
-          if (!resolved) {
-            resolved = true;
-            resolve(token);
-          } else {
-            client.setQueryData<IdTokenResult | null>(key, token);
-          }
-        }, reject);
+            if (!resolved) {
+              resolved = true;
+              resolve(token);
+            } else {
+              client.setQueryData<IdTokenResult | null>(key, token);
+            }
+          },
+          reject
+        );
       });
     },
   });

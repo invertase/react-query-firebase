@@ -1,7 +1,13 @@
 import React from "react";
 import { QueryClient, QueryClientProvider, setLogger } from "react-query";
 import { initializeApp } from "firebase/app";
-import { getAuth, connectAuthEmulator } from "firebase/auth";
+import {
+  getAuth,
+  connectAuthEmulator,
+  Auth,
+  UserCredential,
+  createUserWithEmailAndPassword,
+} from "firebase/auth";
 
 setLogger({
   log: console.log,
@@ -16,15 +22,20 @@ export function genId(): string {
   return Math.random().toString(32);
 }
 
+export async function signIn(auth: Auth): Promise<UserCredential> {
+  return createUserWithEmailAndPassword(auth, `${genId()}@foo.com`, "123456");
+}
+
 export function init() {
   const firebase = initializeApp({
     projectId: "test-project",
+    apiKey: "foo",
   });
 
   const auth = getAuth(firebase);
 
   if (!emulatorsStarted) {
-    connectAuthEmulator(auth, "localhost:9099");
+    connectAuthEmulator(auth, "http://localhost:9099");
     emulatorsStarted = true;
   }
 
