@@ -14,10 +14,10 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 
-export function useAuthUser(
+export function useAuthUser<R = User | null>(
   key: QueryKey,
   auth: Auth,
-  useQueryOptions?: Omit<UseQueryOptions<User | null, Error>, "queryFn">
+  useQueryOptions?: Omit<UseQueryOptions<User | null, Error, R>, "queryFn">
 ) {
   const client = useQueryClient();
   const unsubscribe = useRef<Unsubscribe>();
@@ -28,7 +28,7 @@ export function useAuthUser(
     };
   }, []);
 
-  return useQuery<User | null, Error>({
+  return useQuery<User | null, Error, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
     async queryFn() {
@@ -54,14 +54,14 @@ export function useAuthUser(
   });
 }
 
-export function useAuthIdToken(
+export function useAuthIdToken<R = IdTokenResult | null>(
   key: QueryKey,
   auth: Auth,
   options?: {
     forceRefresh?: boolean;
   },
   useQueryOptions?: Omit<
-    UseQueryOptions<IdTokenResult | null, Error>,
+    UseQueryOptions<IdTokenResult | null, Error, R>,
     "queryFn"
   >
 ) {
@@ -74,7 +74,7 @@ export function useAuthIdToken(
     };
   }, []);
 
-  return useQuery<IdTokenResult | null, Error>({
+  return useQuery<IdTokenResult | null, Error, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
     async queryFn() {
