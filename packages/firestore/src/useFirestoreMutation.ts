@@ -21,8 +21,11 @@ import {
   deleteDoc,
   DocumentData,
   DocumentReference,
+  Firestore,
+  runTransaction,
   setDoc,
   SetOptions,
+  Transaction,
   WithFieldValue,
 } from "firebase/firestore";
 import { useMutation, UseMutationOptions } from "react-query";
@@ -62,4 +65,14 @@ export function useFirestoreDocumentDeletion(
     () => deleteDoc(ref),
     useMutationOptions
   );
+}
+
+export function useFirestoreTransaction<T = void>(
+  firestore: Firestore,
+  updateFunction: (tsx: Transaction) => Promise<T>,
+  useMutationOptions?: UseMutationOptions<T, Error, void>
+) {
+  return useMutation<T, Error, void>(() => {
+    return runTransaction<T>(firestore, updateFunction);
+  }, useMutationOptions);
 }
