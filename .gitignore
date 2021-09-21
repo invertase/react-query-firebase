@@ -7,3 +7,6 @@ ui-debug.log
 dist
 *.log
 .idea
+
+functions/lib/**/*.js
+functions/lib/**/*.js.map

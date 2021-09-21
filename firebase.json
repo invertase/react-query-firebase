@@ -6,8 +6,14 @@
     "auth": {
       "port": 9099
     },
+    "functions": {
+      "port": 5001
+    },
     "ui": {
       "enabled": true
     }
+  },
+  "functions": {
+    "predeploy": "npm --prefix \"$RESOURCE_DIR\" run build"
   }
 }
