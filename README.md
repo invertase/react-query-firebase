@@ -1,13 +1,22 @@
-# React Query Firebase
+<h1 align="center">React Query Firebase</h1>
+<p align="center">
+  <span>A set of <a href="https://react-query.tanstack.com">React Query</a> hooks integrating with <a href="https://firebase.google.com/">Firebase</a>.</span>
+</p>
+<p align="center">
+  <span><a href="https://docs.page/invertase/react-query-firebase">📚 Documentation</a> &bull; <a href="/LICENSE.md">License</a></span>
+</p>
+<br />
 
-A set of [React Query](https://react-query.tanstack.com/) hooks integrating with [Firebase](https://firebase.google.com/).
+React Query Firebase provides a set of easy to use hooks for common Firebase usecases. Each hook wraps around React Query, allowing to easily integrate the hooks into a new or existing project, whilst enjoying the powerful benefits React Query offers.
+
+The exported hooks do not manage Query Keys or Firebase instances, giving you full control over integration.
 
 ## Installation
 
-If you haven't done so already, install `react` and `react-query`:
+If you haven't done so already, install `react`, `react-query` & `firebase` (v9):
 
 ```bash
-npm i --save react react-query
+npm i --save react react-query firebase
 ```
 
 Before using this library, ensure React Query is setup on your project by following the [Installation](https://react-query.tanstack.com/quick-start) guide.
@@ -22,55 +31,11 @@ See below for a full list of available packages.
 
 ## Packages
 
+- `@react-query-firebase/auth`
 - `@react-query-firebase/firestore`
-  - useFirestoreQuery
-  - useFirestoreQueryData
-  - useFirestoreDocument
-  - useFirestoreDocumentData
-  - useFirestoreCollectionMutation
-  - useFirestoreDocumentMutation
+- `@react-query-firebase/functions`
 
-## Examples
-
-The library provides a set of un-opinionated hooks to integrate with Firebase. You provide the
-Firebase instances, the library does the rest.
-
-### Subscribe to a collection
-
-```jsx
-import React from "react";
-import { collection, doc } from "firebase/firestore";
-import { useFirestoreQuery } from "@react-query-firebase/firestore";
-
-// Exported Firestore instance.
-import firestore from "./config/firebase";
-
-function App() {
-  const products = useFirestoreQuery(
-    "products",
-    collection(firestore, "products"),
-    {
-      subscribe: true,
-    }
-  );
-
-  if (products.isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (products.isError) {
-    return <div>{products.data.error}</div>;
-  }
-
-  return (
-    <ul>
-      {products.data.map((product) => (
-        <li key={product.id}>{product.name}</li>
-      ))}
-    </ul>
-  );
-}
-```
+> [View the documentation for full usage and examples.](https://docs.page/invertase/react-query-firebase)
 
 ## License
 
