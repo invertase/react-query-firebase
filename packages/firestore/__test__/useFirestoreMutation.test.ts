@@ -29,6 +29,7 @@ import {
 import { genId, init } from "./helpers";
 import {
   useFirestoreCollectionMutation,
+  useFirestoreDocumentDeletion,
   useFirestoreDocumentMutation,
 } from "../src";
 
@@ -110,6 +111,31 @@ describe("useFirestoreMutation", () => {
       const snapshot = await getDoc(ref);
 
       expect(snapshot.data()).toEqual({ foo: "baz", bar: "baz" });
+    });
+  });
+
+  describe("useFirestoreDocumentDeletion", () => {
+    it("deletes a document", async () => {
+      const ref = doc(firestore, genId(), genId());
+
+      await setDoc(ref, { foo: "baz" });
+
+      const { result, waitFor } = renderHook(
+        () => useFirestoreDocumentDeletion(ref),
+        {
+          wrapper,
+        }
+      );
+
+      act(() => {
+        result.current.mutate();
+      });
+
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+
+      const snapshot = await getDoc(ref);
+
+      expect(snapshot.exists).toBe(false);
     });
   });
 });

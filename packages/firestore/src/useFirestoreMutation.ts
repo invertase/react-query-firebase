@@ -18,6 +18,7 @@
 import {
   addDoc,
   CollectionReference,
+  deleteDoc,
   DocumentData,
   DocumentReference,
   setDoc,
@@ -51,4 +52,14 @@ export function useFirestoreDocumentMutation<T = DocumentData>(
 
     return setDoc<T>(ref, data);
   }, useMutationOptions);
+}
+
+export function useFirestoreDocumentDeletion(
+  ref: DocumentReference,
+  useMutationOptions?: UseMutationOptions<void, Error, void>
+) {
+  return useMutation<void, Error, void>(
+    () => deleteDoc(ref),
+    useMutationOptions
+  );
 }
