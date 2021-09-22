@@ -20,6 +20,7 @@ import { renderHook, act } from "@testing-library/react-hooks";
 import {
   collection,
   doc,
+  DocumentReference,
   Firestore,
   getDoc,
   getDocs,
@@ -29,7 +30,9 @@ import {
 import { genId, init } from "./helpers";
 import {
   useFirestoreCollectionMutation,
+  useFirestoreDocumentDeletion,
   useFirestoreDocumentMutation,
+  useFirestoreTransaction,
 } from "../src";
 
 describe("useFirestoreMutation", () => {
@@ -110,6 +113,76 @@ describe("useFirestoreMutation", () => {
       const snapshot = await getDoc(ref);
 
       expect(snapshot.data()).toEqual({ foo: "baz", bar: "baz" });
+    });
+  });
+
+  describe("useFirestoreDocumentDeletion", () => {
+    it("deletes a document", async () => {
+      const ref = doc(firestore, genId(), genId());
+
+      await setDoc(ref, { foo: "baz" });
+
+      const { result, waitFor } = renderHook(
+        () => useFirestoreDocumentDeletion(ref),
+        {
+          wrapper,
+        }
+      );
+
+      act(() => {
+        result.current.mutate();
+      });
+
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+
+      const snapshot = await getDoc(ref);
+
+      expect(snapshot.exists).toBe(false);
+    });
+  });
+
+  describe("useFirestoreTransaction", () => {
+    it("transacts a document", async () => {
+      const ref = doc(firestore, genId(), genId()) as DocumentReference<Doc>;
+
+      type Doc = {
+        foo: number;
+      };
+
+      await setDoc(ref, { foo: 10 });
+      const mock = jest.fn();
+      const { result, waitFor } = renderHook(
+        () =>
+          useFirestoreTransaction<number>(
+            firestore,
+            async (tsx) => {
+              const doc = await tsx.get(ref);
+              const newValue = doc.data().foo + 1;
+              tsx.update(ref, { foo: newValue });
+              return newValue;
+            },
+            {
+              onSuccess(value) {
+                mock(value);
+              },
+            }
+          ),
+        {
+          wrapper,
+        }
+      );
+
+      act(() => {
+        result.current.mutate();
+      });
+
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+
+      const snapshot = await getDoc(ref);
+
+      expect(snapshot.data().foo).toBe(11);
+      expect(mock.mock.calls[0][0]).toBe(11);
+      expect(mock.mock.calls.length).toBe(1);
     });
   });
 });

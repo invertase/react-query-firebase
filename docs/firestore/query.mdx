@@ -134,35 +134,71 @@ Both the `useFunctionsQuery` and `useFirestoreQueryData` hooks are similar in th
 and both provide tight integration with the [`useQuery`](https://react-query.tanstack.com/reference/useQuery) hook
 allowing you to perform some useful operations on the query data.
 
-### Find a single document in a collection
+### Cached vs Server documents
 
-If you need to query a collection to find a single document and don't know the ID, you can provide
-a query which provides query constraints and limits the data to a single record. However instead of 
+When querying a collection without subscribing to changes, you
+can specify a `source` parameter to indiciate whether the
+cached or server documents should be queried:
+
+```js
+useFirestoreQuery("products", query, {
+  subscribe: false, // or undefined
+  source: "cache", // or 'server'
+});
+```
+
+If no value is provided, a combination of cache and server will be used (as default).
+
+### Include metadata changes
+
+If querying a collection by subscribing, you can also subscribe to metadata changes on
+documents.
+
+```js
+useFirestoreQuery("products", query, {
+  subscribe: true,
+  includeMetadataChanges: true,
+});
+```
+
+### Get a single document in a collection
+
+If you need to query a collection to find a single document but don't know the ID, you can provide
+a query which provides query constraints and limits the data to a single record. However instead of
 returning an array, you can instead override the return type of the query to return a single document or object:
 
 ```ts
 /* This example also works with the useFirestoreQueryData hook */
 
 // Users can only have a single active subscription
-const findActiveSubscription = query(collection(firestore, 'subscriptions'), where('status', '==', 'active'), limit(1));
+const findActiveSubscription = query(
+  collection(firestore, "subscriptions"),
+  where("status", "==", "active"),
+  limit(1)
+);
 
 type Subscription = {
   id: string;
-  status: 'active' | 'disabled';
+  status: "active" | "disabled";
 };
 
 // Override the return type generic:
-const subscription = useFirestoreQuery<Subscription, Subscription | null>("subscription", findActiveSubscription, {
-  subscribe: true,
-}, {
-  select(snapshot: QuerySnapshot<Subscription>): Subscription | null {
-    if (snapshot.empty) {
-      return null;
-    }
-
-    return snapshot.docs[0];
+const subscription = useFirestoreQuery<Subscription, Subscription | null>(
+  "subscription",
+  findActiveSubscription,
+  {
+    subscribe: true,
   },
-});
+  {
+    select(snapshot: QuerySnapshot<Subscription>): Subscription | null {
+      if (snapshot.empty) {
+        return null;
+      }
+
+      return snapshot.docs[0];
+    },
+  }
+);
 
 // On query success, easily check whether there is an active subscription:
 const subscription: Subscription | null = query.data;

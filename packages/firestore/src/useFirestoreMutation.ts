@@ -18,10 +18,14 @@
 import {
   addDoc,
   CollectionReference,
+  deleteDoc,
   DocumentData,
   DocumentReference,
+  Firestore,
+  runTransaction,
   setDoc,
   SetOptions,
+  Transaction,
   WithFieldValue,
 } from "firebase/firestore";
 import { useMutation, UseMutationOptions } from "react-query";
@@ -50,5 +54,25 @@ export function useFirestoreDocumentMutation<T = DocumentData>(
     }
 
     return setDoc<T>(ref, data);
+  }, useMutationOptions);
+}
+
+export function useFirestoreDocumentDeletion(
+  ref: DocumentReference,
+  useMutationOptions?: UseMutationOptions<void, Error, void>
+) {
+  return useMutation<void, Error, void>(
+    () => deleteDoc(ref),
+    useMutationOptions
+  );
+}
+
+export function useFirestoreTransaction<T = void>(
+  firestore: Firestore,
+  updateFunction: (tsx: Transaction) => Promise<T>,
+  useMutationOptions?: UseMutationOptions<T, Error, void>
+) {
+  return useMutation<T, Error, void>(() => {
+    return runTransaction<T>(firestore, updateFunction);
   }, useMutationOptions);
 }
