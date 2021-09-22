@@ -37,8 +37,9 @@ import React from "react";
 import { useFunctionsQuery } from "@react-query-firebase/functions";
 import { functions } from "../firebase";
 
-function Product({ id }: { id: string }) {
-  const query = useFunctionsQuery(["product", id], functions, "product", {
+function Product({ id }: { id: number }) {
+  // Functions has a deployed `getProduct` callable function
+  const query = useFunctionsQuery(["product", id], functions, "getProduct", {
     id,
   });
 
@@ -57,15 +58,28 @@ TypeScript users can provide a custom `RequestData` and `ResponseData` types:
 ```ts
 type RequestData = {
   // Product ID
-  id: string;
+  id: number;
 };
 
 type ResponseData = Product;
 
-useFunctionsQuery<RequestData, ResponseData>(...);
+const productId = 123;
+
+const query = useFunctionsQuery<RequestData, ResponseData>(
+  ["product", productId],
+  functions,
+  "getProduct",
+  {
+    id: productId,
+  }
+);
+
+if (query.isSuccess) {
+  console.log(query.data); // Product
+}
 ```
 
-### `HttpsCallableOptions`
+#### `HttpsCallableOptions`
 
 The hook also accepts an [`HttpsCallableOptions`(https://firebase.google.com/docs/reference/js/functions.httpscallableoptions)] argument, which
 can be provided to the request:
@@ -84,7 +98,7 @@ useFunctionsQuery(
 );
 ```
 
-### `UseQueryOptions`
+#### `UseQueryOptions`
 
 Since the library wraps React Query, we can also hook onto the `useQuery` hook options.
 For example, to select a specific part of the data and be notified on success:
@@ -161,7 +175,7 @@ type ResponseData = Product;
 useFunctionsMutation<RequestData, ResponseData>(...);
 ```
 
-### `HttpsCallableOptions`
+#### `HttpsCallableOptions`
 
 The hook also accepts an [`HttpsCallableOptions`(https://firebase.google.com/docs/reference/js/functions.httpscallableoptions)] argument, which
 can be provided to the request:
@@ -172,7 +186,7 @@ useFunctionsMutation(functions, "product", {
 });
 ```
 
-### `UseMutationOptions`
+#### `UseMutationOptions`
 
 Since the library wraps React Query, we can also hook onto the `useMutation` hook options.
 For example, to be notified on success or error:

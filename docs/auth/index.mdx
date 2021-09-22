@@ -35,7 +35,7 @@ The `useAuthUser` hook can be used to query a users authentication state using t
 ```jsx
 import React from "react";
 import { useAuthUser } from "@react-query-firebase/auth";
-import { functions } from "../firebase";
+import { auth } from "../firebase";
 
 function Profile() {
   const query = useAuthUser("user", auth);
@@ -54,23 +54,6 @@ function Profile() {
 }
 ```
 
-### `UseQueryOptions`
-
-Since the library wraps React Query, we can also hook onto the `useQuery` hook options.
-For example, to be notified on success:
-
-```tsx
-const query = useAuthUser("user", auth, {
-  onSuccess(user: User | null) {
-    if (user) {
-      console.log(user.displayName);
-    } else {
-      console.log('No user signed in.');
-    }
-  }
-});
-```
-
 ### `useAuthIdToken`
 
 The `useAuthIdToken` hooks can be used to query the users ID Token using the [`useQuery`](https://react-query.tanstack.com/reference/useQuery) hook.
@@ -79,7 +62,7 @@ The query returns an [`IdTokenResult`](https://firebase.google.com/docs/referenc
 ```jsx
 import React from "react";
 import { useAuthIdToken } from "@react-query-firebase/auth";
-import { functions } from "../firebase";
+import { auth } from "../firebase";
 
 function Profile() {
   const query = useAuthIdToken(["user", "token"], auth);
@@ -96,7 +79,8 @@ function Profile() {
 }
 ```
 
-### Force Refresh
+
+#### Force Refresh
 
 To force a refresh regardless of token expiration, provide the `forceRefresh` option:
 
@@ -106,15 +90,31 @@ useAuthIdToken(["user", "token"], auth, {
 });
 ```
 
+
 ### `UseQueryOptions`
 
-Since the library wraps React Query, we can also hook onto the `useQuery` hook options.
-For example, to only the token:
+Since the hooks wrap onto the [`useQuery`](https://react-query.tanstack.com/reference/useQuery) hook, we can also pass options. 
+For example, to be notified on success:
+
+```tsx
+const query = useAuthUser("user", auth, {
+  onSuccess(user: User | null) {
+    if (user) {
+      console.log(user.displayName);
+    } else {
+      console.log('No user signed in.');
+    }
+  }
+});
+```
+
+When using the `useAuthIdToken` hook, using the hook options also allows us to return just the 
+users ID Token rather than the whole result if required:
 
 ```jsx
 import React from "react";
 import { useAuthIdToken } from "@react-query-firebase/auth";
-import { functions } from "../firebase";
+import { auth } from "../firebase";
 
 function Profile() {
   const query = useAuthIdToken<string | null>(["user", "token"], auth, {
