@@ -25,6 +25,7 @@ import {
   getDoc,
   getDocs,
   setDoc,
+  writeBatch,
 } from "firebase/firestore";
 
 import { genId, init } from "./helpers";
@@ -33,6 +34,7 @@ import {
   useFirestoreDocumentDeletion,
   useFirestoreDocumentMutation,
   useFirestoreTransaction,
+  useFirestoreWriteBatch,
 } from "../src";
 
 describe("useFirestoreMutation", () => {
@@ -183,6 +185,49 @@ describe("useFirestoreMutation", () => {
       expect(snapshot.data().foo).toBe(11);
       expect(mock.mock.calls[0][0]).toBe(11);
       expect(mock.mock.calls.length).toBe(1);
+    });
+  });
+
+  describe("useFirestoreWriteBatch", () => {
+    it("commits documents", async () => {
+      const ref1 = doc(firestore, genId(), genId());
+      const ref2 = doc(firestore, genId(), genId());
+      const ref3 = doc(firestore, genId(), genId());
+
+      await Promise.all([
+        setDoc(ref1, { foo: "bar" }),
+        setDoc(ref2, { foo: "bar" }),
+        setDoc(ref3, { foo: "bar" }),
+      ]);
+
+      const batch = writeBatch(firestore);
+
+      batch.set(ref1, { foo: "baz" });
+      batch.update(ref2, { bar: "baz" });
+      batch.delete(ref3);
+
+      const { result, waitFor } = renderHook(
+        () => useFirestoreWriteBatch(batch),
+        {
+          wrapper,
+        }
+      );
+
+      act(() => {
+        result.current.mutate();
+      });
+
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+
+      const snapshot1 = await getDoc(ref1);
+      expect(snapshot1.data().foo).toEqual("baz");
+
+      const snapshot2 = await getDoc(ref2);
+      expect(snapshot2.data().foo).toEqual("bar");
+      expect(snapshot2.data().bar).toEqual("baz");
+
+      const snapshot3 = await getDoc(ref3);
+      expect(snapshot3.exists).toBe(false);
     });
   });
 });

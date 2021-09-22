@@ -27,6 +27,7 @@ import {
   SetOptions,
   Transaction,
   WithFieldValue,
+  WriteBatch,
 } from "firebase/firestore";
 import { useMutation, UseMutationOptions } from "react-query";
 
@@ -74,5 +75,14 @@ export function useFirestoreTransaction<T = void>(
 ) {
   return useMutation<T, Error, void>(() => {
     return runTransaction<T>(firestore, updateFunction);
+  }, useMutationOptions);
+}
+
+export function useFirestoreWriteBatch(
+  batch: WriteBatch,
+  useMutationOptions?: UseMutationOptions<void, Error, void>
+) {
+  return useMutation<void, Error, void>(() => {
+    return batch.commit();
   }, useMutationOptions);
 }
