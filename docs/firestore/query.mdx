@@ -21,8 +21,11 @@ import { firestore } from "../firebase";
 
 function Products() {
   const limitTo = 10;
+
+  // Define a query using the Firebase SDK
   const products = query(collection(firestore, "products"), limit(limitTo));
 
+  // Provide the query to the hook
   const query = useFirestoreQuery(["products", { limitTo }], products, {
     subscribe: true,
   });
@@ -203,3 +206,33 @@ const subscription = useFirestoreQuery<Subscription, Subscription | null>(
 // On query success, easily check whether there is an active subscription:
 const subscription: Subscription | null = query.data;
 ```
+
+### Named Queries
+
+If you have the ability to [data bundles](https://firebase.googleblog.com/2021/04/firestore-supports-data-bundles.html),
+you can instead provide a named query to the hook. The hook will first download the query and then cache it based on the
+Firestore instance and bundle name.
+
+```js
+import { loadBundle } from 'firebase/firestore';
+import { firestore } from '../firebase';
+
+// Somewhere in your app...
+const resp = await fetch('/bundles/products');
+
+// Load in the bundle (named "products")
+await loadBundle(firestore, bundle.body)
+```
+
+Elsewhere in your application, provide a named query function instead of a query:
+
+```jsx
+import { useFirestoreQuery, namedQuery } from '@react-query-firebase/firestore';
+import { firestore } from '../firebase';
+
+function Products() {
+  const query = useFirestoreQuery(['products'], firestore, namedQuery(firestore, 'products'));
+}
+```
+
+If the bundle does not exist an error will be thrown.

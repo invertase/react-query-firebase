@@ -1,0 +1,167 @@
+---
+title: Mutation | Firestore | React Query Firebase
+description: Hooks for integrating with Firestore.
+---
+
+The library provides a set of hooks for mutating Firestore documents and collections.
+
+## `useFirestoreCollectionMutation`
+
+Adds a new document to a collection.
+
+```jsx
+import { collection, DocumentReference } from "firebase/firestore";
+import { useFirestoreCollectionMutation } from "@react-query-firebase/firestore";
+import { firestore } from "../firebase";
+
+// Define the collection reference
+const ref = collection(firestore, "products");
+
+// Create the hook with optional UseMutationOptions
+const mutation = useFirestoreCollectionMutation(ref, {
+  onSuccess(docRef: DocumentReference) {
+    console.log("New document added!", docRef);
+  },
+});
+
+// Trigger the mutation
+mutation.mutate({
+  name: "New product",
+});
+```
+
+## `useFirestoreDocumentMutation`
+
+Sets a document's data, optionally merging.
+
+```jsx
+import { collection, DocumentReference } from "firebase/firestore";
+import { useFirestoreCollectionMutation } from "@react-query-firebase/firestore";
+import { firestore } from "../firebase";
+
+// Define the document reference
+const ref = doc(firestore, "products", "123");
+
+// Create the hook
+const mutation = useFirestoreDocumentMutation(ref);
+
+// Trigger the mutation
+mutation.mutate({
+  name: "Updated product",
+});
+```
+
+Alternativly you can merge data using Firestores [`SetOptions`](https://firebase.google.com/docs/reference/js/firestore_.md#setoptions),
+along with any other mutation options:
+
+```jsx
+const mutation = useFirestoreDocumentMutation(
+  ref,
+  {
+    merge: true,
+  },
+  {
+    onSuccess() {
+      console.log("Document updated!");
+    },
+  }
+);
+
+// Trigger the mutation - price will be merged.
+mutation.mutate({
+  price: 10,
+});
+```
+
+## `useFirestoreDocumentDeletion`
+
+Deletes a document from Firestore.
+
+```jsx
+import { doc } from "firebase/firestore";
+import { useFirestoreCollectionMutation } from "@react-query-firebase/firestore";
+import { firestore } from "../firebase";
+
+// Define the document reference
+const ref = doc(firestore, "products", "123");
+
+// Create the hook with optional UseMutationOptions
+const mutation = useFirestoreDocumentDeletion(ref, {
+  onSuccess() {
+    console.log("Document deleted");
+  },
+});
+
+// Trigger the mutation to delete the document
+mutation.mutate();
+```
+
+## `useFirestoreTransaction`
+
+Triggers a [Firestore Transaction](https://firebase.google.com/docs/firestore/manage-data/transactions).
+
+```jsx
+import { doc } from "firebase/firestore";
+import { useFirestoreCollectionMutation } from "@react-query-firebase/firestore";
+import { firestore } from "../firebase";
+
+// Define the document reference
+const ref = doc(firestore, "products", "123");
+
+// Create the hook with optional UseMutationOptions
+const mutation = useFirestoreTransaction(
+  ref,
+  async (transaction) => {
+    const doc = await tsx.get(ref);
+
+    if (!doc.exists) {
+      throw new Error("Document does not exist!");
+    }
+
+    // Increment the price by 10
+    const newPrice = doc.data().price + 10;
+
+    tsx.update(ref, {
+      price: newPrice,
+    });
+
+    return newPrice;
+  },
+  {
+    onSuccess(newPrice) {
+      console.log("Price updated to: ", newPrice);
+    },
+  }
+);
+
+// Trigger the mutation to run the transaction.
+mutation.mutate();
+```
+
+## `useFirestoreWriteBatch`
+
+Triggers a [Firestore batched write](https://firebase.google.com/docs/firestore/manage-data/transactions#batched-writes).
+
+```jsx
+import { writeBatch, doc } from "firebase/firestore";
+import { useFirestoreCollectionMutation } from "@react-query-firebase/firestore";
+import { firestore } from "../firebase";
+
+// Define the WriteBatch instance
+const batch = writeBatch(firestore);
+
+// Create the hook with optional UseMutationOptions
+const mutation = useFirestoreWriteBatch(batch, {
+  onSuccess() {
+    console.log("Write batch completed.");
+  },
+});
+
+// Update the batch in your application flow
+batch.delete(doc(firestore, "products", "567"));
+batch.set(...);
+batch.update(...);
+
+// Trigger the mutation to commit the batch of writes.
+mutation.mutate();
+```

@@ -51,8 +51,6 @@ function Product({ id }: { id: number }) {
 }
 ```
 
-#### TypeScript
-
 TypeScript users can provide a custom `RequestData` and `ResponseData` types:
 
 ```ts
@@ -79,9 +77,7 @@ if (query.isSuccess) {
 }
 ```
 
-#### `HttpsCallableOptions`
-
-The hook also accepts an [`HttpsCallableOptions`(https://firebase.google.com/docs/reference/js/functions.httpscallableoptions)] argument, which
+The hook also accepts an [`HttpsCallableOptions`](https://firebase.google.com/docs/reference/js/functions.httpscallableoptions)] argument, which
 can be provided to the request:
 
 ```js
@@ -97,8 +93,6 @@ useFunctionsQuery(
   }
 );
 ```
-
-#### `UseQueryOptions`
 
 Since the library wraps React Query, we can also hook onto the `useQuery` hook options.
 For example, to select a specific part of the data and be notified on success:
@@ -139,7 +133,7 @@ import React from "react";
 import { useFunctionsQuery } from "@react-query-firebase/functions";
 import { functions } from "../firebase";
 
-function Product({ id }: { id: string }) {
+function Product({ id }: { id: number }) {
   const mutation = useFunctionsMutation(functions, "product");
 
   return (
@@ -158,26 +152,28 @@ function Product({ id }: { id: string }) {
 }
 ```
 
-#### TypeScript
-
 TypeScript users can provide a custom `RequestData` and `ResponseData` types:
 
 ```ts
 type RequestData = {
   // Product ID
-  id: string;
+  id: number;
   // New product name
   name: string;
 };
 
 type ResponseData = Product;
 
-useFunctionsMutation<RequestData, ResponseData>(...);
+const mutation useFunctionsMutation<RequestData, ResponseData>(...);
+
+// The mutate/mutateAsync calls are now typed.
+mutation.mutate({
+  id: 123,
+  name: "A new product name!",
+})
 ```
 
-#### `HttpsCallableOptions`
-
-The hook also accepts an [`HttpsCallableOptions`(https://firebase.google.com/docs/reference/js/functions.httpscallableoptions)] argument, which
+The hook also accepts an [`HttpsCallableOptions`](https://firebase.google.com/docs/reference/js/functions.httpscallableoptions)] argument, which
 can be provided to the request:
 
 ```js
@@ -186,15 +182,13 @@ useFunctionsMutation(functions, "product", {
 });
 ```
 
-#### `UseMutationOptions`
-
-Since the library wraps React Query, we can also hook onto the `useMutation` hook options.
+Since the library wraps React Query, we can also hook onto the [`useMutation`](https://react-query.tanstack.com/reference/useMutation) hook options.
 For example, to be notified on success or error:
 
 ```tsx
 type RequestData = {
   // Product ID
-  id: string;
+  id: number;
   // New product name
   name: string;
 };
@@ -207,7 +201,7 @@ function Product({ id }: { id: string }) {
     "product",
     undefined,
     {
-      onSuccess(product) {
+      onSuccess(product: ResponseData) {
         console.log("Product updated! ", product);
       },
       onError(error) {
