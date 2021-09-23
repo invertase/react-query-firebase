@@ -12,11 +12,11 @@ import {
 } from "firebase/database";
 import { useEffect, useRef } from "react";
 
-export function useDatabaseSnapshot(
+export function useDatabaseSnapshot<R = DataSnapshot>(
   key: QueryKey,
   ref: DatabaseReference,
   options: { subscribe?: boolean } = {},
-  useQueryOptions?: Omit<UseQueryOptions<DataSnapshot, Error, void>, "queryFn">
+  useQueryOptions?: Omit<UseQueryOptions<DataSnapshot, Error, R>, "queryFn">
 ) {
   const client = useQueryClient();
   const unsubscribe = useRef<Unsubscribe>();
@@ -27,20 +27,11 @@ export function useDatabaseSnapshot(
     };
   }, []);
 
-  return useQuery<DataSnapshot, Error, void>({
+  return useQuery<DataSnapshot, Error, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
     async queryFn() {
       unsubscribe.current?.();
-
-      if (!options.subscribe) {
-        return new Promise<DataSnapshot>((resolve, reject) => {
-          onValue(ref, resolve, reject, {
-            onlyOnce: true,
-          });
-        });
-      }
-
       let resolved = false;
 
       return new Promise<DataSnapshot>((resolve, reject) => {
@@ -54,22 +45,25 @@ export function useDatabaseSnapshot(
               client.setQueryData<DataSnapshot>(key, snapshot);
             }
           },
-          reject
+          reject,
+          {
+            onlyOnce: !options.subscribe,
+          }
         );
       });
     },
   });
 }
 
-function parseDataSnapshot(snapshot: DataSnapshot): any {
+function parseDataSnapshot(snapshot: DataSnapshot, toArray: boolean): any {
   if (!snapshot.exists()) {
     return null;
   }
 
-  if (snapshot.hasChildren()) {
+  if (snapshot.hasChildren() && toArray) {
     const array: unknown[] = [];
     snapshot.forEach((snapshot) => {
-      array.push(parseDataSnapshot(snapshot));
+      array.push(parseDataSnapshot(snapshot, toArray));
     });
     return array;
   }
@@ -77,11 +71,16 @@ function parseDataSnapshot(snapshot: DataSnapshot): any {
   return snapshot.val();
 }
 
-export function useDatabaseValue<T = unknown>(
+export type UseDatabaseValueOptions = {
+  subscribe?: boolean;
+  toArray?: boolean;
+};
+
+export function useDatabaseValue<T = unknown, R = T>(
   key: QueryKey,
   ref: DatabaseReference,
-  options: { subscribe?: boolean } = {},
-  useQueryOptions?: Omit<UseQueryOptions<T, Error>, "queryFn">
+  options: UseDatabaseValueOptions = {},
+  useQueryOptions?: Omit<UseQueryOptions<T | null, Error, R>, "queryFn">
 ) {
   const client = useQueryClient();
   const unsubscribe = useRef<Unsubscribe>();
@@ -92,25 +91,11 @@ export function useDatabaseValue<T = unknown>(
     };
   }, []);
 
-  return useQuery<T, Error>({
+  return useQuery<T | null, Error, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
     async queryFn() {
       unsubscribe.current?.();
-
-      if (!options.subscribe) {
-        return new Promise<T>((resolve, reject) => {
-          onValue(
-            ref,
-            (snapshot) => resolve(parseDataSnapshot(snapshot)),
-            reject,
-            {
-              onlyOnce: true,
-            }
-          );
-        });
-      }
-
       let resolved = false;
 
       return new Promise<T>((resolve, reject) => {
@@ -119,12 +104,18 @@ export function useDatabaseValue<T = unknown>(
           (snapshot) => {
             if (!resolved) {
               resolved = true;
-              return resolve(parseDataSnapshot(snapshot));
+              return resolve(parseDataSnapshot(snapshot, !!options?.toArray));
             } else {
-              client.setQueryData<T>(key, parseDataSnapshot(snapshot));
+              client.setQueryData<T>(
+                key,
+                parseDataSnapshot(snapshot, !!options?.toArray)
+              );
             }
           },
-          reject
+          reject,
+          {
+            onlyOnce: !options.subscribe,
+          }
         );
       });
     },

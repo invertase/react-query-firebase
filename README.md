@@ -32,6 +32,7 @@ See below for a full list of available packages.
 ## Packages
 
 - `@react-query-firebase/auth`
+- `@react-query-firebase/database`
 - `@react-query-firebase/firestore`
 - `@react-query-firebase/functions`
 

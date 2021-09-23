@@ -1,8 +1,7 @@
 import React from "react";
 import { QueryClient, QueryClientProvider, setLogger } from "react-query";
 import { initializeApp } from "firebase/app";
-import { getFunctions } from "@firebase/functions";
-import { connectFunctionsEmulator } from "firebase/functions";
+import { connectDatabaseEmulator, getDatabase } from "firebase/database";
 
 setLogger({
   log: console.log,
@@ -14,7 +13,7 @@ setLogger({
 let emulatorsStarted = false;
 
 export function genId(): string {
-  return Math.random().toString(32);
+  return Math.random().toString(32).replace(".", "");
 }
 
 export function init() {
@@ -23,10 +22,10 @@ export function init() {
     apiKey: "foo",
   });
 
-  const functions = getFunctions(firebase);
+  const database = getDatabase(firebase);
 
   if (!emulatorsStarted) {
-    connectFunctionsEmulator(functions, "localhost", 5001);
+    connectDatabaseEmulator(database, "localhost", 9000);
     emulatorsStarted = true;
   }
 
@@ -44,5 +43,5 @@ export function init() {
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
 
-  return { client, wrapper, firebase, functions };
+  return { client, wrapper, firebase, database };
 }

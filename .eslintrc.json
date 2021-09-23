@@ -4,10 +4,7 @@
     "es2021": true,
     "node": true
   },
-  "extends": [
-    "plugin:react/recommended",
-    "google"
-  ],
+  "extends": ["plugin:react/recommended", "google"],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaFeatures": {
@@ -21,15 +18,10 @@
       "version": "latest"
     }
   },
-  "plugins": [
-    "react",
-    "@typescript-eslint"
-  ],
+  "plugins": ["react", "@typescript-eslint"],
   "rules": {
-    "object-curly-spacing": [
-      "error",
-      "always"
-    ],
+    "quote-props": 0,
+    "object-curly-spacing": ["error", "always"],
     "operator-linebreak": "off",
     "indent": [
       "error",
@@ -38,14 +30,8 @@
         "SwitchCase": 1
       }
     ],
-    "max-len": [
-      "error",
-      120
-    ],
-    "quotes": [
-      "error",
-      "double"
-    ],
+    "max-len": ["error", 120],
+    "quotes": ["error", "double"],
     "comma-dangle": "off",
     "require-jsdoc": "off",
     "valid-jsdoc": "off"
