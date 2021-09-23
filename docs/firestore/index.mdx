@@ -1,11 +1,12 @@
 ---
-title: Firestore | React Query Firebase
+title: Cloud Firestore | React Query Firebase
 description: Hooks for integrating with Firestore.
 ---
 
-# Firestore
+# Cloud Firestore
 
-The `@react-query-firebase/firestore` package provides hooks querying, subscribing and modifying collections and documents.
+The `@react-query-firebase/firestore` package provides hooks querying,
+subscribing and modifying collections and documents on Cloud Firestore.
 
 ## Installation
 
@@ -30,7 +31,7 @@ export const firestore = getFirestore(firebase);
 
 **Important**:
 
-When providing [Query](https://firebase.google.com/docs/reference/js/firestore_.query) 
+When providing [Query](https://firebase.google.com/docs/reference/js/firestore_.query)
 and [Document Reference](https://firebase.google.com/docs/reference/js/firestore_.documentreference) instances
 to the hooks, it is important to remember the hooks will only refetch the data when the Query Key changes and not
 the instance. If your data is shared across your application, ensure you provide a unique key for each instance type.
@@ -51,5 +52,3 @@ the instance. If your data is shared across your application, ensure you provide
 - [`useFirestoreDocumentDeletion`](/firestore/mutation#useFirestoreDocumentDeletion)
 - [`useFirestoreTransaction`](/firestore/mutation#useFirestoreTransaction)
 - [`useFirestoreWriteBatch`](/firestore/mutation#useFirestoreWriteBatch)
-
-

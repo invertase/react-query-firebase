@@ -62,11 +62,11 @@ type Product = {
 
 // Option 1: Override the generic DocumentData type
 const products = collection(firestore, "products");
-const query = useFunctionsQuery<Product>("products", products);
+const query = useFirestoreQuery<Product>("products", products);
 
 // Option 2: Provide a converter
 const products = collection(firestore, "products").withConverter<Product>(...);
-const query = useFunctionsQuery("products", products);
+const query = useFirestoreQuery("products", products);
 
 // The query data on success will be successfully typed:
 const snapshot: QuerySnapshot<Product> = query.data;
@@ -121,11 +121,11 @@ type Product = {
 
 // Option 1: Override the generic DocumentData type
 const products = collection(firestore, "products");
-const query = useFunctionsQueryData<Product>("products", products);
+const query = useFirestoreQueryData<Product>("products", products);
 
 // Option 2: Provide a converter
 const products = collection(firestore, "products").withConverter<Product>(...);
-const query = useFunctionsQueryData("products", products);
+const query = useFirestoreQueryData("products", products);
 
 // The query data on success will be successfully typed:
 const data: Product[] = query.data;
@@ -133,7 +133,7 @@ const data: Product[] = query.data;
 
 ## Advanced Usage
 
-Both the `useFunctionsQuery` and `useFirestoreQueryData` hooks are similar in the arguments they accept,
+Both the `useFirestoreQuery` and `useFirestoreQueryData` hooks are similar in the arguments they accept,
 and both provide tight integration with the [`useQuery`](https://react-query.tanstack.com/reference/useQuery) hook
 allowing you to perform some useful operations on the query data.
 

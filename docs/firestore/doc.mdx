@@ -1,0 +1,190 @@
+---
+title: Documents | Firestore | React Query Firebase
+description: Hooks for integrating with Firestore.
+---
+
+## `useFirestoreDocument`
+
+The `useFirestoreDocument` hook is used to get or subscribe to a Firestore document using the [`useQuery`](https://react-query.tanstack.com/reference/useQuery) hook.
+
+```jsx
+import React from "react";
+import { useFirestoreDocument } from "@react-query-firebase/firestore";
+import { doc, DocumentSnapshot, DocumentData } from "firebase/firestore";
+import { firestore } from "../firebase";
+
+function Product({ id }: { id: string }) {
+  const ref = doc(firestore, "products", id);
+
+  // Provide the ref to the hook
+  const query = useFirestoreDocument(["products", id], ref, {
+    subscribe: true,
+  });
+
+  if (query.isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  const snapshot: DocumentSnapshot<DocumentData> = query.data;
+
+  return <div>Product: {snapshot.data().name}</div>;
+}
+```
+
+By default the query will peform a one-time get request, however by providing the `subscribe` flag,
+we can subscribe to any changes on our query in realtime.
+
+> If you just need the data of the returned query (rather than the `DocumentSnapshot`), use [`useFirestoreDocumentData`](#useFirestoreDocumentData) instead.
+
+### TypeScript
+
+By default the query returns a [`DocumentSnapshot`](https://firebase.google.com/docs/reference/js/firestore_.documentsnapshot) whose
+data type is `DocumentData`. If you know the data type of your query documents, either provide the reference from
+a typed collection instance or directly to the hook.
+
+```tsx
+type Product = {
+  name: string;
+};
+
+// Option 1: Override the generic DocumentData type on the hook
+const ref = doc(firestore, "products", id);
+const query = useFirestoreDocument<Product>(["products", id], products);
+
+// Option 2: Provide a converter
+const productsCollection = collection(firestore, "products").withConverter<Product>(...);
+const ref = doc(productsCollection, id);
+const query = useFirestoreDocument("products", products);
+
+// The query data on success will be successfully typed:
+const snapshot: DocumentSnapshot<Product> = query.data;
+```
+
+## `useFirestoreDocumentData`
+
+The `useFirestoreDocumentData` hook is used to get or subscribe to a Firestore document using the [`useQuery`](https://react-query.tanstack.com/reference/useQuery) hook,
+however instead the document data is returned rather than a `DocumentSnapshot`.
+
+```jsx
+import React from "react";
+import { useFirestoreDocumentData } from "@react-query-firebase/firestore";
+import { doc, DocumentSnapshot, DocumentData } from "firebase/firestore";
+import { firestore } from "../firebase";
+
+function Product({ id }: { id: string }) {
+  const ref = doc(firestore, "products", id);
+
+  // Provide the ref to the hook
+  const query = useFirestoreDocumentData(["products", id], ref, {
+    subscribe: true,
+  });
+
+  if (query.isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  const data: DocumentData = query.data;
+
+  return <div>Product: {data.name}</div>;
+}
+```
+
+### TypeScript
+
+By default the query returns a type of [`DocumentData`](https://firebase.google.com/docs/reference/js/firestore_.documentdata).
+If you know the data type of your query document, either provide the collection instance a converter or a type to the query:
+
+```tsx
+type Product = {
+  name: string;
+};
+
+// Option 1: Override the generic DocumentData type on the hook
+const ref = doc(firestore, "products", id);
+const query = useFirestoreDocumentData<Product>(["products", id], products);
+
+// Option 2: Provide a converter
+const productsCollection = collection(firestore, "products").withConverter<Product>(...);
+const ref = doc(productsCollection, id);
+const query = useFirestoreDocumentData("products", products);
+
+// The query data on success will be successfully typed:
+const data: Product = query.data;
+```
+
+## Advanced Usage
+
+Both the `useFirestoreDocument` and `useFirestoreDocumentData` hooks are similar in the arguments they accept,
+and both provide tight integration with the [`useQuery`](https://react-query.tanstack.com/reference/useQuery) hook
+allowing you to perform some useful operations on the query data.
+
+### Cached vs Server documents
+
+When querying a collection without subscribing to changes, you
+can specify a `source` parameter to indiciate whether the
+cached or server documents should be queried:
+
+```js
+useFirestoreDocument(["products", id], ref, {
+  subscribe: false, // or undefined
+  source: "cache", // or 'server'
+});
+```
+
+If no value is provided, a combination of cache and server will be used (as default).
+
+### Include metadata changes
+
+If querying a document by subscribing, you can also subscribe to metadata changes.
+
+```js
+useFirestoreQuery(["products", id], ref, {
+  subscribe: true,
+  includeMetadataChanges: true,
+});
+```
+
+### Modify the return type
+
+If you're only interested in a specific part of the data, you can use the `select` option of the [`useQuery`](https://react-query.tanstack.com/reference/useQuery) hook
+to only return specific parts of the data.
+
+```js
+const query = useFirestoreQuery(["products", id], ref, {
+  subscribe: true,
+}, {
+  select(data) {
+    return data?.name;
+  },
+});
+
+if (query.isSuccess) {
+  console.log('Product name: ', query.data);
+}
+```
+
+TypeScript users can also override the return type.
+
+```js
+type Product = {
+  name: string;
+  price: number;
+};
+
+const query = useFirestoreQuery<Product, string | null>(["products", id], ref, {
+  subscribe: true,
+}, {
+  select(data) {
+    if (data) {
+      return `£${data.price}`
+    }
+
+    return 'Sold out';
+  },
+});
+
+if (query.isSuccess) {
+  // query.data is a string
+  console.log('Product price: ', query.data);
+}
+```
