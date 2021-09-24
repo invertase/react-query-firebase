@@ -75,7 +75,7 @@ const query = useFunctionsQuery<RequestData, ResponseData>(
 );
 
 if (query.isSuccess) {
-  console.log(query.data); // Product
+  const product: Product = query.data;
 }
 ```
 
@@ -86,7 +86,7 @@ can be provided to the request:
 useFunctionsQuery(
   ["product", id],
   functions,
-  "product",
+  "getProduct",
   {
     id,
   },
@@ -104,7 +104,7 @@ For example, to select a specific part of the data and be notified on success:
 const query = useFunctionsQuery<RequestData, ResponseData, string>(
   ["product", id],
   functions,
-  "product",
+  "getProduct",
   {
     id,
   },
@@ -136,7 +136,7 @@ import { useFunctionsQuery } from "@react-query-firebase/functions";
 import { functions } from "../firebase";
 
 function Product({ id }: { id: number }) {
-  const mutation = useFunctionsMutation(functions, "product");
+  const mutation = useFunctionsMutation(functions, "updateProduct");
 
   return (
     <button
@@ -179,7 +179,7 @@ The hook also accepts an [`HttpsCallableOptions`](https://firebase.google.com/do
 can be provided to the request:
 
 ```js
-useFunctionsMutation(functions, "product", {
+useFunctionsMutation(functions, "updateProduct", {
   timeout: 5000,
 });
 ```
@@ -200,7 +200,7 @@ type ResponseData = Product;
 function Product({ id }: { id: string }) {
   const mutation = useFunctionsMutation<RequestData, ResponseData>(
     functions,
-    "product",
+    "updateProduct",
     undefined,
     {
       onSuccess(product: ResponseData) {

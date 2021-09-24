@@ -138,7 +138,7 @@ If no value is provided, a combination of cache and server will be used (as defa
 If querying a document by subscribing, you can also subscribe to metadata changes.
 
 ```js
-useFirestoreQuery(["products", id], ref, {
+useFirestoreDocument(["products", id], ref, {
   subscribe: true,
   includeMetadataChanges: true,
 });
@@ -150,7 +150,7 @@ If you're only interested in a specific part of the data, you can use the `selec
 to only return specific parts of the data.
 
 ```js
-const query = useFirestoreQuery(["products", id], ref, {
+const query = useFirestoreDocumentData(["products", id], ref, {
   subscribe: true,
 }, {
   select(data) {
@@ -171,10 +171,10 @@ type Product = {
   price: number;
 };
 
-const query = useFirestoreQuery<Product, string | null>(["products", id], ref, {
+const query = useFirestoreDocumentData<Product, string | null>(["products", id], ref, {
   subscribe: true,
 }, {
-  select(data) {
+  select(data: Product): string | null {
     if (data) {
       return `£${data.price}`
     }
