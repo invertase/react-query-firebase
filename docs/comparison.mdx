@@ -1,0 +1,48 @@
+---
+title: Comparing React Query Firebase
+description: How does React Query Firebase differ from other solutions?
+---
+
+There are plenty of other solutions to managing your Firebase data with React, such as [ReactFire](https://github.com/FirebaseExtended/reactfire) and
+[react-firebase-hooks](https://github.com/CSFrequency/react-firebase-hooks), so why was this one built?
+
+This library is backed by [React Query](https://react-query.tanstack.com/), rather than a custom built solution to manage state. React Query itself is an
+extreamly popular library that is used for remote data synchronization across your application. Out of the box React Query handles caching, background updates
+and stale data with zero configuration. It also provides tools such as DevTools, infininiate-loading APIs, data pre-fetching, mutation tools and much more.
+
+Using React Query allows us to focus on integration with Firebase, rather than trying to figure out all of these complex solutions. It also allows developers
+to integarte with existing React Query projects.
+
+Take a look at [`useQuery`](https://react-query.tanstack.com/reference/useQuery) and [`useMutation`](https://react-query.tanstack.com/reference/useMutation) to see how
+much functionality React Query provides.
+
+### Pre-fetching
+
+You can pre-fetch data on the server and have it available on the client using [SSR](https://react-query.tanstack.com/guides/ssr#_top), for example:
+
+On the server:
+
+```js
+import { dehydrate, QueryClient } from 'react-query';
+
+const queryClient = new QueryClient();
+
+// For example: `getPosts` calls the Firebase Admin SDK to get the posts
+await queryClient.prefetchQuery('posts', getPosts);
+
+// Load dehydratedState into your application
+const dehydratedState = dehydrate(queryClient)
+```
+
+On the client:
+
+```jsx
+import React from 'react';
+import { useFirestoreQueryData } from '@react-query-firebase/firestore';
+
+function Posts() {
+  const ref = collection(firebase, 'posts');
+  const query = useFirestoreQueryData('posts', ref);
+}
+```
+
