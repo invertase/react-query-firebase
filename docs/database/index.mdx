@@ -30,8 +30,8 @@ export const database = getDatabase(firebase);
 
 ## `useDatabaseSnapshot`
 
-The `useDatabaseSnapshot` hook can be used to query a database reference and return a [`DataSnapshot`](https://firebase.google.com/docs/reference/js/database.datasnapshot).
-The hook wraps around the [`useQuery`](https://react-query.tanstack.com/reference/useQuery) hook.
+The `useDatabaseSnapshot` hook can be used to query a database reference and return a [`DataSnapshot`](https://firebase.google.com/docs/reference/js/database.datasnapshot),
+whilst wrapping around the [`useQuery`](https://react-query.tanstack.com/reference/useQuery) hook.
 
 ```jsx
 import React from "react";
@@ -41,7 +41,7 @@ import { database } from "../firebase";
 
 function Profile({ id }: { id: string }) {
   const dbRef = ref(database, `users/${id}`);
-  const query = useDatabaseSnapshot("profile", dbRef);
+  const query = useDatabaseSnapshot(["user", id], dbRef);
 
   if (query.isLoading) {
     return <div>Loading...</div>;
@@ -61,7 +61,7 @@ To subscribe to value changes on the reference, pass the `subscribe` option to t
 
 ```js
 // Subscribe to value changes
-const query = useDatabaseSnapshot("profile", dbRef, {
+const query = useDatabaseSnapshot(["user", id], dbRef, {
   subscribe: true,
 });
 ```
@@ -70,7 +70,7 @@ You can also pass along [`useQuery`](https://react-query.tanstack.com/reference/
 to return a specific value from the snapshot and be notified on success:
 
 ```js
-const query = useDatabaseSnapshot("profile", dbRef, {
+const query = useDatabaseSnapshot[("user", id], dbRef, {
   select(snapshot) {
     if (snapshot.exists()) {
       return snapshot.val().displayName;
@@ -91,7 +91,7 @@ if (query.isSuccess) {
 TypeScript users can also provide a return type for the data response:
 
 ```ts
-const query = useDatabaseSnapshot<number | null>("profile", dbRef, {
+const query = useDatabaseSnapshot<number | null>(["user", id], dbRef, {
   select(snapshot) {
     if (snapshot.exists()) {
       return snapshot.val().age;
@@ -120,7 +120,7 @@ import { database } from "../firebase";
 
 function Profile({ id }: { id: string }) {
   const dbRef = ref(database, `users/${id}`);
-  const query = useDatabaseValue("profile", dbRef);
+  const query = useDatabaseValue(["user", id], dbRef);
 
   if (query.isLoading) {
     return <div>Loading...</div>;
@@ -138,7 +138,7 @@ To subscribe to value changes on the reference, pass the `subscribe` option to t
 
 ```js
 // Subscribe to value changes
-const query = useDatabaseValue("profile", dbRef, {
+const query = useDatabaseValue(["user", id], dbRef, {
   subscribe: true,
 });
 ```
@@ -147,7 +147,7 @@ You can also pass along [`useQuery`](https://react-query.tanstack.com/reference/
 to return a specific value from the snapshot and be notified on success:
 
 ```js
-const query = useDatabaseValue("profile", dbRef, undefined, {
+const query = useDatabaseValue(["user", id], dbRef, undefined, {
   select(data) {
     return data?.displayName;
   },
@@ -170,7 +170,7 @@ type Profile = {
 };
 
 const query = useDatabaseValue<Profile, number | null>(
-  "profile",
+  ["user", id],
   dbRef,
   undefined,
   {
@@ -209,7 +209,7 @@ We can now return the data as an array with ordered values by providing the `toA
 ```js
 const auditRef = ref(db, "users/123/audit");
 
-const query = useDatabaseValue(["users", "123", "audit"], dbRef, {
+const query = useDatabaseValue(["user", "123", "audit"], dbRef, {
   toArray: true,
 });
 
@@ -230,7 +230,7 @@ To set data in the database, use the `useDatabaseSetMutation` hook.
 The hook wraps around the [`useMutation`](https://react-query.tanstack.com/reference/useMutation) hook.
 
 ```js
-const dbRef = ref(database, `users/123`);
+const dbRef = ref(database, `user/123`);
 
 const mutation = useDatabaseSetMutation(dbRef);
 
@@ -250,14 +250,14 @@ const mutation = useDatabaseSetMutation(dbRef, {
 TypeScript users can override the generic `unknown` type on the setting of data:
 
 ```ts
-const dbRef = ref(database, `users/123`);
+const dbRef = ref(database, `user/123`);
 
 type User = {
   displayName: string;
   age: number;
 };
 
-const mutation = useDatabaseSetMutation(dbRef);
+const mutation = useDatabaseSetMutation<User>(dbRef);
 
 // Mutate call is now typed as `User`
 mutation.mutate({
@@ -272,7 +272,7 @@ To update data in the database, use the `useDatabaseUpdateMutation` hook.
 The hook wraps around the [`useMutation`](https://react-query.tanstack.com/reference/useMutation) hook.
 
 ```js
-const dbRef = ref(database, `users/123`);
+const dbRef = ref(database, `user/123`);
 
 // Example data set in the database
 await set(dbRef, {
@@ -293,14 +293,14 @@ mutation.mutate({
 TypeScript users can override the generic `Record<string, unknown>` type on the updating of data:
 
 ```ts
-const dbRef = ref(database, `users/${id}`);
+const dbRef = ref(database, `user/123`);
 
 type User = {
   displayName: string;
   "address/line1": string;
 };
 
-const mutation = useDatabaseSetMutation(dbRef);
+const mutation = useDatabaseUpdateMutation<User>(dbRef);
 
 // Mutate call is now typed as `User`
 mutation.mutate({
@@ -315,7 +315,7 @@ To remove data in the database, use the `useDatabaseRemoveMutation` hook.
 The hook wraps around the [`useMutation`](https://react-query.tanstack.com/reference/useMutation) hook.
 
 ```js
-const dbRef = ref(db, "users/567");
+const dbRef = ref(db, "user/567");
 
 const mutation = useDatabaseRemoveMutation(dbRef);
 
@@ -363,6 +363,8 @@ const transactionResult = await mutation.mutateAsync();
 // Option 2: Wait for success
 if (mutation.isSuccess) {
   const transactionResult = mutation.data;
+  console.log(transactionResult.committed);
+  console.log(transactionResult.snapshot);
 }
 ```
 
