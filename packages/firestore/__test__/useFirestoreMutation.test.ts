@@ -139,7 +139,7 @@ describe("useFirestoreMutation", () => {
 
       const snapshot = await getDoc(ref);
 
-      expect(snapshot.exists).toBe(false);
+      expect(snapshot.exists()).toBe(false);
     });
   });
 
@@ -227,7 +227,7 @@ describe("useFirestoreMutation", () => {
       expect(snapshot2.data().bar).toEqual("baz");
 
       const snapshot3 = await getDoc(ref3);
-      expect(snapshot3.exists).toBe(false);
+      expect(snapshot3.exists()).toBe(false);
     });
   });
 });
