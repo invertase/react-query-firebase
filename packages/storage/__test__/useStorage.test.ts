@@ -1,7 +1,13 @@
 import React from "react";
 import { QueryClient } from "react-query";
 import { renderHook } from "@testing-library/react-hooks";
-import { ref, Storage, updateMetadata, uploadString } from "firebase/storage";
+import {
+  ref,
+  updateMetadata,
+  uploadString,
+  FirebaseStorage,
+  uploadBytes,
+} from "firebase/storage";
 import { genId, init } from "./helpers";
 import {
   useStorageList,
@@ -9,10 +15,12 @@ import {
   useStorageObjectMetadata,
 } from "../src";
 
+const bytes = new Uint8Array([0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x2c, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x21]);
+
 describe("Storage", () => {
   let client: QueryClient;
   let wrapper: React.FC<{ children: React.ReactNode }>;
-  let storage: Storage;
+  let storage: FirebaseStorage;
 
   beforeEach(() => {
     const config = init();
@@ -26,11 +34,11 @@ describe("Storage", () => {
   });
 
   describe("useStorageObjectMetadata", () => {
-    test("it returns metadata", async () => {
+    test.only("it returns metadata", async () => {
       const hookId = genId();
-      const sRef = ref(storage, genId());
+      const sRef = ref(storage, "some-child");
 
-      await uploadString(sRef, "foo");
+      await uploadBytes(sRef, bytes);
       await updateMetadata(sRef, {
         customMetadata: {
           foo: "bar",

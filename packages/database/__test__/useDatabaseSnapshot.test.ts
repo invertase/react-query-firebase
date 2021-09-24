@@ -14,7 +14,7 @@ import {
 } from "@firebase/database";
 import { push } from "firebase/database";
 
-describe("Database", () => {
+xdescribe("Database", () => {
   let client: QueryClient;
   let wrapper: React.FC<{ children: React.ReactNode }>;
   let database: Database;

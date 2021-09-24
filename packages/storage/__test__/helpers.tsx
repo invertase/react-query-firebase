@@ -13,14 +13,14 @@ setLogger({
 let emulatorsStarted = false;
 
 export function genId(): string {
-  return Math.random().toString(32);
+  return Math.random().toString(32).replace(".", "");
 }
 
 export function init() {
   const firebase = initializeApp({
     projectId: "test-project",
     apiKey: "foo",
-    storageBucket: ""
+    storageBucket: "gs://default-bucket",
   });
 
   const storage = getStorage(firebase);

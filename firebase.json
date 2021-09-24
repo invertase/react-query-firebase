@@ -1,7 +1,13 @@
 {
+  "database": {
+    "rules": "database.rules.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
   "emulators": {
     "firestore": {
-      "port": 8081
+      "port": 8080
     },
     "auth": {
       "port": 9099

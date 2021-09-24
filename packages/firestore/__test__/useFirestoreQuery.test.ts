@@ -33,7 +33,7 @@ import bundles from "./bundles";
 import { genId, init } from "./helpers";
 import { useFirestoreQuery, useFirestoreQueryData, namedQuery } from "../src";
 
-describe("useFirestoreQuery", () => {
+xdescribe("useFirestoreQuery", () => {
   let wrapper: React.FC<{ children: React.ReactNode }>;
   let firestore: Firestore;
 

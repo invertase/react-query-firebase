@@ -6,7 +6,7 @@ import { genId, init } from "./helpers";
 import { useFunctionsMutation, useFunctionsQuery } from "../src";
 import { act } from "react-test-renderer";
 
-describe("Authentication", () => {
+xdescribe("Functions", () => {
   let client: QueryClient;
   let wrapper: React.FC<{ children: React.ReactNode }>;
   let functions: Functions;

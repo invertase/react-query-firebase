@@ -12,7 +12,7 @@ import { act } from "react-test-renderer";
 import { Database, ref, set } from "@firebase/database";
 import { get } from "firebase/database";
 
-describe("Database", () => {
+xdescribe("Database", () => {
   let client: QueryClient;
   let wrapper: React.FC<{ children: React.ReactNode }>;
   let database: Database;
