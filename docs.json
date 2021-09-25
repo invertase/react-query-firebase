@@ -6,6 +6,7 @@
     ["Getting Started", "/"],
     ["Authentication", "/auth"],
     ["Firestore", "/firestore"],
-    ["Functions", "/functions"]
+    ["Functions", "/functions"],
+    ["Examples", ["Auth Examples", ["Basic", "/examples/auth-basic"]]]
   ]
 }
