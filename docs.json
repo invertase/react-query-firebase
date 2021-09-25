@@ -7,6 +7,6 @@
     ["Authentication", "/auth"],
     ["Firestore", "/firestore"],
     ["Functions", "/functions"],
-    ["Examples", ["Auth Examples", ["Basic", "/examples/auth-basic"]]]
+    ["Examples", ["Auth: Basic Sign-in/out", "/examples/auth-basic"]]
   ]
 }
