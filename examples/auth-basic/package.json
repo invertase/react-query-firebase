@@ -1,0 +1,30 @@
+{
+  "private": true,
+  "scripts": {
+    "start": "rescripts start",
+    "build": "rescripts build",
+    "test": "rescripts test",
+    "eject": "rescripts eject"
+  },
+  "dependencies": {
+    "@react-query-firebase/auth": "^0.1.0",
+    "firebase": "^9.1.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-query": "^3.24.4",
+    "react-scripts": "^4.0.3"
+  },
+  "devDependencies": {
+    "@rescripts/cli": "^0.0.16",
+    "@rescripts/rescript-use-babel-config": "^0.0.12",
+    "@rescripts/rescript-use-eslint-config": "^0.0.11"
+  },
+  "browserslist": {
+    "production": [">0.2%", "not dead", "not op_mini all"],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
