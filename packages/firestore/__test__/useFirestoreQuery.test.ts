@@ -23,15 +23,23 @@ import {
   CollectionReference,
   DocumentSnapshot,
   Firestore,
+  limit,
   loadBundle,
   orderBy,
   query,
   QuerySnapshot,
+  startAfter,
 } from "firebase/firestore";
 
 import bundles from "./bundles";
 import { genId, init } from "./helpers";
-import { useFirestoreQuery, useFirestoreQueryData, namedQuery } from "../src";
+import {
+  useFirestoreQuery,
+  useFirestoreQueryData,
+  namedQuery,
+  useFirestoreInfiniteQuery,
+  useFirestoreInfiniteQueryData,
+} from "../src";
 
 describe("useFirestoreQuery", () => {
   let wrapper: React.FC<{ children: React.ReactNode }>;
@@ -364,6 +372,174 @@ describe("useFirestoreQuery", () => {
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
       expect(result.current.data!.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("useFirestoreInfiniteQuery", () => {
+    test("it returns a snapshot", async () => {
+      const hookId = genId();
+
+      const id = genId();
+      const ref = collection(firestore, id);
+
+      await Promise.all([
+        addDoc(ref, { foo: 1 }),
+        addDoc(ref, { foo: 2 }),
+        addDoc(ref, { foo: 3 }),
+        addDoc(ref, { foo: 4 }),
+        addDoc(ref, { foo: 5 }),
+      ]);
+
+      const q = query(ref, limit(2));
+
+      const mock = jest.fn();
+      const { result, waitFor } = renderHook(
+        () =>
+          useFirestoreInfiniteQuery(hookId, q, (snapshot) => {
+            mock(snapshot);
+            return undefined;
+          }),
+        { wrapper }
+      );
+
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+
+      expect(result.current.data.pages.length).toBe(1); // QuerySnapshot
+      expect(result.current.data.pages[0].docs.length).toBe(2);
+
+      act(() => {
+        result.current.fetchNextPage();
+      });
+
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+
+      const snapshot: QuerySnapshot = mock.mock.calls[0][0];
+      expect(snapshot.size).toBe(2);
+      expect(result.current.hasNextPage).toBe(false);
+    });
+
+    test("it loads the next page of snapshots", async () => {
+      const hookId = genId();
+
+      const id = genId();
+      const ref = collection(firestore, id);
+
+      await Promise.all([
+        addDoc(ref, { foo: 1 }),
+        addDoc(ref, { foo: 2 }),
+        addDoc(ref, { foo: 3 }),
+        addDoc(ref, { foo: 4 }),
+        addDoc(ref, { foo: 5 }),
+      ]);
+
+      const q = query(ref, limit(2));
+
+      const { result, waitFor } = renderHook(
+        () =>
+          useFirestoreInfiniteQuery(hookId, q, (snapshot) => {
+            return query(q, startAfter(snapshot.docs[1]));
+          }),
+        { wrapper }
+      );
+
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+
+      expect(result.current.data.pages.length).toBe(1); // QuerySnapshot
+      expect(result.current.data.pages[0].docs.length).toBe(2);
+
+      await act(async () => {
+        await result.current.fetchNextPage();
+      });
+
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+
+      expect(result.current.data.pages.length).toBe(2);
+      expect(result.current.data.pages[1].docs.length).toBe(2);
+    });
+  });
+
+  describe("useFirestoreInfiniteQueryData", () => {
+    test("it returns a data", async () => {
+      const hookId = genId();
+
+      const id = genId();
+      const ref = collection(firestore, id);
+
+      await Promise.all([
+        addDoc(ref, { foo: 1 }),
+        addDoc(ref, { foo: 2 }),
+        addDoc(ref, { foo: 3 }),
+        addDoc(ref, { foo: 4 }),
+        addDoc(ref, { foo: 5 }),
+      ]);
+
+      const q = query(ref, limit(2));
+
+      const mock = jest.fn();
+      const { result, waitFor } = renderHook(
+        () =>
+          useFirestoreInfiniteQueryData(hookId, q, (data) => {
+            mock(data);
+            return undefined;
+          }),
+        { wrapper }
+      );
+
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+
+      expect(result.current.data.pages.length).toBe(1);
+      expect(result.current.data.pages[0].length).toBe(2);
+      expect(result.current.data.pages[0]).toEqual([{ foo: 1 }, { foo: 2 }]);
+
+      act(() => {
+        result.current.fetchNextPage();
+      });
+
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+
+      const data: any = mock.mock.calls[0][0];
+      expect(data.length).toBe(2);
+      expect(result.current.hasNextPage).toBe(false);
+    });
+
+    test("it loads the next page of data", async () => {
+      const hookId = genId();
+
+      const id = genId();
+      const ref = collection(firestore, id);
+
+      await Promise.all([
+        addDoc(ref, { foo: 1 }),
+        addDoc(ref, { foo: 2 }),
+        addDoc(ref, { foo: 3 }),
+        addDoc(ref, { foo: 4 }),
+        addDoc(ref, { foo: 5 }),
+      ]);
+
+      const q = query(ref, limit(2), orderBy("foo"));
+
+      const { result, waitFor } = renderHook(
+        () =>
+          useFirestoreInfiniteQueryData(hookId, q, (data) => {
+            return query(q, startAfter(2));
+          }),
+        { wrapper }
+      );
+
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+
+      expect(result.current.data.pages[0].length).toBe(2);
+      expect(result.current.data.pages[0]).toEqual([{ foo: 1 }, { foo: 2 }]);
+
+      await act(async () => {
+        await result.current.fetchNextPage();
+      });
+
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+
+      expect(result.current.data.pages.length).toBe(2);
+      expect(result.current.data.pages[1].length).toBe(2);
+      expect(result.current.data.pages[1]).toEqual([{ foo: 3 }, { foo: 4 }]);
     });
   });
 });
