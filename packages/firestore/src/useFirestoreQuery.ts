@@ -39,11 +39,11 @@ import { GetSnapshotSource, UseFirestoreHookOptions } from "./index";
 
 const namedQueryCache: { [key: string]: Query } = {};
 
-type NamedQueryPromise<T> = () => Promise<Query<T> | null>;
+export type NamedQueryPromise<T> = () => Promise<Query<T> | null>;
 
-type NamedQuery<T> = Query<T> | NamedQueryPromise<T>;
+export type NamedQuery<T = DocumentData> = Query<T> | NamedQueryPromise<T>;
 
-type QueryType<T> = Query<T> | NamedQuery<T>;
+export type QueryType<T> = Query<T> | NamedQuery<T>;
 
 function isNamedQuery<T>(query: QueryType<T>): query is NamedQuery<T> {
   return typeof query === "function";
