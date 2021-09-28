@@ -2,7 +2,7 @@
 
 React Query Firebase hooks for Authentication.
 
-- [Documentation](https://docs.page/invertase/react-query-firebase)
+- [Documentation](https://react-query-firebase.invertase.dev/auth)
 - [GitHub Repository](https://github.com/invertase/react-query-firebase)
 
 ## License
