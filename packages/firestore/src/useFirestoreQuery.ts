@@ -21,6 +21,9 @@ import {
   useQueryClient,
   QueryKey,
   UseQueryOptions,
+  useInfiniteQuery,
+  QueryFunctionContext,
+  UseInfiniteQueryOptions,
 } from "react-query";
 import {
   getDocs,
@@ -215,6 +218,57 @@ export function useFirestoreQueryData<T = DocumentData, R = T[]>(
           reject
         );
       });
+    },
+  });
+}
+
+export function useFirestoreInfiniteQuery<T = DocumentData, R = T>(
+  key: QueryKey,
+  initialQuery: Query<T>,
+  getNextQuery: (snapshot: QuerySnapshot<T>) => Query<T> | undefined,
+  options?: {
+    source?: GetSnapshotSource;
+  },
+  useInfiniteQueryOptions?: Omit<
+    UseInfiniteQueryOptions,
+    "queryFn" | "getNextPageParam"
+  >
+) {
+  return useInfiniteQuery<QuerySnapshot<T>, Error, R>({
+    queryKey: useInfiniteQueryOptions?.queryKey ?? key,
+    async queryFn(ctx: QueryFunctionContext<QueryKey, Query<T>>) {
+      const query: Query<T> = ctx.pageParam ?? initialQuery;
+      return getSnapshot(query, options?.source);
+    },
+    getNextPageParam(snapshot) {
+      return getNextQuery(snapshot);
+    },
+  });
+}
+
+export function useFirestoreInfiniteQueryData<T = DocumentData, R = T>(
+  key: QueryKey,
+  initialQuery: Query<T>,
+  getNextQuery: (data: T[]) => Query<T> | undefined,
+  options?: {
+    source?: GetSnapshotSource;
+  } & SnapshotOptions,
+  useInfiniteQueryOptions?: Omit<
+    UseInfiniteQueryOptions,
+    "queryFn" | "getNextPageParam"
+  >
+) {
+  return useInfiniteQuery<T[], Error, R>({
+    queryKey: useInfiniteQueryOptions?.queryKey ?? key,
+    async queryFn(ctx: QueryFunctionContext<QueryKey, Query<T>>) {
+      const query: Query<T> = ctx.pageParam ?? initialQuery;
+      const snapshot = await getSnapshot(query, options?.source);
+      return snapshot.docs.map((d) =>
+        d.data({ serverTimestamps: options?.serverTimestamps })
+      );
+    },
+    getNextPageParam(data) {
+      return getNextQuery(data);
     },
   });
 }
