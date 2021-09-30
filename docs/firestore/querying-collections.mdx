@@ -1,0 +1,328 @@
+---
+title: Querying Collections | Firestore
+description: Query Firestore collections using React Query Firebase.
+---
+
+This page covers how to query Firestore collections, and various techniques
+to get the best results from the library.
+
+## Providing a query reference
+
+To start querying a collection, you need to provide the hooks with a Query reference
+created directly from the `firebase/firestore` library. The reference can be a simple
+collection pointer or a fully constrained query using the querying functionality
+provided by the Firestore SDK.
+
+For example, to create a query to a `products` collection:
+
+```js
+import { collection } from "firebase/firestore";
+import { firestore } from "./firebase";
+
+const ref = collection(firestore, "products");
+```
+
+Or if you wish to provide query constaints:
+
+```js
+import { collection, query, limit, where } from "firebase/firestore";
+import { firestore } from "./firebase";
+
+const ref = query(
+  collection(firestore, "products"),
+  limit(10),
+  where("state", "==", "active")
+);
+```
+
+## Basic example
+
+With your query reference in hand, you can get started.
+
+The library provides 2 main hooks for querying collections; `useFirestoreQuery` and `useFirestoreQueryData`.
+Each hook is similar however returns slightly different results (see the next section for more detail).
+Within a component, import and provide a hook a query key and the reference:
+
+```jsx
+import React from "react";
+import { useFirestoreQuery } from "@react-query-firebase/firestore";
+import {
+  query,
+  collection,
+  limit,
+  QuerySnapshot,
+  DocumentData,
+} from "firebase/firestore";
+import { firestore } from "../firebase";
+
+function Products() {
+  // Define a query reference using the Firebase SDK
+  const ref = query(collection(firestore, "products"));
+
+  // Provide the query to the hook
+  const query = useFirestoreQuery(["products"], ref);
+
+  if (query.isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  const snapshot = query.data;
+
+  return snapshot.docs.map((docSnapshot) => {
+    const data = docSnapshot.data();
+
+    return <div key={docSnapshot.id}>{data.name}</div>;
+  });
+}
+```
+
+The hook returns an instance of [`useQuery`](https://react-query.tanstack.com/reference/useQuery)
+containing a `QuerySnapshot`. By using the `useQuery` hook you're able to reactivly handle events
+such as loading, errors, success, refetching and lots more.
+
+> If this doesn't make much sense to you, please check out the React Query documentation before proceeding!
+
+## Realtime updates
+
+A powerful feature of Firestore is being able to easily subscribe to changes on the database. Luckily,
+the hooks handle this by providing a `subscribe` flag to the hook options:
+
+```js
+const query = useFirestoreQuery(["products"], ref, {
+  subscribe: true,
+});
+```
+
+If data is changed which touches your provided query, the hook update the data for
+the query.
+
+Anytime the Query Key changes, your component unmounts or fresh data is required
+the hook will automatically handle unsubscribing from new events.
+
+## Snapshots & Data
+
+When Firestore returns data from a query, it does not provide the raw document data - instead
+we are provided a `QuerySnapshot` containing an array of `DocumentSnapshot` classes. Although
+these classes provide useful functionality, we sometimes just want the data from the database
+for convinience.
+
+As shown above the `useFirestoreQuery` hook returns a `QuerySnapshot`, which requires
+developers to iterate over `DocumentSnapshot` instances and extract the data:
+
+```jsx
+const query = useFirestoreQuery(["products"], ref);
+
+const snapshot = query.data;
+
+return snapshot.docs.map((docSnapshot) => {
+  const data = docSnapshot.data();
+  return <div key={docSnapshot.id}>{data.name}</div>;
+});
+```
+
+If you are only interested in the data, the `useFirestoreQueryData` hook returns exactly this:
+
+```jsx
+const query = useFirestoreQueryData(["products"], ref);
+
+return query.data.map((document) => {
+  return <div key={document.id}>{document.name}</div>;
+});
+```
+
+## Query Keys & References
+
+A core concept of this library is the principles of React Query. React Query will
+refetch your data based on the default (or your own) configuration and when you update
+a Query Key.
+
+If your query changes, ensure your Query Key also changes to reflect this. For example,
+the following **will not work**:
+
+```jsx
+// This does not work!!!
+const [type, setType] = useState("swag");
+const ref = query(collection, where("type", "==", type));
+
+const query = useFirestoreQueryData(["products"], ref);
+
+<button onClick={() => setType("merch")}>Update product type</button>;
+```
+
+Only when React Query performs a refetch will your data change, making it unpredictable.
+
+To predicitably update your data, ensure your Query Key reflects your reference:
+
+```jsx
+// This will work!!
+const [type, setType] = useState("swag");
+const ref = query(collection, where("type", "==", type));
+
+// The Query Key now reflects the ref change
+const query = useFirestoreQueryData(["products", { type }], ref);
+
+<button onClick={() => setType("merch")}>Update product type</button>;
+```
+
+Alongside being predictable, this now benefits from being an individual query
+which is cached. To learn more, read about [Query Keys](TODO),.
+
+## Cached / Server Data
+
+When querying a collection without subscribing to changes, you
+can specify a `source` parameter to indiciate whether the
+cached or server documents should be queried:
+
+```js
+useFirestoreQuery("products", query, {
+  subscribe: false, // or undefined
+  source: "cache", // or 'server'
+});
+```
+
+If no value is provided, a combination of cache and server will be used (as default).
+
+### Include metadata changes
+
+If querying a collection by subscribing, you can also subscribe to metadata changes on
+documents.
+
+```js
+useFirestoreQuery("products", query, {
+  subscribe: true,
+  includeMetadataChanges: true,
+});
+```
+
+## Named Queries
+
+If you have the ability to [data bundles](https://firebase.googleblog.com/2021/04/firestore-supports-data-bundles.html),
+you can instead provide a named query to the hook. The hook will first download the query and then cache it based on the
+Firestore instance and bundle name.
+
+```js
+import { loadBundle } from "firebase/firestore";
+import { firestore } from "../firebase";
+
+// Somewhere in your app...
+const resp = await fetch("/bundles/products");
+
+// Load in the bundle (named "products")
+await loadBundle(firestore, bundle.body);
+```
+
+Elsewhere in your application, provide a named query function instead of a query:
+
+```jsx
+import { useFirestoreQuery, namedQuery } from "@react-query-firebase/firestore";
+import { firestore } from "../firebase";
+
+function Products() {
+  const query = useFirestoreQuery(
+    ["products"],
+    firestore,
+    namedQuery(firestore, "products")
+  );
+}
+```
+
+If the bundle does not exist an error will be thrown.
+
+## Paginated / Infinite Queries
+
+## Modifying data responses
+
+The library allows the passing of all React Query hook options to the library hooks.
+One such option is a `select` function which allows modification of data before it is
+returned from the query.
+
+This functionality is really powerful. For example if we wished to return an array of
+product IDs rather than the entire document:
+
+```js
+const query = useFirestoreQuery(
+  ["products"],
+  ref,
+  {
+    subscribe: true,
+  },
+  {
+    select(snapshot) {
+      return snapshot.docs.map((docSnapshot) => docSnapshot.id);
+    },
+  }
+);
+
+const data = query.data; // ['id1', 'id2', ...]
+```
+
+Another usecase is returning a single document from a query when you do not know the ID:
+
+```js
+/* This example also works with the useFirestoreQueryData hook */
+
+// Users can only have a single active subscription
+const findActiveSubscription = query(
+  collection(firestore, "subscriptions"),
+  where("status", "==", "active"),
+  limit(1)
+);
+
+// Override the return type generic:
+const query = useFirestoreQuery(
+  "subscription",
+  findActiveSubscription,
+  {
+    subscribe: true,
+  },
+  {
+    select(snapshot) {
+      if (snapshot.empty) {
+        return null;
+      }
+
+      return snapshot.docs[0];
+    },
+  }
+);
+
+// Data will contain a single document or null.
+if (query.data) {
+  console.log('Your subscription: ', query.data);
+}
+```
+
+## React Query options
+
+Each hook allows us to provide [`useQuery`](https://react-query.tanstack.com/reference/useQuery)
+options as the last argument, opening up the possibility to integrate the library easily across
+any application.
+
+For example, we can handle state (e.g. success and error) reactivly and also trigger functions within
+the same workflow:
+
+```jsx
+const query = useFirestoreQuery(
+  "subscription",
+  findActiveSubscription,
+  {
+    subscribe: true,
+  },
+  {
+    onSuccess(snapshot) {
+      toast.success('Data loaded successfully!')
+    },
+    onError(error) {
+      toast.error('Woops, something went wrong!');
+    },
+  }
+);
+
+if (query.isError) {
+  return <Error error={query.error} />;
+}
+
+if (query.isSuccess) {
+  return <ProductList data={query.data} />;
+}
+```

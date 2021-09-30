@@ -1,0 +1,82 @@
+---
+title: TypeScript | Firestore
+description: TypeScript usage with React Query Firebase.
+---
+
+The library comes with support for a full typesafe API. 
+
+## Response types
+
+When fetching a [query](TODO) or [document](TODO) the default return type from 
+Firestore is a [`QuerySnapshot`](TODO) or [`DocumentSnapshot`](TODO) whose data type is
+[`DocumentData`](TODO).
+
+For a type safe application, this is dangerous. There are 2 ways to ensure your data
+is returned type safe, either explicilty or inferred:
+
+### Explcit types
+
+Provide the type declaration to the hooks directly:
+
+```ts
+type Product = {
+  name: string;
+  price: number;
+}
+
+useFirestoreQuery<Product>(...); // QuerySnapshot<Product>
+useFirestoreQueryData<Product>(...); // Product[]
+
+useFirestoreDocument<Product>(); // DocumentSnapshot<Product>
+useFirestoreDocumentData<Product>(); // Product | null
+```
+
+### Inferred types
+
+The hooks will inferr any types from the provided reference, for example you could 
+define [Firestore converters](TODO):
+
+```ts
+type Product = {
+  name: string;
+  price: number;
+}
+
+const ref = collection(firebase, 'products').withConverter<Product>(...);
+
+useFirestoreQuery('...', ref); // QuerySnapshot<Product>
+useFirestoreQueryData('...', ref); // Product[]
+
+const docRef = ref.doc('123');
+
+useFirestoreDocument('...', docRef); // DocumentSnapshot<Product>
+useFirestoreDocumentData('...', docRef); // Product | null
+```
+
+## Data modifications
+
+When returning modified data, you can pass a second type to the hooks for 
+typesafe result data.
+
+```ts
+type Product = {
+  name: string;
+  price: number;
+}
+
+const query = useFirestoreQuery<Product, number | null>('...', ref, undefined, {
+  select(snapshot: QuerySnapshot<Product>): number | null {
+    if (!snapshot.exists()) {
+      return null;
+    }
+
+    return snapshot.data().price;
+  }
+});
+
+if (query.isSuccess) {
+  const price = query.data; // number | null
+} 
+```
+
+## Mutations
