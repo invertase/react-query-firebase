@@ -21,6 +21,7 @@ import {
   useQueryClient,
   QueryKey,
   UseQueryOptions,
+  UseQueryResult,
 } from "react-query";
 import {
   DocumentData,
@@ -101,11 +102,49 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
   });
 }
 
-export function useFirestoreDocumentData<T = DocumentData, R = T>(
+type WithIdField<D, F = void> = F extends string
+  ? D & { [key in F]: string }
+  : D;
+
+export function useFirestoreDocumentData<
+  ID extends string,
+  T = DocumentData,
+  R = WithIdField<T, ID> | undefined
+>(
+  key: QueryKey,
+  ref: DocumentReference<T>,
+  options?: UseFirestoreHookOptions & SnapshotOptions & { idField: ID },
+  useQueryOptions?: Omit<
+    UseQueryOptions<WithIdField<T, ID> | undefined, Error, R>,
+    "queryFn"
+  >
+): UseQueryResult<R | undefined, Error>;
+
+export function useFirestoreDocumentData<
+  T = DocumentData,
+  R = WithIdField<T> | undefined
+>(
   key: QueryKey,
   ref: DocumentReference<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions,
-  useQueryOptions?: Omit<UseQueryOptions<T | undefined, Error, R>, "queryFn">
+  useQueryOptions?: Omit<
+    UseQueryOptions<WithIdField<T> | undefined, Error, R>,
+    "queryFn"
+  >
+): UseQueryResult<R, Error>;
+
+export function useFirestoreDocumentData<
+  ID extends string,
+  T = DocumentData,
+  R = WithIdField<T, ID> | undefined
+>(
+  key: QueryKey,
+  ref: DocumentReference<T>,
+  options?: UseFirestoreHookOptions & SnapshotOptions & { idField?: ID },
+  useQueryOptions?: Omit<
+    UseQueryOptions<WithIdField<T, ID> | undefined, Error, R>,
+    "queryFn"
+  >
 ) {
   const client = useQueryClient();
   const unsubscribe = useRef<Unsubscribe>();
@@ -114,48 +153,97 @@ export function useFirestoreDocumentData<T = DocumentData, R = T>(
     return () => unsubscribe.current?.();
   }, []);
 
-  return useQuery<T | undefined, Error, R>({
+  return useQuery<WithIdField<T, ID> | undefined, Error, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
     async queryFn() {
       unsubscribe.current?.();
 
+      return undefined;
+
       if (!options?.subscribe) {
         const snapshot = await getSnapshot(ref, options?.source);
 
-        return snapshot.data({
+        const data = snapshot.data({
           serverTimestamps: options?.serverTimestamps,
         });
+
+        if (!data) {
+          return undefined;
+        }
+
+        if (options?.idField) {
+          return {
+            ...data,
+            [options.idField]: snapshot.id,
+          };
+        }
+
+        return data;
       }
 
-      let resolved = false;
+      // return new Promise<WithIdField<T, ID> | undefined>((resolve, reject) => {
+      //   return resolve(undefined);
+      // });
 
-      return new Promise<T | undefined>((resolve, reject) => {
-        unsubscribe.current = onSnapshot(
-          ref,
-          {
-            includeMetadataChanges: options?.includeMetadataChanges,
-          },
-          (snapshot) => {
-            if (!resolved) {
-              resolved = true;
-              return resolve(
-                snapshot.data({
-                  serverTimestamps: options?.serverTimestamps,
-                })
-              );
-            } else {
-              client.setQueryData<T | undefined>(
-                key,
-                snapshot.data({
-                  serverTimestamps: options?.serverTimestamps,
-                })
-              );
-            }
-          },
-          reject
-        );
-      });
+      // let resolved = false;
+
+      // return new Promise<WithIdField<T, ID> | undefined>((resolve, reject) => {
+      //   unsubscribe.current = onSnapshot(
+      //     ref,
+      //     {
+      //       includeMetadataChanges: options?.includeMetadataChanges,
+      //     },
+      //     (snapshot) => {
+      //       let data = snapshot.data({
+      //         serverTimestamps: options?.serverTimestamps,
+      //       });
+
+      //       if (options?.idField) {
+      //         data = {
+      //           ...data,
+      //           [options.idField]: snapshot.id,
+      //         };
+      //       }
+
+      //       if (!resolved) {
+      //         resolved = true;
+      //         return resolve(data);
+      //       } else {
+      //         client.setQueryData<T | undefined>(key, data);
+      //       }
+      //     },
+      //     reject
+      //   );
+      // });
     },
   });
+}
+
+type Foo = {
+  foo: number;
+};
+
+const a = useFirestoreDocumentData("", {} as any);
+
+if (a.data) {
+  console.log(a.data.foo);
+  console.log(a.data.id);
+}
+
+const q = useFirestoreDocumentData<"id", Foo>("", {} as any, {
+  idField: "id",
+});
+
+if (q.data) {
+  console.log(q.data.foo);
+  console.log(q.data.id);
+}
+
+const r = useFirestoreDocumentData<Foo>("", {} as any);
+
+if (r.data) {
+  console.log(r.data.foo);
+  // @ts-expect-error
+  console.log(r.data.id);
 }
