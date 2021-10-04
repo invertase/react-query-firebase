@@ -5,7 +5,7 @@ import { ReactQueryDevtools } from "react-query/devtools";
 
 import {
   useFunctionsQuery,
-  useFunctionsMutation,
+  useFunctionsCall,
 } from "@react-query-firebase/functions";
 import { functions } from "./firebase";
 import { useQueryClient } from "react-query";
@@ -16,7 +16,7 @@ function Example() {
   const client = useQueryClient();
   const query = useFunctionsQuery<void, string>("joke", functions, "getJoke");
 
-  const mutation = useFunctionsMutation(functions, "getJoke", undefined, {
+  const mutation = useFunctionsCall(functions, "getJoke", undefined, {
     onSuccess(joke) {
       client.setQueryData("joke", joke);
     },
