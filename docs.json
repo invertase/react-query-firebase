@@ -5,6 +5,7 @@
   "sidebar": [
     ["Getting Started", "/"],
     ["Authentication", "/auth"],
+    ["Database", "/database"],
     ["Firestore", "/firestore"],
     ["Functions", "/functions"],
     [
