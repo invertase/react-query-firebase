@@ -9,15 +9,6 @@ import { auth } from "./firebase";
 
 const queryClient = new QueryClient();
 
-export default function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <Example />
-      <ReactQueryDevtools initialIsOpen />
-    </QueryClientProvider>
-  );
-}
-
 function Example() {
   const query = useAuthUser("user", auth);
 
@@ -38,6 +29,15 @@ function Example() {
       <div>User ID: {user.uid}</div>
       <button onClick={() => signOut(auth)}>Sign Out</button>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Example />
+      <ReactQueryDevtools initialIsOpen />
+    </QueryClientProvider>
   );
 }
 
