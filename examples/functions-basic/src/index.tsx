@@ -12,18 +12,10 @@ import { useQueryClient } from "react-query";
 
 const queryClient = new QueryClient();
 
-export default function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <Example />
-      <ReactQueryDevtools initialIsOpen />
-    </QueryClientProvider>
-  );
-}
-
 function Example() {
   const client = useQueryClient();
-  const query = useFunctionsQuery("joke", functions, "getJoke");
+  const query = useFunctionsQuery<void, string>("joke", functions, "getJoke");
+
   const mutation = useFunctionsMutation(functions, "getJoke", undefined, {
     onSuccess(joke) {
       client.setQueryData("joke", joke);
@@ -43,12 +35,21 @@ function Example() {
 
   return (
     <div>
-      <div dangerouslySetInnerHTML={{ __html: joke }} />
+      <div dangerouslySetInnerHTML={{ __html: joke || "" }} />
       <br />
-      <button onClick={() => mutation.mutate()} disabled={mutation.isLoading}>
+      <button onClick={() => mutation.mutate(undefined)} disabled={mutation.isLoading}>
         {mutation.isLoading ? "Loading joke..." : "Load a new joke"}
       </button>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Example />
+      <ReactQueryDevtools initialIsOpen />
+    </QueryClientProvider>
   );
 }
 

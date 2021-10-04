@@ -1,5 +1,6 @@
 {
-  "name": "react-query-ts",
+  "name": "auth-basic",
+  "private": true,
   "version": "1.0.0",
   "description": "",
   "keywords": [],
