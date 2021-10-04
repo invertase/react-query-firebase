@@ -12,12 +12,14 @@ import {
   Unsubscribe,
   IdTokenResult,
   onAuthStateChanged,
+  fetchSignInMethodsForEmail,
+  AuthError,
 } from "firebase/auth";
 
 export function useAuthUser<R = User | null>(
   key: QueryKey,
   auth: Auth,
-  useQueryOptions?: Omit<UseQueryOptions<User | null, Error, R>, "queryFn">
+  useQueryOptions?: Omit<UseQueryOptions<User | null, AuthError, R>, "queryFn">
 ) {
   const client = useQueryClient();
   const unsubscribe = useRef<Unsubscribe>();
@@ -28,7 +30,7 @@ export function useAuthUser<R = User | null>(
     };
   }, []);
 
-  return useQuery<User | null, Error, R>({
+  return useQuery<User | null, AuthError, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
     async queryFn() {
@@ -61,7 +63,7 @@ export function useAuthIdToken<R = IdTokenResult | null>(
     forceRefresh?: boolean;
   },
   useQueryOptions?: Omit<
-    UseQueryOptions<IdTokenResult | null, Error, R>,
+    UseQueryOptions<IdTokenResult | null, AuthError, R>,
     "queryFn"
   >
 ) {
@@ -74,7 +76,7 @@ export function useAuthIdToken<R = IdTokenResult | null>(
     };
   }, []);
 
-  return useQuery<IdTokenResult | null, Error, R>({
+  return useQuery<IdTokenResult | null, AuthError, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
     async queryFn() {
@@ -102,6 +104,21 @@ export function useAuthIdToken<R = IdTokenResult | null>(
           reject
         );
       });
+    },
+  });
+}
+
+export function useAuthfetchSignInMethodsForEmail(
+  key: QueryKey,
+  auth: Auth,
+  email: string,
+  useQueryOptions?: Omit<UseQueryOptions<string[], AuthError>, "queryFn">
+) {
+  return useQuery<string[], AuthError>({
+    ...useQueryOptions,
+    queryKey: useQueryOptions?.queryKey ?? key,
+    async queryFn() {
+      return fetchSignInMethodsForEmail(auth, email);
     },
   });
 }
