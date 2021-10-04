@@ -80,3 +80,58 @@ if (query.isSuccess) {
 ```
 
 ## Mutations
+
+When working with the various mutation hooks, you can provide types to
+override the expected mutation data.
+
+By default, the mutation value will be inferred from the provided reference, for example:
+
+```ts
+type Product = {
+  name: string;
+  price: number;
+}
+
+const ref = collection(firebase, 'products').withConverter<Product>(...);
+
+const mutation = useFirestoreCollectionMutation(ref);
+
+// mutate expects a Product
+mutation.mutate({
+  name: 'New product',
+  price: 10,
+});
+```
+
+You can also optionally provide a type override:
+
+```ts
+const mutation = useFirestoreCollectionMutation<Product>(ref);
+
+// mutate expects a Product
+mutation.mutate({
+  name: 'New product',
+  price: 10,
+});
+```
+
+If working with transactions, you can provide a custom type as the expected
+response of the transaction:
+
+```ts
+const ref = collection(firebase, 'posts').doc('123');
+
+const mutation = useFirestoreTransaction<number>(firestore, async (tsx) => {
+  const post = await tsx.get(ref);
+  const newLikes = post.data().likes + 1;
+
+  tsx.update(ref, { likes: newLikes });
+
+  // Returning a number is required
+  return newLikes;
+});
+
+if (mutation.isSuccess) {
+  console.log('New likes: ', mutation.data);
+}
+```
