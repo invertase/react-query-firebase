@@ -12,7 +12,7 @@ import {
 } from "firebase/functions";
 
 export function useFunctionsQuery<
-  RequestData = void,
+  RequestData = any,
   ResponseData = unknown,
   ModifiedData = ResponseData
 >(
@@ -42,7 +42,7 @@ export function useFunctionsQuery<
 }
 
 export function useFunctionsCall<
-  RequestData = void,
+  RequestData = any,
   ResponseData = unknown
 >(
   functions: Functions,
