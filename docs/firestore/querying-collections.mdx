@@ -230,6 +230,48 @@ If the bundle does not exist an error will be thrown.
 
 ## Paginated / Infinite Queries
 
+Paginating data (or loading infinite data) is supported via the `useFirestoreInfiniteQuery` and
+`useFirestoreInfiniteQueryData` hooks. The hooks both wrap the [`useInfiniteQuery`](https://react-query.tanstack.com/reference/useInfiniteQuery)
+hook.
+
+The first step is to define an initial query, which will be called when the hook mounts:
+
+```js
+const postsCollection = collection(firestore, "posts");
+const postsQuery = query(postsCollection, limit(20));
+
+const posts = useFirestoreInfiniteQuery("posts", postsQuery, () => {});
+```
+
+The 3rd argument accepts a callback, which is used to query the next page of data when
+requested. The callback is provided a `QuerySnapshot` (or array of document data), allowing you
+to construct a query to get the next batch of documents. If you return `undefined`, this will signal
+that there is no more data left to fetch.
+
+```js
+const postsCollection = collection(firestore, "posts");
+const postsQuery = query(postsCollection, limit(20));
+
+const posts = useFirestoreInfiniteQuery("posts", postsQuery, (snapshot) => {
+  const lastDocument = snapshot.docs[snapshot.docs.length - 1];
+
+  // Get the next 20 documents starting after the last document fetched.
+  return query(postsQuery, startAfter(lastDocument));
+});
+```
+
+Within your application, call the `fetchNextPage` function to get the next page of data.
+This could be when the user presses a "Next Page" button or when they scroll to the bottom
+of the current list - it's up to you!
+
+```jsx
+const posts = useFirestoreInfiniteQuery(...);
+
+<button onClick={() => posts.fetchNextPage()}>Load More</button>
+```
+
+To learn more, visit the [React Query Infinite Queries guide](https://react-query.tanstack.com/guides/infinite-queries).
+
 ## Modifying data responses
 
 The library allows the passing of all React Query hook options to the library hooks.
@@ -288,9 +330,53 @@ const query = useFirestoreQuery(
 
 // Data will contain a single document or null.
 if (query.data) {
-  console.log('Your subscription: ', query.data);
+  console.log("Your subscription: ", query.data);
 }
 ```
+
+## Document IDs
+
+When using the `useFirestoreQuery` & `useFirestoreInfiniteQuery` hooks, the data returned contains
+a `QuerySnapshot`, containing an array of `DocumentSnapshot` instances. These instances
+allow you to fetch both the data and metadata such as the documents ID.
+
+The `useFirestoreQueryData` & `useFirestoreInfiniteQueryData` hooks instead returns an array of your document data,
+which does not include the document ID. If you'd like to return the document ID alongside
+the data, provide the `idField` option to the hook:
+
+```js
+const products = useFirestoreQueryData("products", query, {
+  idField: "_id",
+});
+
+if (products.isSuccess) {
+  products.data.forEach((product) => {
+    console.log("Product ID: ", product._id);
+  });
+}
+```
+
+This also works with TypeScript, either by explicially providing the ID type or
+inferred by the option:
+
+```ts
+type Product = {
+  name: string;
+};
+
+// Explicit types
+const products = useFirestoreQueryData<"_id", Product>("products", query, {
+  idField: "_id",
+});
+
+// Inferred types
+const query = collection(firebase, 'products').withConverter<Product>(...);
+const products = useFirestoreQueryData("products", query, {
+  idField: "_id",
+});
+```
+
+In this example, the `Product` type will have the `_id` field joined (`Product & { _id: string }`).
 
 ## React Query options
 
@@ -310,10 +396,10 @@ const query = useFirestoreQuery(
   },
   {
     onSuccess(snapshot) {
-      toast.success('Data loaded successfully!')
+      toast.success("Data loaded successfully!");
     },
     onError(error) {
-      toast.error('Woops, something went wrong!');
+      toast.error("Woops, something went wrong!");
     },
   }
 );
