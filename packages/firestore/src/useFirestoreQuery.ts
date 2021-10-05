@@ -267,7 +267,10 @@ export function useFirestoreQueryData<
   });
 }
 
-export function useFirestoreInfiniteQuery<T = DocumentData, R = T[]>(
+export function useFirestoreInfiniteQuery<
+  T = DocumentData,
+  R = QuerySnapshot<T>
+>(
   key: QueryKey,
   initialQuery: Query<T>,
   getNextQuery: (snapshot: QuerySnapshot<T>) => Query<T> | undefined,

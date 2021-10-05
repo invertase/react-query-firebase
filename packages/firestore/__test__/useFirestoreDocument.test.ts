@@ -313,5 +313,26 @@ describe("useFirestoreDocument", () => {
       expect(result.current.data).toBeDefined();
       expect(result.current.data).toEqual({ baz: "ben" });
     });
+
+    test("it provides the id key", async () => {
+      const hookId = genId();
+      const id = genId();
+      const ref = doc(firestore, genId(), id);
+
+      await setDoc(ref, { foo: "bar" });
+
+      const { result, waitFor } = renderHook(
+        () =>
+          useFirestoreDocumentData<"id">(hookId, ref, {
+            idField: "id",
+          }),
+        { wrapper }
+      );
+
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+
+      expect(result.current.data).toBeDefined();
+      expect(result.current.data).toEqual({ baz: "ben", id });
+    });
   });
 });
