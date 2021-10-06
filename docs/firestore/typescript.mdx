@@ -7,9 +7,10 @@ The library comes with support for a full typesafe API.
 
 ## Response types
 
-When fetching a [query](TODO) or [document](TODO) the default return type from 
-Firestore is a [`QuerySnapshot`](TODO) or [`DocumentSnapshot`](TODO) whose data type is
-[`DocumentData`](TODO).
+When fetching a or modifying documents the default return type from 
+Firestore is a [`QuerySnapshot`](https://firebase.google.com/docs/reference/js/firestore_.querysnapshot) or 
+[`DocumentSnapshot`](https://firebase.google.com/docs/reference/js/firestore_.documentsnapshot) whose data type is
+[`DocumentData`](https://firebase.google.com/docs/reference/js/firestore_.documentdata).
 
 For a type safe application, this is dangerous. There are 2 ways to ensure your data
 is returned type safe, either explicilty or inferred:
@@ -34,7 +35,7 @@ useFirestoreDocumentData<Product>(); // Product | null
 ### Inferred types
 
 The hooks will inferr any types from the provided reference, for example you could 
-define [Firestore converters](TODO):
+define [Firestore converters](https://firebase.google.com/docs/reference/js/firestore_.firestoredataconverter):
 
 ```ts
 type Product = {
