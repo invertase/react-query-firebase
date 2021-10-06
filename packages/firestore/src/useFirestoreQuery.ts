@@ -21,6 +21,11 @@ import {
   useQueryClient,
   QueryKey,
   UseQueryOptions,
+  useInfiniteQuery,
+  QueryFunctionContext,
+  UseInfiniteQueryOptions,
+  UseQueryResult,
+  UseInfiniteQueryResult,
 } from "react-query";
 import {
   getDocs,
@@ -35,15 +40,19 @@ import {
   Firestore,
   SnapshotOptions,
 } from "firebase/firestore";
-import { GetSnapshotSource, UseFirestoreHookOptions } from "./index";
+import {
+  GetSnapshotSource,
+  UseFirestoreHookOptions,
+  WithIdField,
+} from "./index";
 
 const namedQueryCache: { [key: string]: Query } = {};
 
-type NamedQueryPromise<T> = () => Promise<Query<T> | null>;
+export type NamedQueryPromise<T> = () => Promise<Query<T> | null>;
 
-type NamedQuery<T> = Query<T> | NamedQueryPromise<T>;
+export type NamedQuery<T = DocumentData> = Query<T> | NamedQueryPromise<T>;
 
-type QueryType<T> = Query<T> | NamedQuery<T>;
+export type QueryType<T> = Query<T> | NamedQuery<T>;
 
 function isNamedQuery<T>(query: QueryType<T>): query is NamedQuery<T> {
   return typeof query === "function";
@@ -109,7 +118,7 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
   query: QueryType<T>,
   options?: UseFirestoreHookOptions,
   useQueryOptions?: Omit<UseQueryOptions<QuerySnapshot<T>, Error, R>, "queryFn">
-) {
+): UseQueryResult<R, Error> {
   const client = useQueryClient();
   const unsubscribe = useRef<Unsubscribe>();
 
@@ -152,12 +161,40 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
   });
 }
 
-export function useFirestoreQueryData<T = DocumentData, R = T[]>(
+export function useFirestoreQueryData<T = DocumentData, R = WithIdField<T>[]>(
   key: QueryKey,
   query: QueryType<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions,
-  useQueryOptions?: Omit<UseQueryOptions<T[], Error, R>, "queryFn">
-) {
+  useQueryOptions?: Omit<UseQueryOptions<WithIdField<T>[], Error, R>, "queryFn">
+): UseQueryResult<R, Error>;
+
+export function useFirestoreQueryData<
+  ID extends string,
+  T = DocumentData,
+  R = WithIdField<T, ID>[]
+>(
+  key: QueryKey,
+  query: QueryType<T>,
+  options?: UseFirestoreHookOptions & SnapshotOptions & { idField: ID },
+  useQueryOptions?: Omit<
+    UseQueryOptions<WithIdField<T, ID>[], Error, R>,
+    "queryFn"
+  >
+): UseQueryResult<R, Error>;
+
+export function useFirestoreQueryData<
+  ID extends string,
+  T = DocumentData,
+  R = WithIdField<T, ID>[]
+>(
+  key: QueryKey,
+  query: QueryType<T>,
+  options?: UseFirestoreHookOptions & SnapshotOptions & { idField?: ID },
+  useQueryOptions?: Omit<
+    UseQueryOptions<WithIdField<T, ID>[], Error, R>,
+    "queryFn"
+  >
+): UseQueryResult<R, Error> {
   const client = useQueryClient();
   const unsubscribe = useRef<Unsubscribe>();
 
@@ -165,10 +202,10 @@ export function useFirestoreQueryData<T = DocumentData, R = T[]>(
     return () => unsubscribe.current?.();
   }, []);
 
-  return useQuery<T[], Error, R>({
+  return useQuery<WithIdField<T, ID>[], Error, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
-    async queryFn() {
+    async queryFn(): Promise<WithIdField<T, ID>[]> {
       unsubscribe.current?.();
 
       const _query = await resolveQuery(query);
@@ -176,45 +213,159 @@ export function useFirestoreQueryData<T = DocumentData, R = T[]>(
       if (!options?.subscribe) {
         const snapshot = await getSnapshot(_query, options?.source);
 
-        return snapshot.docs.map((doc) =>
-          doc.data({
+        return snapshot.docs.map((doc) => {
+          let data = doc.data({
             serverTimestamps: options?.serverTimestamps,
-          })
-        );
+          });
+
+          if (options?.idField) {
+            data = {
+              ...data,
+              [options.idField]: doc.id,
+            };
+          }
+
+          return data as WithIdField<T, ID>;
+        });
       }
 
       let resolved = false;
 
-      return new Promise<T[]>((resolve, reject) => {
+      return new Promise<WithIdField<T, ID>[]>((resolve, reject) => {
         unsubscribe.current = onSnapshot(
           _query,
           {
             includeMetadataChanges: options?.includeMetadataChanges,
           },
           (snapshot) => {
+            const docs = snapshot.docs.map((doc) => {
+              let data = doc.data({
+                serverTimestamps: options?.serverTimestamps,
+              });
+
+              if (options?.idField) {
+                data = {
+                  ...data,
+                  [options.idField]: doc.id,
+                };
+              }
+
+              return data as WithIdField<T, ID>;
+            });
+
             if (!resolved) {
               resolved = true;
-              return resolve(
-                snapshot.docs.map((doc) =>
-                  doc.data({
-                    serverTimestamps: options?.serverTimestamps,
-                  })
-                )
-              );
+              return resolve(docs);
             } else {
-              client.setQueryData<T[]>(
-                key,
-                snapshot.docs.map((doc) =>
-                  doc.data({
-                    serverTimestamps: options?.serverTimestamps,
-                  })
-                )
-              );
+              client.setQueryData<WithIdField<T, ID>[]>(key, docs);
             }
           },
           reject
         );
       });
+    },
+  });
+}
+
+export function useFirestoreInfiniteQuery<
+  T = DocumentData,
+  R = QuerySnapshot<T>
+>(
+  key: QueryKey,
+  initialQuery: Query<T>,
+  getNextQuery: (snapshot: QuerySnapshot<T>) => Query<T> | undefined,
+  options?: {
+    source?: GetSnapshotSource;
+  },
+  useInfiniteQueryOptions?: Omit<
+    UseInfiniteQueryOptions,
+    "queryFn" | "getNextPageParam"
+  >
+): UseInfiniteQueryResult<R, Error> {
+  return useInfiniteQuery<QuerySnapshot<T>, Error, R>({
+    queryKey: useInfiniteQueryOptions?.queryKey ?? key,
+    async queryFn(ctx: QueryFunctionContext<QueryKey, Query<T>>) {
+      const query: Query<T> = ctx.pageParam ?? initialQuery;
+      return getSnapshot(query, options?.source);
+    },
+    getNextPageParam(snapshot) {
+      return getNextQuery(snapshot);
+    },
+  });
+}
+
+export function useFirestoreInfiniteQueryData<
+  T = DocumentData,
+  R = WithIdField<T>[]
+>(
+  key: QueryKey,
+  initialQuery: Query<T>,
+  getNextQuery: (data: T[]) => Query<T> | undefined,
+  options?: {
+    source?: GetSnapshotSource;
+  } & SnapshotOptions,
+  useInfiniteQueryOptions?: Omit<
+    UseInfiniteQueryOptions<WithIdField<T>[], Error, R>,
+    "queryFn" | "getNextPageParam"
+  >
+): UseInfiniteQueryResult<R, Error>;
+
+export function useFirestoreInfiniteQueryData<
+  ID extends string,
+  T = DocumentData,
+  R = WithIdField<T, ID>[]
+>(
+  key: QueryKey,
+  initialQuery: Query<T>,
+  getNextQuery: (data: T[]) => Query<T> | undefined,
+  options?: {
+    source?: GetSnapshotSource;
+  } & SnapshotOptions & { idField: ID },
+  useInfiniteQueryOptions?: Omit<
+    UseInfiniteQueryOptions<WithIdField<T, ID>[], Error, R>,
+    "queryFn" | "getNextPageParam"
+  >
+): UseInfiniteQueryResult<R, Error>;
+
+export function useFirestoreInfiniteQueryData<
+  ID extends string,
+  T = DocumentData,
+  R = WithIdField<T, ID>[]
+>(
+  key: QueryKey,
+  initialQuery: Query<T>,
+  getNextQuery: (data: T[]) => Query<T> | undefined,
+  options?: {
+    source?: GetSnapshotSource;
+  } & SnapshotOptions & { idField?: ID },
+  useInfiniteQueryOptions?: Omit<
+    UseInfiniteQueryOptions<WithIdField<T, ID>[], Error, R>,
+    "queryFn" | "getNextPageParam"
+  >
+): UseInfiniteQueryResult<R, Error> {
+  return useInfiniteQuery<WithIdField<T, ID>[], Error, R>({
+    queryKey: useInfiniteQueryOptions?.queryKey ?? key,
+    async queryFn(
+      ctx: QueryFunctionContext<QueryKey, Query<T>>
+    ): Promise<WithIdField<T, ID>[]> {
+      const query: Query<T> = ctx.pageParam ?? initialQuery;
+      const snapshot = await getSnapshot(query, options?.source);
+
+      return snapshot.docs.map((doc) => {
+        let data = doc.data({ serverTimestamps: options?.serverTimestamps });
+
+        if (options?.idField) {
+          data = {
+            ...data,
+            [options.idField]: doc.id,
+          };
+        }
+
+        return data as WithIdField<T, ID>;
+      });
+    },
+    getNextPageParam(data) {
+      return getNextQuery(data);
     },
   });
 }

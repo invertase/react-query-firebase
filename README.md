@@ -3,7 +3,7 @@
   <span>A set of <a href="https://react-query.tanstack.com">React Query</a> hooks integrating with <a href="https://firebase.google.com/">Firebase</a>.</span>
 </p>
 <p align="center">
-  <span><a href="https://docs.page/invertase/react-query-firebase">📚 Documentation</a> &bull; <a href="/LICENSE.md">License</a></span>
+  <span><a href="https://react-query-firebase.invertase.dev/">📚 Documentation</a> &bull; <a href="/LICENSE.md">License</a></span>
 </p>
 <br />
 
@@ -36,7 +36,7 @@ See below for a full list of available packages.
 - `@react-query-firebase/firestore`
 - `@react-query-firebase/functions`
 
-> [View the documentation for full usage and examples.](https://docs.page/invertase/react-query-firebase)
+> [View the documentation for full usage and examples.](https://react-query-firebase.invertase.dev/)
 
 ## License
 

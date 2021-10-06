@@ -29,7 +29,11 @@ import {
   WithFieldValue,
   WriteBatch,
 } from "firebase/firestore";
-import { useMutation, UseMutationOptions } from "react-query";
+import {
+  useMutation,
+  UseMutationOptions,
+  UseMutationResult,
+} from "react-query";
 
 export function useFirestoreCollectionMutation<T = DocumentData>(
   ref: CollectionReference<T>,
@@ -38,7 +42,7 @@ export function useFirestoreCollectionMutation<T = DocumentData>(
     Error,
     WithFieldValue<T>
   >
-) {
+): UseMutationResult<DocumentReference<T>, Error, WithFieldValue<T>> {
   return useMutation<DocumentReference<T>, Error, WithFieldValue<T>>((data) => {
     return addDoc<T>(ref, data);
   }, useMutationOptions);
@@ -48,9 +52,9 @@ export function useFirestoreDocumentMutation<T = DocumentData>(
   ref: DocumentReference<T>,
   options?: SetOptions,
   useMutationOptions?: UseMutationOptions<void, Error, WithFieldValue<T>>
-) {
+): UseMutationResult<void, Error, WithFieldValue<T>> {
   return useMutation<void, Error, WithFieldValue<T>>((data) => {
-    if (!!options) {
+    if (options) {
       return setDoc<T>(ref, data, options);
     }
 
@@ -61,7 +65,7 @@ export function useFirestoreDocumentMutation<T = DocumentData>(
 export function useFirestoreDocumentDeletion(
   ref: DocumentReference,
   useMutationOptions?: UseMutationOptions<void, Error, void>
-) {
+): UseMutationResult<void, Error, void> {
   return useMutation<void, Error, void>(
     () => deleteDoc(ref),
     useMutationOptions
@@ -72,7 +76,7 @@ export function useFirestoreTransaction<T = void>(
   firestore: Firestore,
   updateFunction: (tsx: Transaction) => Promise<T>,
   useMutationOptions?: UseMutationOptions<T, Error, void>
-) {
+): UseMutationResult<T, Error, void> {
   return useMutation<T, Error, void>(() => {
     return runTransaction<T>(firestore, updateFunction);
   }, useMutationOptions);
@@ -81,7 +85,7 @@ export function useFirestoreTransaction<T = void>(
 export function useFirestoreWriteBatch(
   batch: WriteBatch,
   useMutationOptions?: UseMutationOptions<void, Error, void>
-) {
+): UseMutationResult<void, Error, void> {
   return useMutation<void, Error, void>(() => {
     return batch.commit();
   }, useMutationOptions);

@@ -1,0 +1,8 @@
+{
+  "name": "React Query Firebase",
+  "platforms": ["Web"],
+  "content": "README.md",
+  "pages": [],
+  "related": ["firebase/firebase-js-sdk", "tannerlinsley/react-query"],
+  "tabs": []
+}

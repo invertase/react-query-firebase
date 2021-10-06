@@ -3,7 +3,7 @@ import { QueryClient } from "react-query";
 import { renderHook } from "@testing-library/react-hooks";
 import { Functions } from "firebase/functions";
 import { genId, init } from "./helpers";
-import { useFunctionsMutation, useFunctionsQuery } from "../src";
+import { useFunctionsCall, useFunctionsQuery } from "../src";
 import { act } from "react-test-renderer";
 
 xdescribe("Functions", () => {
@@ -179,13 +179,13 @@ xdescribe("Functions", () => {
     });
   });
 
-  describe("useFunctionsMutation", () => {
+  describe("useFunctionsCall", () => {
     test("it calls the function", async () => {
       const mock = jest.fn();
 
       const { result, waitFor } = renderHook(
         () =>
-          useFunctionsMutation(functions, "test", undefined, {
+          useFunctionsCall(functions, "test", undefined, {
             onSuccess(data) {
               mock(data);
             },
@@ -204,7 +204,7 @@ xdescribe("Functions", () => {
 
     test("it throws when calling a bad function", async () => {
       const { result, waitFor } = renderHook(
-        () => useFunctionsMutation(functions, "foo"),
+        () => useFunctionsCall(functions, "foo"),
         { wrapper }
       );
 

@@ -3,6 +3,7 @@ import {
   useQuery,
   useQueryClient,
   UseQueryOptions,
+  UseQueryResult,
 } from "react-query";
 import {
   DatabaseReference,
@@ -17,7 +18,7 @@ export function useDatabaseSnapshot<R = DataSnapshot>(
   ref: DatabaseReference,
   options: { subscribe?: boolean } = {},
   useQueryOptions?: Omit<UseQueryOptions<DataSnapshot, Error, R>, "queryFn">
-) {
+): UseQueryResult<R, Error> {
   const client = useQueryClient();
   const unsubscribe = useRef<Unsubscribe>();
 
@@ -76,12 +77,12 @@ export type UseDatabaseValueOptions = {
   toArray?: boolean;
 };
 
-export function useDatabaseValue<T = unknown, R = T>(
+export function useDatabaseValue<T = unknown | null, R = T>(
   key: QueryKey,
   ref: DatabaseReference,
   options: UseDatabaseValueOptions = {},
-  useQueryOptions?: Omit<UseQueryOptions<T | null, Error, R>, "queryFn">
-) {
+  useQueryOptions?: Omit<UseQueryOptions<T, Error, R>, "queryFn">
+): UseQueryResult<R, Error> {
   const client = useQueryClient();
   const unsubscribe = useRef<Unsubscribe>();
 
@@ -91,7 +92,7 @@ export function useDatabaseValue<T = unknown, R = T>(
     };
   }, []);
 
-  return useQuery<T | null, Error, R>({
+  return useQuery<T, Error, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
     async queryFn() {

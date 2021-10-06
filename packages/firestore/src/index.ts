@@ -31,6 +31,10 @@ export type UseFirestoreHookOptions =
       subscribe?: false;
     } & GetSnapshotOptions);
 
+export type WithIdField<D, F = void> = F extends string
+  ? D & { [key in F]: string }
+  : D;
+
 export * from "./useFirestoreDocument";
 export * from "./useFirestoreQuery";
 export * from "./useFirestoreMutation";

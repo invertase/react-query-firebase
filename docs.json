@@ -5,8 +5,15 @@
   "sidebar": [
     ["Getting Started", "/"],
     ["Authentication", "/auth"],
-    ["Realtime Database", "/database"],
-    ["Cloud Firestore", "/firestore"],
-    ["Cloud Functions", "/functions"]
+    ["Database", "/database"],
+    ["Firestore", "/firestore"],
+    ["Functions", "/functions"],
+    [
+      "Examples",
+      [
+        ["Auth: Basic Sign-in/out", "/examples/auth-basic"],
+        ["Functions: Query & Mutate", "/examples/functions-basic"]
+      ]
+    ]
   ]
 }
