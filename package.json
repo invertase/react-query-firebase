@@ -50,7 +50,7 @@
   "scripts": {
     "test": "firebase emulators:exec --project test-project 'jest --runInBand'",
     "test:ci": "firebase emulators:exec --project test-project 'sleep 5 && jest --runInBand --coverage && codecov'",
-    "lint": "eslint \"**/*.{js,ts,tsx,jsx}\"",
+    "lint": "eslint \"**/*.{ts,tsx,jsx}\"",
     "lint:fix": "eslint \"**/*.{js,ts,tsx,jsx}\" --fix",
     "emulators": "firebase emulators:exec --project test-project"
   }
