@@ -354,6 +354,28 @@ describe("useFirestoreQuery", () => {
         expect.arrayContaining([{ baz: "ben" }])
       );
     });
+
+    test("it provides the id key", async () => {
+      const hookId = genId();
+
+      const id = genId();
+      const ref = collection(firestore, id);
+
+      await addDoc(ref, { foo: "bar" });
+
+      const { result, waitFor } = renderHook(
+        () =>
+          useFirestoreQueryData<"id">(hookId, ref, {
+            idField: "id",
+          }),
+        { wrapper }
+      );
+
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+
+      expect(result.current.data[0].foo).toEqual("bar");
+      expect(typeof result.current.data[0].id).toBe("string");
+    });
   });
 
   // TODO(ehesp): Test works, but Jest throws an "unimplemented" error when calling loadBundle.
@@ -473,7 +495,7 @@ describe("useFirestoreQuery", () => {
         addDoc(ref, { foo: 5 }),
       ]);
 
-      const q = query(ref, limit(2));
+      const q = query(ref, limit(2), orderBy("foo"));
 
       const mock = jest.fn();
       const { result, waitFor } = renderHook(
@@ -520,7 +542,7 @@ describe("useFirestoreQuery", () => {
 
       const { result, waitFor } = renderHook(
         () =>
-          useFirestoreInfiniteQueryData(hookId, q, (data) => {
+          useFirestoreInfiniteQueryData(hookId, q, () => {
             return query(q, startAfter(2));
           }),
         { wrapper }
@@ -540,6 +562,59 @@ describe("useFirestoreQuery", () => {
       expect(result.current.data.pages.length).toBe(2);
       expect(result.current.data.pages[1].length).toBe(2);
       expect(result.current.data.pages[1]).toEqual([{ foo: 3 }, { foo: 4 }]);
+    });
+
+    test("it provides the idField", async () => {
+      const hookId = genId();
+
+      const id = genId();
+      const ref = collection(firestore, id);
+
+      await Promise.all([
+        addDoc(ref, { foo: 1 }),
+        addDoc(ref, { foo: 2 }),
+        addDoc(ref, { foo: 3 }),
+        addDoc(ref, { foo: 4 }),
+        addDoc(ref, { foo: 5 }),
+      ]);
+
+      const q = query(ref, limit(2), orderBy("foo"));
+
+      const { result, waitFor } = renderHook(
+        () =>
+          useFirestoreInfiniteQueryData<"id">(
+            hookId,
+            q,
+            () => {
+              return query(q, startAfter(2));
+            },
+            {
+              idField: "id",
+            }
+          ),
+        { wrapper }
+      );
+
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+
+      expect(result.current.data.pages[0].length).toBe(2);
+      expect(result.current.data.pages[0][0].foo).toEqual(1);
+      expect(typeof result.current.data.pages[0][0].id).toBe("string");
+      expect(result.current.data.pages[0][1].foo).toEqual(2);
+      expect(typeof result.current.data.pages[0][1].id).toBe("string");
+
+      await act(async () => {
+        await result.current.fetchNextPage();
+      });
+
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+
+      expect(result.current.data.pages.length).toBe(2);
+      expect(result.current.data.pages[1].length).toBe(2);
+      expect(result.current.data.pages[1][0].foo).toEqual(3);
+      expect(typeof result.current.data.pages[1][0].id).toBe("string");
+      expect(result.current.data.pages[1][1].foo).toEqual(4);
+      expect(typeof result.current.data.pages[1][1].id).toBe("string");
     });
   });
 });
