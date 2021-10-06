@@ -373,9 +373,8 @@ describe("useFirestoreQuery", () => {
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
-      expect(result.current.data).toEqual(
-        expect.arrayContaining([{ foo: "bar", id }])
-      );
+      expect(result.current.data[0].foo).toEqual("bar");
+      expect(typeof result.current.data[0].id).toBe("string");
     });
   });
 
@@ -496,7 +495,7 @@ describe("useFirestoreQuery", () => {
         addDoc(ref, { foo: 5 }),
       ]);
 
-      const q = query(ref, limit(2));
+      const q = query(ref, limit(2), orderBy("foo"));
 
       const mock = jest.fn();
       const { result, waitFor } = renderHook(
@@ -599,11 +598,10 @@ describe("useFirestoreQuery", () => {
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       expect(result.current.data.pages[0].length).toBe(2);
-      expect(result.current.data.pages[0]).toEqual([{ foo: 1 }, { foo: 2 }]);
       expect(result.current.data.pages[0][0].foo).toEqual(1);
-      expect(result.current.data.pages[0][0].id).toBeInstanceOf(String);
+      expect(typeof result.current.data.pages[0][0].id).toBe("string");
       expect(result.current.data.pages[0][1].foo).toEqual(2);
-      expect(result.current.data.pages[0][1].id).toBeInstanceOf(String);
+      expect(typeof result.current.data.pages[0][1].id).toBe("string");
 
       await act(async () => {
         await result.current.fetchNextPage();
@@ -614,9 +612,9 @@ describe("useFirestoreQuery", () => {
       expect(result.current.data.pages.length).toBe(2);
       expect(result.current.data.pages[1].length).toBe(2);
       expect(result.current.data.pages[1][0].foo).toEqual(3);
-      expect(result.current.data.pages[1][0].id).toBeInstanceOf(String);
+      expect(typeof result.current.data.pages[1][0].id).toBe("string");
       expect(result.current.data.pages[1][1].foo).toEqual(4);
-      expect(result.current.data.pages[1][1].id).toBeInstanceOf(String);
+      expect(typeof result.current.data.pages[1][1].id).toBe("string");
     });
   });
 });

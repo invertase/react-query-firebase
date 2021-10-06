@@ -332,7 +332,7 @@ describe("useFirestoreDocument", () => {
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       expect(result.current.data).toBeDefined();
-      expect(result.current.data).toEqual({ baz: "ben", id });
+      expect(result.current.data).toEqual({ foo: "bar", id });
     });
   });
 });

@@ -25,7 +25,7 @@ setLogger({
   log: console.log,
   warn: console.warn,
   // ✅ no more errors on the console
-  error: () => {},
+  error: () => null,
 });
 
 let emulatorsStarted = false;
@@ -38,7 +38,7 @@ export function genInt(): number {
   return Math.floor(Math.random() * (5000 - 1 + 1) + 1);
 }
 
-export function init() {
+export function init(): any {
   const firebase = initializeApp({
     projectId: "test-project",
   });
@@ -67,7 +67,7 @@ export function init() {
   return { client, wrapper, firebase, firestore };
 }
 
-export async function wipe() {
+export async function wipe(): Promise<void> {
   await axios(
     "http://localhost:8080/emulator/v1/projects/test-project/databases/(default)/documents",
     {
