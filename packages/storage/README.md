@@ -1,6 +1,6 @@
-# @react-query-firebase/functions
+# @react-query-firebase/storage
 
-React Query Firebase hooks for Functions.
+React Query Firebase hooks for Cloud Storage.
 
 - [Documentation](https://docs.page/invertase/react-query-firebase)
 - [GitHub Repository](https://github.com/invertase/react-query-firebase)

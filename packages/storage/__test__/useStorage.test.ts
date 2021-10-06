@@ -34,7 +34,7 @@ describe("Storage", () => {
   });
 
   describe("useStorageObjectMetadata", () => {
-    test.only("it returns metadata", async () => {
+    test("it returns metadata", async () => {
       const hookId = genId();
       const sRef = ref(storage, "some-child");
 

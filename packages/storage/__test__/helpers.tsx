@@ -7,7 +7,7 @@ setLogger({
   log: console.log,
   warn: console.warn,
   // ✅ no more errors on the console
-  error: () => {},
+  error: () => null,
 });
 
 let emulatorsStarted = false;
@@ -16,7 +16,7 @@ export function genId(): string {
   return Math.random().toString(32).replace(".", "");
 }
 
-export function init() {
+export function init(): any {
   const firebase = initializeApp({
     projectId: "test-project",
     apiKey: "foo",

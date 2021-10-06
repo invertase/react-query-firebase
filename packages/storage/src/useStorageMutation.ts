@@ -1,17 +1,13 @@
 import {
-  QueryKey,
   useMutation,
   UseMutationOptions,
   UseMutationResult,
-  useQuery,
-  useQueryClient,
-  UseQueryOptions,
-  UseQueryResult,
 } from "react-query";
 import {
   deleteObject,
   FullMetadata,
   SettableMetadata,
+  StorageError,
   StorageReference,
   updateMetadata,
   uploadBytes,
@@ -24,22 +20,29 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { Unsubscribe } from "@firebase/util";
 
-export function useStorageDeleteMutation(
+export function useStorageDeleteObject(
   ref: StorageReference,
-  useMutationOptions?: UseMutationOptions<void, Error, void>
-): UseMutationResult<void, Error, void> {
-  return useMutation<void, Error, void>(() => {
+  useMutationOptions?: UseMutationOptions<void, StorageError, void>
+): UseMutationResult<void, StorageError, void> {
+  return useMutation<void, StorageError, void>(() => {
     return deleteObject(ref);
   }, useMutationOptions);
 }
 
-export function useStorageUpdateMetadataMutation(
+export function useStorageUpdateMetadata(
   ref: StorageReference,
-  useMutationOptions?: UseMutationOptions<FullMetadata, Error, SettableMetadata>
-): UseMutationResult<FullMetadata, Error, SettableMetadata> {
-  return useMutation<FullMetadata, Error, SettableMetadata>((metadata) => {
-    return updateMetadata(ref, metadata);
-  }, useMutationOptions);
+  useMutationOptions?: UseMutationOptions<
+    FullMetadata,
+    StorageError,
+    SettableMetadata
+  >
+): UseMutationResult<FullMetadata, StorageError, SettableMetadata> {
+  return useMutation<FullMetadata, StorageError, SettableMetadata>(
+    (metadata) => {
+      return updateMetadata(ref, metadata);
+    },
+    useMutationOptions
+  );
 }
 
 export type UseStorageUploadStringMutationArgs = {
@@ -63,15 +66,15 @@ function isStringMutation(
   return typeof args.value === "string";
 }
 
-export function useStorageUploadMutation(
+export function useStorageUpload(
   ref: StorageReference,
   useMutationOptions?: UseMutationOptions<
     UploadResult,
-    Error,
+    StorageError,
     UseStorageUploadMutationArgs
   >
-): UseMutationResult<UploadResult, Error, UseStorageUploadMutationArgs> {
-  return useMutation<UploadResult, Error, UseStorageUploadMutationArgs>(
+): UseMutationResult<UploadResult, StorageError, UseStorageUploadMutationArgs> {
+  return useMutation<UploadResult, StorageError, UseStorageUploadMutationArgs>(
     (args) => {
       if (isStringMutation(args)) {
         return uploadString(ref, args.value, args.format, args.metadata);
@@ -88,20 +91,17 @@ export type UseStorageUploadResumableMutationArgs = {
   metadata?: UploadMetadata;
 };
 
-export function useStorageUploadResumableMutation(
-  key: QueryKey,
+export function useStorageUploadResumable(
   ref: StorageReference,
-  useQueryOptions?: UseQueryOptions<UploadTaskSnapshot, Error>,
   useMutationOptions?: UseMutationOptions<
     UploadResult,
-    Error,
+    StorageError,
     UseStorageUploadMutationArgs
   >
 ): [
-  UseQueryResult<UploadTaskSnapshot, Error>,
-  UseMutationResult<UploadResult, Error, UseStorageUploadResumableMutationArgs>
+  UseMutationResult<UploadResult, Error, UseStorageUploadResumableMutationArgs>,
+  UploadTaskSnapshot | null
 ] {
-  const client = useQueryClient();
   const [snapshot, setSnapshot] = useState<UploadTaskSnapshot | null>(null);
   const unsubscribe = useRef<Unsubscribe>();
 
@@ -109,28 +109,16 @@ export function useStorageUploadResumableMutation(
     unsubscribe.current?.();
   }, []);
 
-  const query = useQuery<UploadTaskSnapshot, Error>({
-    queryKey: key,
-    queryFn: () => {
-      return snapshot!;
-    },
-    enabled: !snapshot ? false : useQueryOptions?.enabled ?? true,
-  });
-
   const mutation = useMutation<
     UploadResult,
-    Error,
+    StorageError,
     UseStorageUploadResumableMutationArgs
   >(async ({ value, metadata }) => {
     const task = uploadBytesResumable(ref, value, metadata);
 
     unsubscribe.current = task.on("state_changed", {
       next(snapshot) {
-        if (!snapshot) {
-          setSnapshot(snapshot);
-        } else {
-          client.setQueryData<UploadTaskSnapshot>(key, snapshot);
-        }
+        setSnapshot(snapshot);
       },
       error(error) {
         throw error;
@@ -142,5 +130,5 @@ export function useStorageUploadResumableMutation(
     return finalSnapshot;
   }, useMutationOptions);
 
-  return [query, mutation];
+  return [mutation, snapshot];
 }
