@@ -36,6 +36,7 @@
     "firebase-admin": "^9.11.1",
     "jest": "^27.1.1",
     "jest-environment-jsdom": "^27.2.0",
+    "lerna": "^4.0.0",
     "prettier": "^2.3.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
