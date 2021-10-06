@@ -34,6 +34,9 @@ jobs:
           node-version: 16
       - name: Yarn install
         run: yarn
+      - name: Yarn install (functions)
+        working-directory: functions
+        run: yarn
       - name: Install Firebase CLI
         run: npm i -g firebase-tools
       - name: Run tests

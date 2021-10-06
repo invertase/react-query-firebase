@@ -21,6 +21,7 @@ import {
   useQueryClient,
   QueryKey,
   UseQueryOptions,
+  UseQueryResult,
 } from "react-query";
 import {
   DocumentData,
@@ -33,7 +34,11 @@ import {
   SnapshotOptions,
   Unsubscribe,
 } from "firebase/firestore";
-import { GetSnapshotSource, UseFirestoreHookOptions } from "./index";
+import {
+  GetSnapshotSource,
+  UseFirestoreHookOptions,
+  WithIdField,
+} from "./index";
 
 async function getSnapshot<T>(
   ref: DocumentReference<T>,
@@ -60,7 +65,7 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
     UseQueryOptions<DocumentSnapshot<T>, Error, R>,
     "queryFn"
   >
-) {
+): UseQueryResult<R, Error> {
   const client = useQueryClient();
   const unsubscribe = useRef<Unsubscribe>();
 
@@ -101,12 +106,46 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
   });
 }
 
-export function useFirestoreDocumentData<T = DocumentData, R = T>(
+export function useFirestoreDocumentData<
+  T = DocumentData,
+  R = WithIdField<T> | undefined
+>(
   key: QueryKey,
   ref: DocumentReference<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions,
-  useQueryOptions?: Omit<UseQueryOptions<T | undefined, Error, R>, "queryFn">
-) {
+  useQueryOptions?: Omit<
+    UseQueryOptions<WithIdField<T> | undefined, Error, R>,
+    "queryFn"
+  >
+): UseQueryResult<R, Error>;
+
+export function useFirestoreDocumentData<
+  ID extends string,
+  T = DocumentData,
+  R = WithIdField<T, ID> | undefined
+>(
+  key: QueryKey,
+  ref: DocumentReference<T>,
+  options?: UseFirestoreHookOptions & SnapshotOptions & { idField: ID },
+  useQueryOptions?: Omit<
+    UseQueryOptions<WithIdField<T, ID> | undefined, Error, R>,
+    "queryFn"
+  >
+): UseQueryResult<R | undefined, Error>;
+
+export function useFirestoreDocumentData<
+  ID extends string,
+  T = DocumentData,
+  R = WithIdField<T, ID> | undefined
+>(
+  key: QueryKey,
+  ref: DocumentReference<T>,
+  options?: UseFirestoreHookOptions & SnapshotOptions & { idField?: ID },
+  useQueryOptions?: Omit<
+    UseQueryOptions<WithIdField<T, ID> | undefined, Error, R>,
+    "queryFn"
+  >
+): UseQueryResult<R, Error> {
   const client = useQueryClient();
   const unsubscribe = useRef<Unsubscribe>();
 
@@ -114,42 +153,56 @@ export function useFirestoreDocumentData<T = DocumentData, R = T>(
     return () => unsubscribe.current?.();
   }, []);
 
-  return useQuery<T | undefined, Error, R>({
+  return useQuery<WithIdField<T, ID> | undefined, Error, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
-    async queryFn() {
+    async queryFn(): Promise<WithIdField<T, ID> | undefined> {
       unsubscribe.current?.();
 
       if (!options?.subscribe) {
         const snapshot = await getSnapshot(ref, options?.source);
 
-        return snapshot.data({
+        let data = snapshot.data({
           serverTimestamps: options?.serverTimestamps,
         });
+
+        if (data && options?.idField) {
+          data = {
+            ...data,
+            [options.idField]: snapshot.id,
+          };
+        }
+
+        return data as WithIdField<T, ID> | undefined;
       }
 
       let resolved = false;
 
-      return new Promise<T | undefined>((resolve, reject) => {
+      return new Promise<WithIdField<T, ID> | undefined>((resolve, reject) => {
         unsubscribe.current = onSnapshot(
           ref,
           {
             includeMetadataChanges: options?.includeMetadataChanges,
           },
           (snapshot) => {
+            let data = snapshot.data({
+              serverTimestamps: options?.serverTimestamps,
+            });
+
+            if (data && options?.idField) {
+              data = {
+                ...data,
+                [options.idField]: snapshot.id,
+              };
+            }
+
             if (!resolved) {
               resolved = true;
-              return resolve(
-                snapshot.data({
-                  serverTimestamps: options?.serverTimestamps,
-                })
-              );
+              return resolve(data as WithIdField<T, ID> | undefined);
             } else {
-              client.setQueryData<T | undefined>(
+              client.setQueryData<WithIdField<T, ID> | undefined>(
                 key,
-                snapshot.data({
-                  serverTimestamps: options?.serverTimestamps,
-                })
+                data as WithIdField<T, ID> | undefined
               );
             }
           },

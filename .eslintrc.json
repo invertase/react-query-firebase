@@ -4,7 +4,13 @@
     "es2021": true,
     "node": true
   },
-  "extends": ["plugin:react/recommended", "google"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "google",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaFeatures": {
@@ -20,6 +26,9 @@
   },
   "plugins": ["react", "@typescript-eslint"],
   "rules": {
+    "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-non-null-assertion": "off",
     "quote-props": 0,
     "object-curly-spacing": ["error", "always"],
     "operator-linebreak": "off",

@@ -26,15 +26,15 @@ function Products() {
   const products = query(collection(firestore, "products"), limit(limitTo));
 
   // Provide the query to the hook
-  const query = useFirestoreQuery(["products", { limitTo }], products, {
+  const products = useFirestoreQuery(["products", { limitTo }], products, {
     subscribe: true,
   });
 
-  if (query.isLoading) {
+  if (products.isLoading) {
     return <div>Loading...</div>;
   }
 
-  const snapshot: QuerySnapshot<DocumentData> = query.data;
+  const snapshot: QuerySnapshot<DocumentData> = products.data;
 
   return snapshot.docs.map((docSnapshot) => {
     const data = docSnapshot.data();
