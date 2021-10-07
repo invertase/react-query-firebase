@@ -34,7 +34,7 @@ Within a component, import and provide a hook a Query Key and the reference:
 
 ```jsx
 import React from "react";
-import { useFirestoreQuery } from "@react-query-firebase/firestore";
+import { useFirestoreDocument } from "@react-query-firebase/firestore";
 import {
   query,
   collection,
@@ -45,8 +45,7 @@ import {
 import { firestore } from "../firebase";
 
 function Product({ id }) {
-  const collectionRef = collection(firestore, "products");
-  const ref = doc(collectionRef, id);
+  const ref = doc(firestore, 'products', id);
 
   const product = useFirestoreDocument(["products", id], ref);
 

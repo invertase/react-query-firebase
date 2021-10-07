@@ -1,0 +1,596 @@
+---
+title: Authentication Actions | Authentication
+description: Hooks for integrating with Authentication.
+---
+
+# Authentication Actions
+
+When working with Authentication, it's common you'll want to perform authentication actions throughout your
+application, such as signing in a user, creating a user, triggering an OAuth flow, updating a user and lots more.
+
+The React Query Firebase library supports all of the authentication actions by wrapping around the
+[`useMutation`](https://react-query.tanstack.com/reference/useMutation) hook.
+
+Although the Firebase SDK makes it super simple to perform these actions, it is still up to you to handle
+local state such as loading, errors and success. The hooks provided by this library make such scenarios simple.
+
+For example, to sign a user in without the hooks, we need to handle many states ourselves:
+
+```jsx
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "./firebase";
+
+function SignIn() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState("");
+  const [error, setError] = useState("");
+
+  async function onSignIn() {
+    try {
+      setLoading(true);
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <>
+      <input value={email} onChange={(e) => setEmail(e.target.value)} />
+      <input value={password} onChange={(e) => setPassword(e.target.value)} />
+      <button disabled={loading} onClick={onSignIn}>
+        Sign In
+      </button>
+      {!!error && <p>{error}</p>}
+    </>
+  );
+}
+```
+
+Granted this could be cleaned up using form libraries and reducers, however repeating this process for the many authentication
+actions becomes tiresome.
+
+Instead, with React Query Firebase we're able to quickly setup the same flow with minimal code:
+
+```jsx
+import { useAuthSignInWithEmailAndPassword } from "@react-query-firebase/auth";
+import { auth } from "./firebase";
+
+function SignIn() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const mutation = useAuthSignInWithEmailAndPassword(auth, {
+    onError(error) {
+      toast.error("Could not sign you in!");
+    },
+  });
+
+  function onSignIn() {
+    mutation.mutate({ email, password });
+  }
+
+  return (
+    <>
+      <input value={email} onChange={(e) => setEmail(e.target.value)} />
+      <input value={password} onChange={(e) => setPassword(e.target.value)} />
+      <button disabled={mutation.isLoading} onClick={onSignIn}>
+        Sign In
+      </button>
+      {!!mutation.isError && <p>{mutation.error.message}</p>}
+    </>
+  );
+}
+```
+
+By using the built in hooks, we abstract the async state handling to React Query, allowing us to focus building the
+UI and not local state management. Another bonus is we're able to provide the React Query mutation options to all of the
+hooks, allowing us to handle side-effects such as error handling!
+
+## Hooks
+
+Below is a list of all of the available hooks which wrap the Firebase API.
+
+### `useAuthApplyActionCode`
+
+Applies a verification code sent to the user by email or other out-of-band mechanism.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#applyactioncode)
+
+```js
+const mutation = useAuthApplyActionCode(auth);
+mutation.mutate("oobCode");
+```
+
+### `useAuthCheckActionCode`
+
+Checks a verification code sent to the user by email or other out-of-band mechanism.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#checkactioncode)
+
+```js
+const mutation = useAuthCheckActionCode(auth, {
+  onSuccess(actionCodeInfo) {
+    console.log("Valid action code!");
+  },
+  onError(error) {
+    console.error("Invalid action code: ", error.code);
+  },
+});
+
+mutation.mutate("oobCode");
+```
+
+### `useAuthConfirmPasswordReset`
+
+Completes the password reset process, given a confirmation code and new password.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#confirmpasswordreset)
+
+```js
+const mutation = useAuthCheckActionCode(auth);
+
+mutation.mutate({
+  oobCode: "...",
+  newPassword: "...",
+});
+```
+
+### `useAuthCreateUserWithEmailAndPassword`
+
+Creates a new user account associated with the specified email address and password.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#createuserwithemailandpassword)
+
+```js
+const mutation = useAuthCreateUserWithEmailAndPassword(auth);
+
+mutation.mutate({
+  email: "foo@bar.com",
+  password: "...",
+});
+```
+
+### `useAuthDeleteUser`
+
+Deletes and signs out the user.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#deleteuser)
+
+```js
+const mutation = useAuthDeleteUser(auth);
+
+mutation.mutate();
+```
+
+### `useAuthLinkWithCredential`
+
+Links the user account with the given credentials.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#linkwithcredential)
+
+```js
+const mutation = useAuthLinkWithCredential();
+
+mutation.mutate({
+  user: auth.currentUser,
+  // Any Auth credential supported...
+  credential: EmailAuthProvider.credential('foo@bar.com', '...');
+});
+```
+
+### `useAuthLinkWithPhoneNumber`
+
+Links the user account with the given phone number.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#linkwithphonenumber)
+
+```js
+const mutation = useAuthLinkWithPhoneNumber();
+
+mutation.mutate({
+  user: auth.currentUser,
+  phoneNumber: '+44123456789'
+  appVerifier: new RecaptchaVerifier('recaptcha'),
+});
+```
+
+### `useAuthLinkWithPopup`
+
+Links the authenticated provider to the user account using a pop-up based OAuth flow.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#linkwithpopup)
+
+```js
+const mutation = useAuthLinkWithPopup();
+
+mutation.mutate({
+  user: auth.currentUser,
+  // Any provider supported...
+  provider: new GithubAuthProvider(),
+});
+```
+
+### `useAuthLinkWithRedirect`
+
+Links the OAuthProvider to the user account using a full-page redirect flow.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#linkwithredirect)
+
+```js
+const mutation = useAuthLinkWithRedirect();
+
+mutation.mutate({
+  user: auth.currentUser,
+  // Any provider supported...
+  provider: new GithubAuthProvider(),
+});
+```
+
+### `useAuthReauthenticateWithCredential`
+
+Re-authenticates a user using a fresh credential.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#reauthenticatewithcredential)
+
+```js
+const mutation = useAuthReauthenticateWithCredential();
+
+mutation.mutate({
+  user: auth.currentUser,
+  // Any Auth credential supported...
+  credential: EmailAuthProvider.credential('foo@bar.com', '...');
+});
+```
+
+### `useAuthReauthenticateWithPhoneNumber`
+
+Re-authenticates a user using a fresh phone credential.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#reauthenticatewithphonenumber)
+
+```js
+const mutation = useAuthReauthenticateWithCredential();
+
+mutation.mutate({
+  user: auth.currentUser,
+  phoneNumber: '+44123456789'
+  appVerifier: new RecaptchaVerifier('recaptcha'),
+});
+```
+
+### `useAuthReauthenticateWithPopup`
+
+Reauthenticates the current user with the specified OAuthProvider using a pop-up based OAuth flow.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#reauthenticatewithpopup)
+
+```js
+const mutation = useAuthReauthenticateWithPopup();
+
+mutation.mutate({
+  user: auth.currentUser,
+  // Any provider supported...
+  provider: new GithubAuthProvider(),
+});
+```
+
+### `useAuthReauthenticateWithRedirect`
+
+Reauthenticates the current user with the specified OAuthProvider using a full-page redirect flow.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#reauthenticatewithredirect)
+
+```js
+const mutation = useAuthReauthenticateWithRedirect();
+
+mutation.mutate({
+  user: auth.currentUser,
+  // Any provider supported...
+  provider: new GithubAuthProvider(),
+});
+```
+
+### `useAuthReload`
+
+Reloads user account data, if signed in.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#reload)
+
+```js
+const mutation = useAuthReload();
+
+mutation.mutate({
+  user: auth.currentUser,
+});
+```
+
+### `useAuthSendEmailVerification`
+
+Sends a verification email to a user.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#sendemailverification)
+
+```js
+const mutation = useAuthSendEmailVerification();
+
+mutation.mutate({
+  user: auth.currentUser,
+  actionCodeSettings: {...}, // optional
+});
+```
+
+### `useAuthSendPasswordResetEmail`
+
+Sends a password reset email to the given email address.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#sendpasswordresetemail)
+
+```js
+const mutation = useAuthSendPasswordResetEmail(auth);
+
+mutation.mutate({
+  email: 'foo@bar.com',
+  actionCodeSettings: {...}, // optional
+});
+```
+
+### `useAuthSendSignInLinkToEmail`
+
+Sends a sign-in email link to the user with the specified email.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#sendsigninlinktoemail)
+
+```js
+const mutation = useAuthSendPasswordResetEmail(auth);
+
+mutation.mutate({
+  email: 'foo@bar.com',
+  actionCodeSettings: {...},
+});
+```
+
+### `useAuthSignInAnonymously`
+
+Asynchronously signs in as an anonymous user.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#signinanonymously)
+
+```js
+const mutation = useAuthSignInAnonymously(auth);
+
+mutation.mutate();
+```
+
+### `useAuthSignInWithCredential`
+
+Asynchronously signs in with the given credentials.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#signinwithcredential)
+
+```js
+const mutation = useAuthSignInWithCredential(auth);
+
+const credential = EmailAuthProvider.credential("foo@bar.com", "...");
+mutation.mutate(credential);
+```
+
+### `useAuthSignInWithCustomToken`
+
+Asynchronously signs in using a custom token.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#signinwithcustomtoken)
+
+```js
+const mutation = useAuthSignInWithCustomToken(auth);
+
+mutation.mutate("xxxxx");
+```
+
+### `useAuthSignInWithEmailAndPassword`
+
+Asynchronously signs in using a custom token.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#signinwithemailandpassword)
+
+```js
+const mutation = useAuthSignInWithEmailAndPassword(auth);
+
+mutation.mutate({
+  email: "foo@bar.com",
+  password: "...",
+});
+```
+
+### `useAuthSignInWithEmailLink`
+
+Asynchronously signs in using an email and sign-in email link.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#signinwithemaillink)
+
+```js
+const mutation = useAuthSignInWithEmailLink(auth);
+
+mutation.mutate({
+  email: "foo@bar.com",
+  emailLink: "https://...", // optional
+});
+```
+
+### `useAuthSignInWithPhoneNumber`
+
+Asynchronously signs in using a phone number.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#signinwithphonenumber)
+
+```js
+const mutation = useAuthSignInWithPhoneNumber(auth);
+
+mutation.mutate({
+  phoneNumber: '+44123456789'
+  appVerifier: new RecaptchaVerifier('recaptcha'),
+});
+```
+
+### `useAuthSignInWithPopup`
+
+Authenticates a Firebase client using a popup-based OAuth authentication flow.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#signinwithpopup)
+
+```js
+const mutation = useAuthSignInWithPopup(auth);
+
+mutation.mutate({
+  // Any provider supported...
+  provider: new GithubAuthProvider(),
+});
+```
+
+### `useAuthSignInWithRedirect`
+
+Authenticates a Firebase client using a full-page redirect flow.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#signinwithredirect)
+
+```js
+const mutation = useAuthSignInWithRedirect(auth);
+
+mutation.mutate({
+  // Any provider supported...
+  provider: new GithubAuthProvider(),
+});
+```
+
+### `useAuthSignOut`
+
+Signs out the current user.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#signout)
+
+```js
+const mutation = useAuthSignOut(auth);
+
+mutation.mutate();
+```
+
+### `useAuthUnlink`
+
+Unlinks a provider from a user account.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#unlink)
+
+```js
+const mutation = useAuthUnlink();
+
+mutation.mutate({
+  user: auth.currentUser,
+  providerId: 'google.com',
+});
+```
+
+### `useAuthUpdateCurrentUser`
+
+Asynchronously sets the provided user as `Auth.currentUser` on the Auth instance.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#updatecurrentuser)
+
+```js
+const mutation = useAuthUpdateCurrentUser(auth);
+
+mutation.mutate(user); // Some `User` instance
+mutation.mutate(null); // Removes the user
+```
+
+### `useAuthUpdateEmail`
+
+Updates the user's email address.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#updateemail)
+
+```js
+const mutation = useAuthUpdateEmail();
+
+mutation.mutate({
+  user: auth.currentUser,
+  newEmail: 'bar@foo.com',
+});
+```
+
+### `useAuthUpdatePassword`
+
+Updates the user's password.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#updatepassword)
+
+```js
+const mutation = useAuthUpdatePassword();
+
+mutation.mutate({
+  user: auth.currentUser,
+  newPassword: '...',
+});
+```
+
+### `useAuthUpdatePhoneNumber`
+
+Updates the user's phone number.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#updatephonenumber)
+
+```js
+const mutation = useAuthUpdatePhoneNumber();
+
+mutation.mutate({
+  user: auth.currentUser,
+  // PhoneAuthCredential returned from phone auth flow
+  credential,
+});
+```
+
+### `useAuthUpdateProfile`
+
+Updates a user's profile data.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#updateprofile)
+
+```js
+const mutation = useAuthUpdateProfile();
+
+mutation.mutate({
+  user: auth.currentUser,
+  displayName: '...', // optional
+  photoURL: 'https://...', // optional
+});
+```
+
+### `useAuthVerifyBeforeUpdateEmail`
+
+Sends a verification email to a new email address.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#verifybeforeupdateemail)
+
+```js
+const mutation = useAuthVerifyBeforeUpdateEmail();
+
+mutation.mutate({
+  user: auth.currentUser,
+  newEmail: 'bar@foo.com',
+  actionCodeSettings: {}, // optional
+});
+```
+
+### `useAuthVerifyPasswordResetCode`
+
+Checks a password reset code sent to the user by email or other out-of-band mechanism.
+
+- [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#verifypasswordresetcode)
+
+```js
+const mutation = useAuthVerifyPasswordResetCode(auth);
+
+mutation.mutate('oobCode');
+```
+

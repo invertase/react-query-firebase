@@ -4,12 +4,19 @@
   "theme": "#FF4154",
   "sidebar": [
     ["Getting Started", "/"],
-    ["Authentication", "/auth"],
+    [
+      "Authentication",
+      [
+        ["Getting Started", "/auth"],
+        ["ID Token", "/auth/id-token"],
+        ["Auth Actions", "/auth/actions"]
+      ]
+    ],
     ["Database", "/database"],
     [
       "Firestore",
       [
-        ["Getting Started", "/firestore/getting-started"],
+        ["Getting Started", "/firestore"],
         ["Querying Collections", "/firestore/querying-collections"],
         ["Querying Documents", "/firestore/querying-documents"],
         ["Data Mutation", "/firestore/data-mutation"],
