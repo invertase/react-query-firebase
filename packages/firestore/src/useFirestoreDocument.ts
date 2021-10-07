@@ -33,6 +33,7 @@ import {
   onSnapshot,
   SnapshotOptions,
   Unsubscribe,
+  FirestoreError,
 } from "firebase/firestore";
 import {
   GetSnapshotSource,
@@ -62,10 +63,10 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
   ref: DocumentReference<T>,
   options?: UseFirestoreHookOptions,
   useQueryOptions?: Omit<
-    UseQueryOptions<DocumentSnapshot<T>, Error, R>,
+    UseQueryOptions<DocumentSnapshot<T>, FirestoreError, R>,
     "queryFn"
   >
-): UseQueryResult<R, Error> {
+): UseQueryResult<R, FirestoreError> {
   const client = useQueryClient();
   const unsubscribe = useRef<Unsubscribe>();
 
@@ -73,7 +74,7 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
     return () => unsubscribe.current?.();
   }, []);
 
-  return useQuery<DocumentSnapshot<T>, Error, R>({
+  return useQuery<DocumentSnapshot<T>, FirestoreError, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
     async queryFn() {
@@ -114,10 +115,10 @@ export function useFirestoreDocumentData<
   ref: DocumentReference<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions,
   useQueryOptions?: Omit<
-    UseQueryOptions<WithIdField<T> | undefined, Error, R>,
+    UseQueryOptions<WithIdField<T> | undefined, FirestoreError, R>,
     "queryFn"
   >
-): UseQueryResult<R, Error>;
+): UseQueryResult<R, FirestoreError>;
 
 export function useFirestoreDocumentData<
   ID extends string,
@@ -128,10 +129,10 @@ export function useFirestoreDocumentData<
   ref: DocumentReference<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions & { idField: ID },
   useQueryOptions?: Omit<
-    UseQueryOptions<WithIdField<T, ID> | undefined, Error, R>,
+    UseQueryOptions<WithIdField<T, ID> | undefined, FirestoreError, R>,
     "queryFn"
   >
-): UseQueryResult<R | undefined, Error>;
+): UseQueryResult<R | undefined, FirestoreError>;
 
 export function useFirestoreDocumentData<
   ID extends string,
@@ -142,10 +143,10 @@ export function useFirestoreDocumentData<
   ref: DocumentReference<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions & { idField?: ID },
   useQueryOptions?: Omit<
-    UseQueryOptions<WithIdField<T, ID> | undefined, Error, R>,
+    UseQueryOptions<WithIdField<T, ID> | undefined, FirestoreError, R>,
     "queryFn"
   >
-): UseQueryResult<R, Error> {
+): UseQueryResult<R, FirestoreError> {
   const client = useQueryClient();
   const unsubscribe = useRef<Unsubscribe>();
 
@@ -153,7 +154,7 @@ export function useFirestoreDocumentData<
     return () => unsubscribe.current?.();
   }, []);
 
-  return useQuery<WithIdField<T, ID> | undefined, Error, R>({
+  return useQuery<WithIdField<T, ID> | undefined, FirestoreError, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
     async queryFn(): Promise<WithIdField<T, ID> | undefined> {

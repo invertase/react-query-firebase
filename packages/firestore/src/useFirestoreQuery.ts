@@ -39,6 +39,7 @@ import {
   DocumentData,
   Firestore,
   SnapshotOptions,
+  FirestoreError,
 } from "firebase/firestore";
 import {
   GetSnapshotSource,
@@ -61,15 +62,9 @@ function isNamedQuery<T>(query: QueryType<T>): query is NamedQuery<T> {
 export async function resolveQuery<T>(query: QueryType<T>): Promise<Query<T>> {
   if (isNamedQuery(query)) {
     if (typeof query === "function") {
+      // Firebase throws an error if the query doesn't exist.
       const resolved = await query();
-
-      if (!resolved) {
-        throw new Error(
-          "A named query returned no response. Ensure you have loaded the remote bundle containing the same named key."
-        );
-      }
-
-      return resolved;
+      return resolved!;
     }
 
     return query;
@@ -117,8 +112,11 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
   key: QueryKey,
   query: QueryType<T>,
   options?: UseFirestoreHookOptions,
-  useQueryOptions?: Omit<UseQueryOptions<QuerySnapshot<T>, Error, R>, "queryFn">
-): UseQueryResult<R, Error> {
+  useQueryOptions?: Omit<
+    UseQueryOptions<QuerySnapshot<T>, FirestoreError, R>,
+    "queryFn"
+  >
+): UseQueryResult<R, FirestoreError> {
   const client = useQueryClient();
   const unsubscribe = useRef<Unsubscribe>();
 
@@ -126,7 +124,7 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
     return () => unsubscribe.current?.();
   }, []);
 
-  return useQuery<QuerySnapshot<T>, Error, R>({
+  return useQuery<QuerySnapshot<T>, FirestoreError, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
     async queryFn() {
@@ -165,8 +163,11 @@ export function useFirestoreQueryData<T = DocumentData, R = WithIdField<T>[]>(
   key: QueryKey,
   query: QueryType<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions,
-  useQueryOptions?: Omit<UseQueryOptions<WithIdField<T>[], Error, R>, "queryFn">
-): UseQueryResult<R, Error>;
+  useQueryOptions?: Omit<
+    UseQueryOptions<WithIdField<T>[], FirestoreError, R>,
+    "queryFn"
+  >
+): UseQueryResult<R, FirestoreError>;
 
 export function useFirestoreQueryData<
   ID extends string,
@@ -177,10 +178,10 @@ export function useFirestoreQueryData<
   query: QueryType<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions & { idField: ID },
   useQueryOptions?: Omit<
-    UseQueryOptions<WithIdField<T, ID>[], Error, R>,
+    UseQueryOptions<WithIdField<T, ID>[], FirestoreError, R>,
     "queryFn"
   >
-): UseQueryResult<R, Error>;
+): UseQueryResult<R, FirestoreError>;
 
 export function useFirestoreQueryData<
   ID extends string,
@@ -191,10 +192,10 @@ export function useFirestoreQueryData<
   query: QueryType<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions & { idField?: ID },
   useQueryOptions?: Omit<
-    UseQueryOptions<WithIdField<T, ID>[], Error, R>,
+    UseQueryOptions<WithIdField<T, ID>[], FirestoreError, R>,
     "queryFn"
   >
-): UseQueryResult<R, Error> {
+): UseQueryResult<R, FirestoreError> {
   const client = useQueryClient();
   const unsubscribe = useRef<Unsubscribe>();
 
@@ -202,7 +203,7 @@ export function useFirestoreQueryData<
     return () => unsubscribe.current?.();
   }, []);
 
-  return useQuery<WithIdField<T, ID>[], Error, R>({
+  return useQuery<WithIdField<T, ID>[], FirestoreError, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
     async queryFn(): Promise<WithIdField<T, ID>[]> {
@@ -281,8 +282,8 @@ export function useFirestoreInfiniteQuery<
     UseInfiniteQueryOptions,
     "queryFn" | "getNextPageParam"
   >
-): UseInfiniteQueryResult<R, Error> {
-  return useInfiniteQuery<QuerySnapshot<T>, Error, R>({
+): UseInfiniteQueryResult<R, FirestoreError> {
+  return useInfiniteQuery<QuerySnapshot<T>, FirestoreError, R>({
     queryKey: useInfiniteQueryOptions?.queryKey ?? key,
     async queryFn(ctx: QueryFunctionContext<QueryKey, Query<T>>) {
       const query: Query<T> = ctx.pageParam ?? initialQuery;
@@ -305,10 +306,10 @@ export function useFirestoreInfiniteQueryData<
     source?: GetSnapshotSource;
   } & SnapshotOptions,
   useInfiniteQueryOptions?: Omit<
-    UseInfiniteQueryOptions<WithIdField<T>[], Error, R>,
+    UseInfiniteQueryOptions<WithIdField<T>[], FirestoreError, R>,
     "queryFn" | "getNextPageParam"
   >
-): UseInfiniteQueryResult<R, Error>;
+): UseInfiniteQueryResult<R, FirestoreError>;
 
 export function useFirestoreInfiniteQueryData<
   ID extends string,
@@ -322,10 +323,10 @@ export function useFirestoreInfiniteQueryData<
     source?: GetSnapshotSource;
   } & SnapshotOptions & { idField: ID },
   useInfiniteQueryOptions?: Omit<
-    UseInfiniteQueryOptions<WithIdField<T, ID>[], Error, R>,
+    UseInfiniteQueryOptions<WithIdField<T, ID>[], FirestoreError, R>,
     "queryFn" | "getNextPageParam"
   >
-): UseInfiniteQueryResult<R, Error>;
+): UseInfiniteQueryResult<R, FirestoreError>;
 
 export function useFirestoreInfiniteQueryData<
   ID extends string,
@@ -339,11 +340,11 @@ export function useFirestoreInfiniteQueryData<
     source?: GetSnapshotSource;
   } & SnapshotOptions & { idField?: ID },
   useInfiniteQueryOptions?: Omit<
-    UseInfiniteQueryOptions<WithIdField<T, ID>[], Error, R>,
+    UseInfiniteQueryOptions<WithIdField<T, ID>[], FirestoreError, R>,
     "queryFn" | "getNextPageParam"
   >
-): UseInfiniteQueryResult<R, Error> {
-  return useInfiniteQuery<WithIdField<T, ID>[], Error, R>({
+): UseInfiniteQueryResult<R, FirestoreError> {
+  return useInfiniteQuery<WithIdField<T, ID>[], FirestoreError, R>({
     queryKey: useInfiniteQueryOptions?.queryKey ?? key,
     async queryFn(
       ctx: QueryFunctionContext<QueryKey, Query<T>>
