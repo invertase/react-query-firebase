@@ -1,0 +1,81 @@
+---
+title: Querying Functions | Cloud Functions
+description: Hooks for integrating with Cloud Functions.
+---
+
+# Querying Functions
+
+The `useFunctionsQuery` enables you to query a Callable Cloud Function as your render.
+
+For example, lets assume we have a `getProduct` Callable HTTPS Function deployed which accepts a product ID
+and returns data. We can query the function and render the response:
+
+```jsx
+import React from "react";
+import { useFunctionsQuery } from "@react-query-firebase/functions";
+import { functions } from "../firebase";
+
+function Product({ id }: { id: number }) {
+  // Functions has a deployed `getProduct` callable function
+  const query = useFunctionsQuery(["product", id], functions, "getProduct", {
+    id,
+  });
+
+  if (query.isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  return <h1>{query.data.name}</h1>;
+}
+```
+
+- We first provide a [Query Key](https://react-query.tanstack.com/guides/query-keys).
+- We provide the hook the exported `Functions` instance.
+- We provide the name of the Callable Function (in this case `getProduct`).
+- Data (request body) is provided to the function. This is optional.
+
+## `HttpsCallableOptions`
+
+The 4th argument of the hook accepts an optional [`HttpsCallableOptions`](https://firebase.google.com/docs/reference/js/functions.httpscallableoptions)
+argument which will be used when requested. For example we can increase the timeout of the request.
+
+```js
+const query = useFunctionsQuery(
+  ["product", id],
+  functions,
+  "getProduct",
+  {
+    id,
+  },
+  {
+    timeout: 10000,
+  }
+);
+```
+
+## React Query options
+
+The 5th optional argument accepts options of the [`useQuery`](https://react-query.tanstack.com/reference/useQuery) hook,
+allowing us handle things such as side effects.
+
+```js
+const query = useFunctionsQuery(
+  ["product", id],
+  functions,
+  "getProduct",
+  {
+    id,
+  },
+  {
+    timeout: 10000,
+  },
+  {
+    onSuccess(product) {
+      console.log("Fetched the product: ", product);
+    },
+    onError(error) {
+      console.error("Error fetching the product!", error);
+    },
+  }
+);
+```
