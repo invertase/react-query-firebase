@@ -12,7 +12,15 @@
         ["Auth Actions", "/auth/actions"]
       ]
     ],
-    ["Database", "/database"],
+    [
+      "Database",
+      [
+        ["Getting Started", "/database"],
+        ["Querying Data", "/database/querying"],
+        ["Data Mutation", "/database/data-mutation"],
+        ["TypeScript", "/database/typescript"]
+      ]
+    ],
     [
       "Firestore",
       [
