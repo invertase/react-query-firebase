@@ -16,7 +16,7 @@ npm i --save @react-query-firebase/firestore
 
 ## Usage
 
-To use the hooks, export your `Firestore` instance from your codebase, e.g:
+To use the hooks, export a `Firestore` instance from your codebase, e.g:
 
 ```js
 // src/firebase.js
@@ -29,3 +29,29 @@ const firebase = initializeApp({
 
 export const firestore = getFirestore(firebase);
 ```
+
+## Documentation
+
+- [Querying Collections](/firestore/querying-collections)
+- [Querying Documents](/firestore/querying-documents)
+- [Data Mutation](/firestore/data-mutation)
+- [Prefetching](/firestore/prefetching)
+- [TypeScript](/firestore/typescript)
+
+## Hooks
+
+- [`useFirestoreQuery`](/firestore/hooks/useFirestoreQuery)
+- [`useFirestoreQueryData`](/firestore/hooks/useFirestoreQueryData)
+
+- [`useFirestoreInfiniteQuery`](/firestore/hooks/useFirestoreInfiniteQuery)
+- [`useFirestoreInfiniteQueryData`](/firestore/hooks/useFirestoreInfiniteQueryData)
+
+- [`useFirestoreDocument`](/firestore/hooks/useFirestoreDocument)
+- [`useFirestoreDocumentData`](/firestore/hooks/useFirestoreDocumentData)
+
+- [`useFirestoreCollectionMutation`](firestore/hooks/useFirestoreCollectionMutation)
+- [`useFirestoreDocumentMutation`](firestore/hooks/useFirestoreDocumentMutation)
+- [`useFirestoreDocumentDeletion`](firestore/hooks/useFirestoreDocumentDeletion)
+- [`useFirestoreTransaction`](firestore/hooks/useFirestoreTransaction)
+- [`useFirestoreWriteBatch`](firestore/hooks/useFirestoreWriteBatch)
+

@@ -18,8 +18,8 @@ It accepts a `CollectionReference` and when the mutation is triggered, the provi
 data is added as a new document.
 
 ```jsx
-import { collection } from "firebase/firestore";
 import { useFirestoreCollectionMutation } from "@react-query-firebase/firestore";
+import { collection } from "firebase/firestore";
 import { firestore } from "./firebase";
 
 function AddDocument() {
@@ -179,8 +179,7 @@ function WriteBatchDocuments() {
   // Define the WriteBatch instance
   const batch = writeBatch(firestore);
 
-  const collection = collection(firestore, "products");
-  const ref = doc(collection, "123");
+  const ref = doc(collection(firestore, "products"), "123");
 
   const mutation = useFirestoreWriteBatch(batch);
 
@@ -203,22 +202,37 @@ function WriteBatchDocuments() {
 }
 ```
 
-## React Query options
+## Side Effects
 
 All mutation hooks are built on-top of the [`useMutation`](https://react-query.tanstack.com/reference/useMutation) hook,
-and allow you to provide all of the options it accepts. This enables you to easily
-build any UI flow you desire. For example:
+and allow you define mutation side effects:
 
 ```js
-const mutation = useFirestoreDocumentMutation(ref, {
+const mutation = useFirestoreCollectionMutation(ref, {
   onSuccess() {
-    toast.success('Document updated!');
+    toast.success("Document added!");
   },
   onError(error) {
-    toast.error(error.message);
+    toast.error("Failed to add document!");
   },
   onMutate() {
-    toast.info('Updating document...');
+    toast.info("Adding document...");
   },
 });
+
+// or on the mutation function!
+mutation.mutate(
+  { name: "New Product!" },
+  {
+    onSuccess() {
+      toast.success("Document added!");
+    },
+    onError(error) {
+      toast.error("Failed to add document!");
+    },
+    onMutate() {
+      toast.info("Adding document...");
+    },
+  }
+);
 ```

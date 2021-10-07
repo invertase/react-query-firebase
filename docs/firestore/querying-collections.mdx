@@ -10,7 +10,9 @@ to get the best results from the library.
 
 ## Providing a query reference
 
-To start querying a collection, you need to provide the hooks with a Query reference
+To start querying a collection, you need to provide the hooks with a
+[`CollectionReference`](https://firebase.google.com/docs/reference/js/firestore_.collectionreference) or
+[`Query`](https://firebase.google.com/docs/reference/js/firestore_.query) reference
 created directly from the `firebase/firestore` library. The reference can be a simple
 collection pointer or a fully constrained query using the querying functionality
 provided by the Firestore SDK.
@@ -43,7 +45,7 @@ With your query reference in hand, you can get started.
 
 The library provides 2 main hooks for querying collections; `useFirestoreQuery` and `useFirestoreQueryData`.
 Each hook is similar however returns slightly different results (see the next section for more detail).
-Within a component, import and provide a hook a query key and the reference:
+Within a component, import and provide a hook a Query Key and the reference:
 
 ```jsx
 import React from "react";
@@ -95,17 +97,17 @@ const query = useFirestoreQuery(["products"], ref, {
 });
 ```
 
-If data is changed which touches your provided query, the hook update the data for
-the query.
+If data is changed which touches your provided query, the hook data will be updated.
 
-Anytime the Query Key changes, your component unmounts or fresh data is required
+Anytime the Query Key changes or your component unmounts or fresh data is required,
 the hook will automatically handle unsubscribing from new events.
 
 ## Snapshots & Data
 
 When Firestore returns data from a query, it does not provide the raw document data - instead
-we are provided a `QuerySnapshot` containing an array of `DocumentSnapshot` classes. Although
-these classes provide useful functionality, we sometimes just want the data from the database
+we are provided a [`QuerySnapshot`](https://firebase.google.com/docs/reference/js/firestore_.querysnapshot)
+containing an array of [`DocumentSnapshot`](https://firebase.google.com/docs/reference/js/firestore_.documentsnapshot) instances.
+Although these classes provide useful functionality, we sometimes just want the data from the database
 for convinience.
 
 As shown above the `useFirestoreQuery` hook returns a `QuerySnapshot`, which requires
@@ -142,7 +144,7 @@ If your query changes, ensure your Query Key also changes to reflect this. For e
 the following **will not work**:
 
 ```jsx
-// This does not work!!!
+// This does not work!!!!!11
 const [type, setType] = useState("swag");
 const ref = query(collection, where("type", "==", type));
 
@@ -151,7 +153,8 @@ const query = useFirestoreQueryData(["products"], ref);
 <button onClick={() => setType("merch")}>Update product type</button>;
 ```
 
-Only when React Query performs a refetch will your data change, making it unpredictable.
+Only when React Query performs a refetch will your data change, making your application
+state unpredictable.
 
 To predicitably update your data, ensure your Query Key reflects your reference:
 
@@ -160,7 +163,7 @@ To predicitably update your data, ensure your Query Key reflects your reference:
 const [type, setType] = useState("swag");
 const ref = query(collection, where("type", "==", type));
 
-// The Query Key now reflects the ref change
+// The Query Key now reflects the query constraints
 const query = useFirestoreQueryData(["products", { type }], ref);
 
 <button onClick={() => setType("merch")}>Update product type</button>;
@@ -176,21 +179,21 @@ can specify a `source` parameter to indiciate whether the
 cached or server documents should be queried:
 
 ```js
-useFirestoreQuery("products", query, {
+useFirestoreQuery(["products"], query, {
   subscribe: false, // or undefined
   source: "cache", // or 'server'
 });
 ```
 
-If no value is provided, a combination of cache and server will be used (as default).
+If no value is provided, a combination of cache and server will be used (as default by Firestore).
 
 ### Include metadata changes
 
-If querying a collection by subscribing, you can also subscribe to metadata changes on
+If subscribing to a query, you can also subscribe to metadata changes on
 documents.
 
 ```js
-useFirestoreQuery("products", query, {
+useFirestoreQuery(["products"], query, {
   subscribe: true,
   includeMetadataChanges: true,
 });
@@ -198,7 +201,7 @@ useFirestoreQuery("products", query, {
 
 ## Named Queries
 
-If you have the ability to [data bundles](https://firebase.googleblog.com/2021/04/firestore-supports-data-bundles.html),
+If you have the ability to create [data bundles](https://firebase.googleblog.com/2021/04/firestore-supports-data-bundles.html),
 you can instead provide a named query to the hook. The hook will first download the query and then cache it based on the
 Firestore instance and bundle name.
 
@@ -233,8 +236,8 @@ If the bundle does not exist an error will be thrown.
 ## Paginated / Infinite Queries
 
 Paginating data (or loading infinite data) is supported via the `useFirestoreInfiniteQuery` and
-`useFirestoreInfiniteQueryData` hooks. The hooks both wrap the [`useInfiniteQuery`](https://react-query.tanstack.com/reference/useInfiniteQuery)
-hook.
+`useFirestoreInfiniteQueryData` hooks. The hooks both wrap the
+[`useInfiniteQuery`](https://react-query.tanstack.com/reference/useInfiniteQuery) hook.
 
 The first step is to define an initial query, which will be called when the hook mounts:
 
@@ -269,7 +272,12 @@ of the current list - it's up to you!
 ```jsx
 const posts = useFirestoreInfiniteQuery(...);
 
-<button onClick={() => posts.fetchNextPage()}>Load More</button>
+<button
+  disabled={posts.isLoading}
+  onClick={() => posts.fetchNextPage()}
+>
+  Load More
+</button>
 ```
 
 To learn more, visit the [React Query Infinite Queries guide](https://react-query.tanstack.com/guides/infinite-queries).
@@ -281,7 +289,7 @@ One such option is a `select` function which allows modification of data before 
 returned from the query.
 
 This functionality is really powerful. For example if we wished to return an array of
-product IDs rather than the entire document:
+product IDs rather than the entire document as the query result:
 
 ```js
 const query = useFirestoreQuery(
@@ -291,6 +299,7 @@ const query = useFirestoreQuery(
     subscribe: true,
   },
   {
+    // React Query data selector
     select(snapshot) {
       return snapshot.docs.map((docSnapshot) => docSnapshot.id);
     },
@@ -303,11 +312,10 @@ const data = query.data; // ['id1', 'id2', ...]
 Another usecase is returning a single document from a query when you do not know the ID:
 
 ```js
-/* This example also works with the useFirestoreQueryData hook */
-
 // Users can only have a single active subscription
 const findActiveSubscription = query(
   collection(firestore, "subscriptions"),
+  where("uid", "==", "123"),
   where("status", "==", "active"),
   limit(1)
 );
@@ -358,27 +366,7 @@ if (products.isSuccess) {
 }
 ```
 
-This also works with TypeScript, either by explicially providing the ID type or
-inferred by the option:
-
-```ts
-type Product = {
-  name: string;
-};
-
-// Explicit types
-const products = useFirestoreQueryData<"_id", Product>("products", query, {
-  idField: "_id",
-});
-
-// Inferred types
-const query = collection(firebase, 'products').withConverter<Product>(...);
-const products = useFirestoreQueryData("products", query, {
-  idField: "_id",
-});
-```
-
-In this example, the `Product` type will have the `_id` field joined (`Product & { _id: string }`).
+Note the `idField` will override any data properties if they collide with the same name.
 
 ## React Query options
 
@@ -386,13 +374,12 @@ Each hook allows us to provide [`useQuery`](https://react-query.tanstack.com/ref
 options as the last argument, opening up the possibility to integrate the library easily across
 any application.
 
-For example, we can handle state (e.g. success and error) reactivly and also trigger functions within
-the same workflow:
+For example, we can handle side effects alonside reactive updates with ease:
 
 ```jsx
 const query = useFirestoreQuery(
-  "subscription",
-  findActiveSubscription,
+  ["products"],
+  ref,
   {
     subscribe: true,
   },

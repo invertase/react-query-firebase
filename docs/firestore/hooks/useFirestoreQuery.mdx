@@ -1,0 +1,17 @@
+---
+title: useFirestoreQuery | Firestore
+description: Hooks for integrating with Firestore.
+---
+
+# `useFirestoreQuery`
+
+Fetches data for a given Query reference.
+
+```ts
+useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
+  key: QueryKey,
+  query: QueryType<T>,
+  options?: UseFirestoreHookOptions,
+  useQueryOptions?: Omit<UseQueryOptions<QuerySnapshot<T>, FirestoreError, R>, "queryFn">
+): UseQueryResult<R, FirestoreError>;
+```
