@@ -6,7 +6,17 @@
     ["Getting Started", "/"],
     ["Authentication", "/auth"],
     ["Database", "/database"],
-    ["Firestore", "/firestore"],
+    [
+      "Firestore",
+      [
+        ["Getting Started", "/firestore/getting-started"],
+        ["Querying Collections", "/firestore/querying-collections"],
+        ["Querying Documents", "/firestore/querying-documents"],
+        ["Data Mutation", "/firestore/data-mutation"],
+        ["Prefetching", "/firestore/prefetching"],
+        ["TypeScript", "/firestore/typescript"]
+      ]
+    ],
     ["Functions", "/functions"],
     [
       "Examples",
