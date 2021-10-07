@@ -4,6 +4,7 @@ import {
   useQuery,
   useQueryClient,
   UseQueryOptions,
+  UseQueryResult,
 } from "react-query";
 import {
   Auth,
@@ -18,7 +19,7 @@ export function useAuthUser<R = User | null>(
   key: QueryKey,
   auth: Auth,
   useQueryOptions?: Omit<UseQueryOptions<User | null, AuthError, R>, "queryFn">
-) {
+): UseQueryResult<R, AuthError> {
   const client = useQueryClient();
   const unsubscribe = useRef<Unsubscribe>();
 
@@ -60,7 +61,7 @@ export function useAuthIdToken<R = IdTokenResult | null>(
     UseQueryOptions<IdTokenResult | null, AuthError, R>,
     "queryFn"
   >
-) {
+): UseQueryResult<R, AuthError> {
   const client = useQueryClient();
   const unsubscribe = useRef<Unsubscribe>();
 
@@ -103,7 +104,7 @@ export function useAuthFetchSignInMethodsForEmail(
   auth: Auth,
   email: string,
   useQueryOptions?: Omit<UseQueryOptions<string[], AuthError>, "queryFn">
-) {
+): UseQueryResult<string[], AuthError> {
   return useQuery<string[], AuthError>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,

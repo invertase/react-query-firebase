@@ -1,4 +1,8 @@
-import { useMutation, UseMutationOptions } from "react-query";
+import {
+  useMutation,
+  UseMutationOptions,
+  UseMutationResult,
+} from "react-query";
 import {
   DatabaseReference,
   remove,
@@ -18,7 +22,7 @@ export function useDatabaseSetMutation<T = unknown>(
   ref: DatabaseReference,
   options?: UseDatabaseSetMutationOptions,
   useMutationOptions?: UseMutationOptions<void, Error, T>
-) {
+): UseMutationResult<void, Error, T> {
   return useMutation<void, Error, T>((value) => {
     if (options?.priority !== undefined) {
       return setWithPriority(ref, value, options.priority);
@@ -35,7 +39,7 @@ export function useDatabaseUpdateMutation<
 >(
   ref: DatabaseReference,
   useMutationOptions?: UseMutationOptions<void, Error, T>
-) {
+): UseMutationResult<void, Error, T> {
   return useMutation<void, Error, T>((values) => {
     return update(ref, values);
   }, useMutationOptions);
@@ -44,7 +48,7 @@ export function useDatabaseUpdateMutation<
 export function useDatabaseRemoveMutation(
   ref: DatabaseReference,
   useMutationOptions?: UseMutationOptions<void, Error, void>
-) {
+): UseMutationResult<void, Error, void> {
   return useMutation<void, Error, void>(() => {
     return remove(ref);
   }, useMutationOptions);
@@ -55,7 +59,7 @@ export function useDatabaseTransactionMutation<T = any>(
   transactionUpdate: (currentData: T | null) => unknown,
   options?: TransactionOptions,
   useMutationOptions?: UseMutationOptions<TransactionResult, Error, void>
-) {
+): UseMutationResult<TransactionResult, Error, void> {
   return useMutation<TransactionResult, Error, void>(() => {
     return runTransaction(ref, transactionUpdate, options);
   }, useMutationOptions);

@@ -44,7 +44,7 @@ function Example() {
   );
 }
 
-export default function App() {
+export default function App(): JSX.Element {
   return (
     <QueryClientProvider client={queryClient}>
       <Example />

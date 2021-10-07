@@ -13,7 +13,7 @@ setLogger({
   log: console.log,
   warn: console.warn,
   // ✅ no more errors on the console
-  error: () => {},
+  error: () => null,
 });
 
 let emulatorsStarted = false;
@@ -26,7 +26,7 @@ export async function signIn(auth: Auth): Promise<UserCredential> {
   return createUserWithEmailAndPassword(auth, `${genId()}@foo.com`, "123456");
 }
 
-export function init() {
+export function init(): any {
   const firebase = initializeApp({
     projectId: "test-project",
     apiKey: "foo",

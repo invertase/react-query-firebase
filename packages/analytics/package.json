@@ -1,7 +1,7 @@
 {
-  "name": "@react-query-firebase/functions",
-  "version": "0.2.1",
-  "description": "",
+  "name": "@react-query-firebase/analytics",
+  "version": "0.1.0",
+  "description": "Firebase Analytics hooks using React Query.",
   "main": "dist/bundle.cjs.js",
   "module": "dist/bundle.es.js",
   "types": "dist/index.d.ts",

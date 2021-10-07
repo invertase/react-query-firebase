@@ -2,8 +2,10 @@ import {
   QueryKey,
   useMutation,
   UseMutationOptions,
+  UseMutationResult,
   useQuery,
   UseQueryOptions,
+  UseQueryResult,
 } from "react-query";
 import {
   Functions,
@@ -25,7 +27,7 @@ export function useFunctionsQuery<
     UseQueryOptions<ResponseData, Error, ModifiedData>,
     "queryFn"
   >
-) {
+): UseQueryResult<ModifiedData, Error> {
   return useQuery<ResponseData, Error, ModifiedData>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
@@ -41,15 +43,12 @@ export function useFunctionsQuery<
   });
 }
 
-export function useFunctionsCall<
-  RequestData = any,
-  ResponseData = unknown
->(
+export function useFunctionsCall<RequestData = any, ResponseData = unknown>(
   functions: Functions,
   trigger: string,
   options?: HttpsCallableOptions,
   useMutationOptions?: UseMutationOptions<ResponseData, Error, RequestData>
-) {
+): UseMutationResult<ResponseData, Error, RequestData> {
   return useMutation<ResponseData, Error, RequestData>(async (data) => {
     const response = await httpsCallable<RequestData, ResponseData>(
       functions,

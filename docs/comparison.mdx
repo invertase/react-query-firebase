@@ -3,46 +3,46 @@ title: Comparing React Query Firebase
 description: How does React Query Firebase differ from other solutions?
 ---
 
-There are plenty of other solutions to managing your Firebase data with React, such as [ReactFire](https://github.com/FirebaseExtended/reactfire) and
-[react-firebase-hooks](https://github.com/CSFrequency/react-firebase-hooks), so why was this one built?
+How is this library different from other solutions such as such as [ReactFire](https://github.com/FirebaseExtended/reactfire) or
+[react-firebase-hooks](https://github.com/CSFrequency/react-firebase-hooks)?
 
-This library is backed by [React Query](https://react-query.tanstack.com/), rather than a custom built solution to manage state. React Query itself is an
-extreamly popular library that is used for remote data synchronization across your application. Out of the box React Query handles caching, background updates
+The answer is simple - React Query Firebase doesn't try to implement the complex data fetching logic that other solutions provide,
+instead it wraps around [React Query](https://react-query.tanstack.com/). Out of the box React Query handles caching, background updates
 and stale data with zero configuration. It also provides tools such as DevTools, infininiate-loading APIs, data pre-fetching, mutation tools and much more.
 
-Using React Query allows us to focus on integration with Firebase, rather than trying to figure out all of these complex solutions. It also allows developers
-to integarte with existing React Query projects.
+Alongside this, React Query Firebase is unopinionated when it comes to integrating with both Firebase and React Query. You can use the library alongside
+your existing Firebase or React Query code with zero conflict. You provide the [Query Keys](https://react-query.tanstack.com/guides/query-keys) and a
+Firebase instance and the library does the rest. Each hook allows you to also provide React Query hook options, which opens the door to making integration 
+with the rest of your application super powerful.
 
-Take a look at [`useQuery`](https://react-query.tanstack.com/reference/useQuery) and [`useMutation`](https://react-query.tanstack.com/reference/useMutation) to see how
-much functionality React Query provides.
-
-### Pre-fetching
-
-You can pre-fetch data on the server and have it available on the client using [SSR](https://react-query.tanstack.com/guides/ssr#_top), for example:
-
-On the server:
-
-```js
-import { dehydrate, QueryClient } from 'react-query';
-
-const queryClient = new QueryClient();
-
-// For example: `getPosts` calls the Firebase Admin SDK to get the posts
-await queryClient.prefetchQuery('posts', getPosts);
-
-// Load dehydratedState into your application
-const dehydratedState = dehydrate(queryClient)
-```
-
-On the client:
+Since we've also got access to the awesome [`useMutation`](https://react-query.tanstack.com/reference/useMutation) hook, it means the library provides super useful
+hooks to help reduce boilerplate code for many Firebase operations, for example:
 
 ```jsx
-import React from 'react';
-import { useFirestoreQueryData } from '@react-query-firebase/firestore';
+const signIn = useAuthSignInWithEmailAndPassword(auth, {
+  onSuccess() {
+    navigate('/account');
+  },
+  onError(error) {
+    toast.error(error.message);
+  },
+});
 
-function Posts() {
-  const ref = collection(firebase, 'posts');
-  const query = useFirestoreQueryData('posts', ref);
-}
+return (
+  <>
+    <button
+      disabled={signIn.isLoading}
+      onClick={() => signIn.mutate({
+        email: 'foo@bar.com',
+        password: '123456',
+      })}
+    >
+      Sign In
+    </button>
+    {signIn.isError && <p>{signIn.error.message}</p>}
+  </p>
+);
 ```
 
+In this simple example, we've got success and error callback handlers alongside reactive updates within our application, with zero custom local 
+state management. By integrating with React Query, it allows us to build complex logic flows with minimal effort.
