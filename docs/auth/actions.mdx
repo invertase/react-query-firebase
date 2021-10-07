@@ -79,7 +79,7 @@ function SignIn() {
       <button disabled={mutation.isLoading} onClick={onSignIn}>
         Sign In
       </button>
-      {!!mutation.isError && <p>{mutation.error.message}</p>}
+      {mutation.isError && <p>{mutation.error.message}</p>}
     </>
   );
 }

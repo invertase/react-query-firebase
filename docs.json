@@ -24,7 +24,15 @@
         ["TypeScript", "/firestore/typescript"]
       ]
     ],
-    ["Functions", "/functions"],
+    [
+      "Functions",
+      [
+        ["Getting Started", "/functions"],
+        ["Querying Functions", "/functions/querying"],
+        ["Calling Functions", "/functions/calling"],
+        ["TypeScript", "/functions/typescript"]
+      ]
+    ],
     [
       "Examples",
       [
