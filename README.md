@@ -77,13 +77,11 @@ See below for a full list of available packages.
 
 ## Packages
 
-- `@react-query-firebase/analytics`
-- `@react-query-firebase/auth`
-- `@react-query-firebase/database`
-- `@react-query-firebase/firestore`
-- `@react-query-firebase/functions`
-
-> [View the documentation for full usage and examples.](https://react-query-firebase.invertase.dev/)
+- [`@react-query-firebase/analytics`](https://react-query-firebase.invertase.dev/analytics)
+- [`@react-query-firebase/auth`](https://react-query-firebase.invertase.dev/auth)
+- [`@react-query-firebase/database`](https://react-query-firebase.invertase.dev/database)
+- [`@react-query-firebase/firestore`](https://react-query-firebase.invertase.dev/firestore)
+- [`@react-query-firebase/functions`](https://react-query-firebase.invertase.dev/functions)
 
 ## License
 
