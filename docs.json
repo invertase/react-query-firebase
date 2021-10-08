@@ -5,6 +5,15 @@
   "sidebar": [
     ["Getting Started", "/"],
     [
+      "Analytics",
+      [
+        ["Getting Started", "/analytics"],
+        ["Logging Events", "/analytics/logging-events"],
+        ["Actions", "/analytics/actions"],
+        ["TypeScript", "/analytics/typescript"]
+      ]
+    ],
+    [
       "Authentication",
       [
         ["Getting Started", "/auth"],
