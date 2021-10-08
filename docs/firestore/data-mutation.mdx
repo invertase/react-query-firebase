@@ -95,13 +95,13 @@ To delete a document from your collection, use the `useFirestoreDocumentDeletion
 
 ```jsx
 import { collection, doc } from "firebase/firestore";
-import { useFirestoreDocumentMutation } from "@react-query-firebase/firestore";
+import { useFirestoreDocumentDeletion } from "@react-query-firebase/firestore";
 import { firestore } from "./firebase";
 
 function DeleteDocument() {
   const collection = collection(firestore, "products");
   const ref = doc(collection, "456");
-  const mutation = useFirestoreDocumentMutation(ref);
+  const mutation = useFirestoreDocumentDeletion(ref);
 
   return (
     <>

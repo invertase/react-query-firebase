@@ -5,7 +5,7 @@ import { genId, init } from "./helpers";
 import {
   useDatabaseRemoveMutation,
   useDatabaseSetMutation,
-  useDatabaseTransactionMutation,
+  useDatabaseTransaction,
   useDatabaseUpdateMutation,
 } from "../src";
 import { act } from "react-test-renderer";
@@ -121,7 +121,7 @@ describe("Database", () => {
     });
   });
 
-  describe("useDatabaseTransactionMutation", () => {
+  describe("useDatabaseTransaction", () => {
     test("it performs a transaction", async () => {
       const dbRef = ref(database, genId());
 
@@ -135,7 +135,7 @@ describe("Database", () => {
 
       const { result } = renderHook(
         () =>
-          useDatabaseTransactionMutation<{ foo: number }>(dbRef, (data) => {
+          useDatabaseTransaction<{ foo: number }>(dbRef, (data) => {
             if (data) {
               data.foo++;
             }

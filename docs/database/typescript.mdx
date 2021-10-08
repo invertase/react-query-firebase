@@ -1,0 +1,71 @@
+---
+title: TypeScript | Realtime Database
+description: TypeScript usage with React Query Firebase.
+---
+
+The library comes with support for a full typesafe API.
+
+## Typing data values
+
+The `useDatabaseSnapshot` returns a [`DataSnapshot`](https://firebase.google.com/docs/reference/js/database.datasnapshot.md#datasnapshotforeach)
+returns an instance whose `val()` method retuns the data as `any`. In this case, you'll need to cast it.
+
+However, the `useDatabaseValue` hook instead returns the raw data of the reference node, allowing us to
+provide the data type to the hook:
+
+```ts
+type Product = {
+  name: string;
+  price: number;
+};
+
+const product = useDatabaseValue<Product>(["products", id], database, dbRef);
+
+if (product.isSuccess) {
+  // product.data is now typed!
+  console.log(product.data.name);
+  console.log(product.data.price);
+}
+```
+
+## Typing mutations
+
+The mutation hooks allow us to provide a type which ensures the mutation calls are type safe.
+
+When setting data:
+
+```ts
+const mutation = useDatabaseSetMutation<number>(dbRef);
+mutation.mutate(1337);
+```
+
+When updating data, the type must extend the expected update values (`Record<string, unknown>`):
+
+```ts
+type Updates = {
+  age: number;
+  "address/line1": string;
+};
+
+const mutation = useDatabaseUpdateMutation<Updates>(dbRef);
+
+mutation.mutate({
+  age: 18,
+  "address/line1": "Mountain View",
+});
+```
+
+When working with Transactions, you can type the expected value provided to the transaction function:
+
+```ts
+type Post = {
+  title: string;
+  likes: number;
+};
+
+const mutation = useDatabaseTransaction<Post>(dbRef, (post: Post | null) => {
+  // ...
+});
+
+mutation.mutate();
+```
