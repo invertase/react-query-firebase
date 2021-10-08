@@ -1,0 +1,98 @@
+---
+title: Authentication State | Authentication
+description: Hooks for integrating with Authentication.
+---
+
+# Authentication State
+
+This page covers how you can subscribe and listen to the users authentication state, along with some
+useful tips to get the best results from the library.
+
+## Subscribing to updates
+
+Applications taking advantage of Firebase Authentication will more than likely want to subscribe to
+the users authentication state, knowing whether they're signed-in our out.
+
+The `useAuthUser` hook enables you to do exactly this!
+
+```jsx
+import { useAuthUser } from "@react-query-firebase/auth";
+import { auth } from "./firebase";
+
+function App() {
+  const user = useAuthUser(["user"], auth);
+
+  if (user.isLoading) {
+    return <div />;
+  }
+
+  if (user.data) {
+    return <div>Welcome {user.data.displayName}!</div>;
+  }
+
+  return <div>Not signed in.</div>;
+}
+```
+
+Anytime your users state changes, the hooks data will be updated allowing you to reactively handle updates
+within your application. If the user is authenticated, the hook returns the 
+[`User`](https://firebase.google.com/docs/reference/js/auth.user) interface, otherwise it's `null`.
+
+## Sharing a Query Key
+
+One great feature of React Query is that by providing a [Query Key](https://react-query.tanstack.com/guides/query-keys)
+we can share state between components, without worrying about multiple calls and listeners being created all over
+our application.
+
+It's common you'll likey want to access the users state in many components. Traditionally you'd usually store the
+user in context and access it. With React Query, we don't need to worry about that. Instead if we provided the same
+Query Key, the request will only be triggered once!
+
+```jsx
+import { useAuthUser } from "@react-query-firebase/auth";
+import { auth } from "./firebase";
+
+function App() {
+  const user = useAuthUser(["user"], auth);
+
+  if (user.isLoading) {
+    return <div />;
+  }
+
+  if (user.data) {
+    return <User />;
+  }
+
+  return <div>Not signed in.</div>;
+}
+
+function User() {
+  const user = useAuthUser(["user"], auth);
+
+  return <div>Welcome {user.data.displayName}!</div>;
+}
+```
+
+In this case, the `User` component will reuse the data from the already created `user` query, internally
+utilizing one authentication listener.
+
+## React Query options
+
+The hook also allows us to provide React Query options, supporting all of the options the
+[`useQuery`](https://react-query.tanstack.com/reference/useQuery) supports! For example, we could handle
+side effects with ease:
+
+```jsx
+const user = useAuthUser(["user"], auth, {
+  onSuccess(user) {
+    if (user) {
+      console.log('User is authenticated!', user);
+    }
+  },
+  onError(error) {
+    console.error('Failed to subscribe to users authentication state!');
+  }
+});
+```
+
+

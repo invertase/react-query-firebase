@@ -1,0 +1,86 @@
+---
+title: Logging Events | Analytics
+description: Hooks for integrating with Firebase Analytics.
+---
+
+# Logging Events
+
+A core feature of analytics is the ability to log both predefine and custom events throughout the flow
+of your application. The library exposes two hooks for this; `useAnalyticsLogEvent` & `useAnalyticsCustomLogEvent`.
+
+## Predefined Events
+
+The Firebase Analytics SDK allows us to trigger many different types of events with specific parameters.
+The `useAnalyticsLogEvent` enables us to trigger these events by extending the
+[`useMutation`](https://react-query.tanstack.com/reference/useMutation) hook.
+
+The hooks accept the event parameters and optional options, for example, to trigger the `screen_view` event:
+
+```jsx
+import { useAnalyticsLogEvent } from "@react-query-firebase/analytics";
+import { analytics } from "./firebase";
+
+function SearchPage() {
+  const mutation = useAnalyticsLogEvent(analytics, "screen_view");
+
+  useEffect(() => {
+    mutation.mutate({
+      params: {
+        firebase_screen: "Search",
+        firebase_screen_class: "SearchPage",
+      },
+      // Optional
+      options: {
+        global: false,
+      },
+    });
+  }, []);
+
+  return <div>Search!</div>;
+}
+```
+
+If you're unsure of what events are supported and their parameters, please visit the
+[Firebase Documentation](https://firebase.google.com/docs/reference/js/analytics).
+
+> If you're using TypeScript, the event names and parameters are fully typed.
+
+## Custom Events
+
+To log a custom event with Analytics, use the `useAnalyticsCustomLogEvent` hook instead:
+
+```jsx
+import { useAnalyticsLogEvent } from "@react-query-firebase/analytics";
+import { analytics } from "./firebase";
+
+function LikeButton({ id }) {
+  const mutation = useAnalyticsCustomLogEvent(analytics, "liked_post");
+
+  return (
+    <button
+      onClick={() => {
+        mutation.mutate({
+          params: {
+            post_id: id,
+          },
+        });
+      }}
+    >
+      Search!
+    </button>
+  );
+}
+```
+
+## React Query options
+
+Since both hooks extend the [`useMutation`](https://react-query.tanstack.com/reference/useMutation) hook, we
+can optionally provide hooks to signal when an event has been triggered.
+
+```js
+const mutation = useAnalyticsLogEvent(analytics, "screen_view", {
+  onSuccess() {
+    console.log("Screen view event logged!");
+  },
+});
+```

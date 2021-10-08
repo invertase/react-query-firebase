@@ -54,7 +54,7 @@ export function useDatabaseRemoveMutation(
   }, useMutationOptions);
 }
 
-export function useDatabaseTransactionMutation<T = any>(
+export function useDatabaseTransaction<T = any>(
   ref: DatabaseReference,
   transactionUpdate: (currentData: T | null) => unknown,
   options?: TransactionOptions,

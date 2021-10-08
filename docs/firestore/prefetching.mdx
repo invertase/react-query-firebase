@@ -1,0 +1,40 @@
+---
+title: Prefetching | Firestore
+description: Hooks for integrating with Firestore.
+---
+
+# Prefetching
+
+React Query supports [Prefetching](https://react-query.tanstack.com/guides/prefetching#_top) out of the box,
+allowing us to manually prime or fetch the data before the user queries it (e.g. on a server).
+
+Although this works with React Query Firebase, be mindful that the data which is prefetched must be serializable. In the case
+of hooks such as `useFirestoreQuery` and `useFirestoreDocument`, the result of these hooks is a [`QuerySnapshot`](https://firebase.google.com/docs/reference/js/firestore_.querysnapshot)
+or [`DocumentSnapshot`](https://firebase.google.com/docs/reference/js/firestore_.documentsnapshot),
+
+These classes are not serializable, so we're unable to use them in prefetching. Instead we can make use of the `useFirestoreQueryData` or `useFirestoreDocumentData` hooks, which instead return the raw
+serializable data from Firestore.
+
+For example, on a server endpoint which requests a products listing:
+
+```js
+app.get('/products', async (req, res) => {
+  await queryClient.prefetchQuery('products', getProducts);
+
+  return ...
+});
+```
+
+```jsx
+function Products() {
+  const ref = query(collection(firestore, "products"));
+  const query = useFirestoreQueryData(["products"], ref);
+
+  return ...
+}
+```
+
+In the above example, the data for the Query Key is prefetched on the server, and queried on the client.
+However, instead of the hook state initially being `loading`, the data will be immidiatley available on the client.
+
+Make sure your server query and client query return the same data model.

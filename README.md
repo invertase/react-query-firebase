@@ -7,10 +7,54 @@
 </p>
 <br />
 
-React Query Firebase provides a set of easy to use hooks for common Firebase usecases. Each hook wraps around React Query, allowing to easily integrate the hooks into a new or existing project, whilst enjoying the powerful benefits React Query offers.
+React Query Firebase provides a set of easy to use hooks for handling asynchronous tasks with Firebase in your React application, with 
+full TypeScript support.
 
-The exported hooks do not manage Query Keys or Firebase instances, giving you full control over integration.
+Unlike other solutions, hooks are built on top of [React Query](https://react-query.tanstack.com) which takes care of complex challenges
+such as caching, automatic refetching, realtime data subscriptions, pagination & infinite queries, mutations, SSR Support, data selectors, side effect handlers
+and more.
 
+As an example, let's use a Firestore hook to fetch a document whilst handing loading and error state with ease:
+
+```tsx
+import { useFirestoreDocument } from '@react-query-firebase/firestore';
+import { doc } from 'firebase/firestore';
+
+type Product = {
+  name: string;
+  price: number;
+};
+
+function ProductPage({ id }: { id: string }) {
+  // Create a Firestore document reference as normal
+  const ref = doc(firestore, 'products', id);
+
+  // Subscribe to document updates
+  const product = useFirestoreDocument<Product>(['product', id], ref, {
+    // Subscribe to realtime changes
+    subscribe: true,
+    // Include metadata changes in the updates
+    includeMetadataChanges: true,
+  }, {
+    // Optionally handle side effects with React Query hook options
+    onSuccess(snapshot) {
+      console.log('Successfully fetched product ID: ', snapshot.id);
+    },
+  });
+
+  if (product.isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (product.isError) {
+    return <div>Failed to fetch product: {product.error.message}</div>;
+  }
+
+  const snapshot = product.data; // DocumentSnapshot<Product>
+
+  return <div>Product: {snapshot.data().name}</div>;
+}
+```
 ## Installation
 
 If you haven't done so already, install `react`, `react-query` & `firebase` (v9):
@@ -31,6 +75,7 @@ See below for a full list of available packages.
 
 ## Packages
 
+- `@react-query-firebase/analytics`
 - `@react-query-firebase/auth`
 - `@react-query-firebase/database`
 - `@react-query-firebase/firestore`

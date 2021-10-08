@@ -4,10 +4,52 @@
   "theme": "#FF4154",
   "sidebar": [
     ["Getting Started", "/"],
-    ["Authentication", "/auth"],
-    ["Database", "/database"],
-    ["Firestore", "/firestore"],
-    ["Functions", "/functions"],
+    [
+      "Analytics",
+      [
+        ["Getting Started", "/analytics"],
+        ["Logging Events", "/analytics/logging-events"],
+        ["Actions", "/analytics/actions"],
+        ["TypeScript", "/analytics/typescript"]
+      ]
+    ],
+    [
+      "Authentication",
+      [
+        ["Getting Started", "/auth"],
+        ["ID Token", "/auth/id-token"],
+        ["Auth Actions", "/auth/actions"]
+      ]
+    ],
+    [
+      "Database",
+      [
+        ["Getting Started", "/database"],
+        ["Querying Data", "/database/querying"],
+        ["Data Mutation", "/database/data-mutation"],
+        ["TypeScript", "/database/typescript"]
+      ]
+    ],
+    [
+      "Firestore",
+      [
+        ["Getting Started", "/firestore"],
+        ["Querying Collections", "/firestore/querying-collections"],
+        ["Querying Documents", "/firestore/querying-documents"],
+        ["Data Mutation", "/firestore/data-mutation"],
+        ["Prefetching", "/firestore/prefetching"],
+        ["TypeScript", "/firestore/typescript"]
+      ]
+    ],
+    [
+      "Functions",
+      [
+        ["Getting Started", "/functions"],
+        ["Querying Functions", "/functions/querying"],
+        ["Calling Functions", "/functions/calling"],
+        ["TypeScript", "/functions/typescript"]
+      ]
+    ],
     [
       "Examples",
       [

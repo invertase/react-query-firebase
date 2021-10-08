@@ -1,0 +1,74 @@
+---
+title: Calling Functions | Cloud Functions
+description: Hooks for integrating with Cloud Functions.
+---
+
+# Calling Functions
+
+The `useFunctionsCall` enables you to call a Callable Cloud Function on demand.
+
+For example, lets assume we have a `updateProduct` Callable HTTPS Function deployed which accepts a product ID
+and data to update. Instead of calling this function as we render, we can instead call it as a mutation on demand.
+
+```jsx
+import React from "react";
+import { useFunctionsCall } from "@react-query-firebase/functions";
+import { functions } from "../firebase";
+
+function Product({ id }: { id: number }) {
+  const mutation = useFunctionsCall(functions, "updateProduct");
+
+  return (
+    <button
+      disabled={mutation.isLoading}
+      onClick={() => {
+        mutation.mutate({
+          id,
+          name: "New product name!",
+        });
+      }}
+    >
+      Update Product Name
+    </button>
+  );
+}
+```
+
+The hook is built on top of the [`useMutation`](https://react-query.tanstack.com/reference/useMutation) hook.
+
+## `HttpsCallableOptions`
+
+The 3rd argument of the hook accepts an optional [`HttpsCallableOptions`](https://firebase.google.com/docs/reference/js/functions.httpscallableoptions)
+argument which will be used when requested. For example we can increase the timeout of the request.
+
+```js
+const mutation = useFunctionsCall(functions, "updateProduct", {
+  timeout: 10000,
+});
+```
+
+## React Query options
+
+The 4th optional argument accepts options of the [`useMutation`](https://react-query.tanstack.com/reference/useMutation) hook,
+allowing us handle things such as side effects.
+
+```js
+const mutation = useFunctionsCall(
+  functions,
+  "updateProduct",
+  {
+    timeout: 10000,
+  },
+  {
+    onSuccess() {
+      console.log("Product updated...");
+    },
+    onError(error) {
+      console.error("Failed to update product...", error);
+    },
+    onMutate(variables) {
+      console.log("Updating product with variables", variables);
+    },
+  }
+);
+```

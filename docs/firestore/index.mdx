@@ -1,9 +1,9 @@
 ---
-title: Cloud Firestore | React Query Firebase
+title: Getting Started | Cloud Firestore
 description: Hooks for integrating with Firestore.
 ---
 
-# Cloud Firestore
+# Getting Started
 
 The `@react-query-firebase/firestore` package provides hooks querying,
 subscribing and modifying collections and documents on Cloud Firestore.
@@ -16,9 +16,10 @@ npm i --save @react-query-firebase/firestore
 
 ## Usage
 
-To use the hooks, export your `Firestore` instance, e.g:
+To use the hooks, export a `Firestore` instance from your codebase, e.g:
 
 ```js
+// src/firebase.js
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 
@@ -29,26 +30,10 @@ const firebase = initializeApp({
 export const firestore = getFirestore(firebase);
 ```
 
-**Important**:
+## Documentation
 
-When providing [Query](https://firebase.google.com/docs/reference/js/firestore_.query)
-and [Document Reference](https://firebase.google.com/docs/reference/js/firestore_.documentreference) instances
-to the hooks, it is important to remember the hooks will only refetch the data when the Query Key changes and not
-the instance. If your data is shared across your application, ensure you provide a unique key for each instance type.
-
-## Hooks
-
-**Query Hooks:**
-
-- [`useFirestoreQuery`](/firestore/query#useFirestoreQuery)
-- [`useFirestoreQueryData`](/firestore/query#useFirestoreQueryData)
-- [`useFirestoreDocument`](/firestore/doc#useFirestoreDocument)
-- [`useFirestoreDocumentData`](/firestore/doc#useFirestoreDocumentData)
-
-**Mutation Hooks:**
-
-- [`useFirestoreCollectionMutation`](/firestore/mutation#useFirestoreCollectionMutation)
-- [`useFirestoreDocumentMutation`](/firestore/mutation#useFirestoreDocumentMutation)
-- [`useFirestoreDocumentDeletion`](/firestore/mutation#useFirestoreDocumentDeletion)
-- [`useFirestoreTransaction`](/firestore/mutation#useFirestoreTransaction)
-- [`useFirestoreWriteBatch`](/firestore/mutation#useFirestoreWriteBatch)
+- [Querying Collections](/firestore/querying-collections)
+- [Querying Documents](/firestore/querying-documents)
+- [Data Mutation](/firestore/data-mutation)
+- [Prefetching](/firestore/prefetching)
+- [TypeScript](/firestore/typescript)
