@@ -1,0 +1,35 @@
+---
+title: Analytics
+description: Hooks for integrating with Firebase Analytics.
+---
+
+# Analytics
+
+The `@react-query-firebase/analytics` package provides hooks for triggering analytics events.
+
+## Installation
+
+```bash
+npm i --save @react-query-firebase/analytics
+```
+
+## Usage
+
+To use the hooks, export your `Auth` instance from your codebase, e.g:
+
+```js
+import { initializeApp } from 'firebase/app';
+import { getAnalytics } from 'firebase/analytics';
+
+const firebase = initializeApp({
+  ...
+});
+
+export const analytics = getAnalytics(firebase);
+```
+
+## Documentation
+
+- [Logging Events](/analytics/logging-events)
+- [Actions](/analytics/actions)
+- [TypeScript](/analytics/typescript)

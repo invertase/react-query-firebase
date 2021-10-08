@@ -1,7 +1,7 @@
 {
   "name": "@react-query-firebase/functions",
   "version": "0.2.1",
-  "description": "",
+  "description": "React Query hooks for Firebase Cloud Functions",
   "main": "dist/bundle.cjs.js",
   "module": "dist/bundle.es.js",
   "types": "dist/index.d.ts",
@@ -9,6 +9,18 @@
     "dist",
     "LICENSE",
     "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/invertase/react-query-firebase.git"
+  },
+  "keywords": [
+    "react query",
+    "react",
+    "firebase",
+    "functions",
+    "cloud functions",
+    "callable functions"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

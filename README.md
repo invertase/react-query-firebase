@@ -75,6 +75,7 @@ See below for a full list of available packages.
 
 ## Packages
 
+- `@react-query-firebase/analytics`
 - `@react-query-firebase/auth`
 - `@react-query-firebase/database`
 - `@react-query-firebase/firestore`

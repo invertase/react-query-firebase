@@ -1,7 +1,7 @@
 {
   "name": "@react-query-firebase/database",
   "version": "0.1.1",
-  "description": "",
+  "description": "React Query hooks for Firebase Realtime Database",
   "main": "dist/bundle.cjs.js",
   "module": "dist/bundle.es.js",
   "types": "dist/index.d.ts",
@@ -9,6 +9,17 @@
     "dist",
     "LICENSE",
     "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/invertase/react-query-firebase.git"
+  },
+  "keywords": [
+    "react query",
+    "react",
+    "firebase",
+    "database",
+    "realtime database"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
