@@ -77,6 +77,8 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
   return useQuery<DocumentSnapshot<T>, FirestoreError, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
+    staleTime:
+      useQueryOptions?.staleTime ?? options?.subscribe ? Infinity : undefined,
     async queryFn() {
       unsubscribe.current?.();
 
@@ -157,6 +159,8 @@ export function useFirestoreDocumentData<
   return useQuery<WithIdField<T, ID> | undefined, FirestoreError, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
+    staleTime:
+      useQueryOptions?.staleTime ?? options?.subscribe ? Infinity : undefined,
     async queryFn(): Promise<WithIdField<T, ID> | undefined> {
       unsubscribe.current?.();
 

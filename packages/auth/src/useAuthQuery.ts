@@ -32,6 +32,7 @@ export function useAuthUser<R = User | null>(
   return useQuery<User | null, AuthError, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
+    staleTime: useQueryOptions?.staleTime ?? Infinity,
     async queryFn() {
       unsubscribe.current?.();
 
@@ -74,6 +75,7 @@ export function useAuthIdToken<R = IdTokenResult | null>(
   return useQuery<IdTokenResult | null, AuthError, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
+    staleTime: useQueryOptions?.staleTime ?? Infinity,
     async queryFn() {
       unsubscribe.current?.();
 
