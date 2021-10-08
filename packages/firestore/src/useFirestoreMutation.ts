@@ -28,6 +28,7 @@ import {
   Transaction,
   WithFieldValue,
   WriteBatch,
+  FirestoreError,
 } from "firebase/firestore";
 import {
   useMutation,
@@ -39,21 +40,28 @@ export function useFirestoreCollectionMutation<T = DocumentData>(
   ref: CollectionReference<T>,
   useMutationOptions?: UseMutationOptions<
     DocumentReference<T>,
-    Error,
+    FirestoreError,
     WithFieldValue<T>
   >
-): UseMutationResult<DocumentReference<T>, Error, WithFieldValue<T>> {
-  return useMutation<DocumentReference<T>, Error, WithFieldValue<T>>((data) => {
-    return addDoc<T>(ref, data);
-  }, useMutationOptions);
+): UseMutationResult<DocumentReference<T>, FirestoreError, WithFieldValue<T>> {
+  return useMutation<DocumentReference<T>, FirestoreError, WithFieldValue<T>>(
+    (data) => {
+      return addDoc<T>(ref, data);
+    },
+    useMutationOptions
+  );
 }
 
 export function useFirestoreDocumentMutation<T = DocumentData>(
   ref: DocumentReference<T>,
   options?: SetOptions,
-  useMutationOptions?: UseMutationOptions<void, Error, WithFieldValue<T>>
-): UseMutationResult<void, Error, WithFieldValue<T>> {
-  return useMutation<void, Error, WithFieldValue<T>>((data) => {
+  useMutationOptions?: UseMutationOptions<
+    void,
+    FirestoreError,
+    WithFieldValue<T>
+  >
+): UseMutationResult<void, FirestoreError, WithFieldValue<T>> {
+  return useMutation<void, FirestoreError, WithFieldValue<T>>((data) => {
     if (options) {
       return setDoc<T>(ref, data, options);
     }
@@ -64,9 +72,9 @@ export function useFirestoreDocumentMutation<T = DocumentData>(
 
 export function useFirestoreDocumentDeletion(
   ref: DocumentReference,
-  useMutationOptions?: UseMutationOptions<void, Error, void>
-): UseMutationResult<void, Error, void> {
-  return useMutation<void, Error, void>(
+  useMutationOptions?: UseMutationOptions<void, FirestoreError, void>
+): UseMutationResult<void, FirestoreError, void> {
+  return useMutation<void, FirestoreError, void>(
     () => deleteDoc(ref),
     useMutationOptions
   );
@@ -75,18 +83,18 @@ export function useFirestoreDocumentDeletion(
 export function useFirestoreTransaction<T = void>(
   firestore: Firestore,
   updateFunction: (tsx: Transaction) => Promise<T>,
-  useMutationOptions?: UseMutationOptions<T, Error, void>
-): UseMutationResult<T, Error, void> {
-  return useMutation<T, Error, void>(() => {
+  useMutationOptions?: UseMutationOptions<T, FirestoreError, void>
+): UseMutationResult<T, FirestoreError, void> {
+  return useMutation<T, FirestoreError, void>(() => {
     return runTransaction<T>(firestore, updateFunction);
   }, useMutationOptions);
 }
 
 export function useFirestoreWriteBatch(
   batch: WriteBatch,
-  useMutationOptions?: UseMutationOptions<void, Error, void>
-): UseMutationResult<void, Error, void> {
-  return useMutation<void, Error, void>(() => {
+  useMutationOptions?: UseMutationOptions<void, FirestoreError, void>
+): UseMutationResult<void, FirestoreError, void> {
+  return useMutation<void, FirestoreError, void>(() => {
     return batch.commit();
   }, useMutationOptions);
 }
