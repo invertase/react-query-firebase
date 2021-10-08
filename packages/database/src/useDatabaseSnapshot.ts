@@ -31,6 +31,8 @@ export function useDatabaseSnapshot<R = DataSnapshot>(
   return useQuery<DataSnapshot, Error, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
+    staleTime:
+      useQueryOptions?.staleTime ?? options?.subscribe ? Infinity : undefined,
     async queryFn() {
       unsubscribe.current?.();
       let resolved = false;
@@ -95,6 +97,8 @@ export function useDatabaseValue<T = unknown | null, R = T>(
   return useQuery<T, Error, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
+    staleTime:
+      useQueryOptions?.staleTime ?? options?.subscribe ? Infinity : undefined,
     async queryFn() {
       unsubscribe.current?.();
       let resolved = false;
