@@ -93,17 +93,22 @@ export function useAuthConfirmPasswordReset(
 export function useAuthCreateUserWithEmailAndPassword(
   auth: Auth,
   useMutationOptions?: UseMutationOptions<
-    void,
+    UserCredential,
     AuthError,
     { email: string; password: string }
   >
-): UseMutationResult<void, AuthError, { email: string; password: string }> {
-  return useMutation<void, AuthError, { email: string; password: string }>(
-    ({ email, password }) => {
-      return createUserWithEmailAndPassword(auth, email, password);
-    },
-    useMutationOptions
-  );
+): UseMutationResult<
+  UserCredential,
+  AuthError,
+  { email: string; password: string }
+> {
+  return useMutation<
+    UserCredential,
+    AuthError,
+    { email: string; password: string }
+  >(({ email, password }) => {
+    return createUserWithEmailAndPassword(auth, email, password);
+  }, useMutationOptions);
 }
 
 export function useAuthDeleteUser(
