@@ -10,7 +10,7 @@
 React Query Firebase provides a set of easy to use hooks for handling asynchronous tasks with Firebase in your React application, with 
 full TypeScript support.
 
-> **Note**: The library only supports Firebase JS SDK v9 - [learn more about it here](https://firebase.googleblog.com/2021/08/the-new-firebase-js-sdk-now-ga.html)!
+> **Note**: The library supports the Firebase JS SDK v9 - [learn more about it here](https://firebase.googleblog.com/2021/08/the-new-firebase-js-sdk-now-ga.html)!
 
 Unlike other solutions, hooks are built on top of [React Query](https://react-query.tanstack.com) which takes care of complex challenges
 such as caching, automatic refetching, realtime data subscriptions, pagination & infinite queries, mutations, SSR Support, data selectors, side effect handlers
@@ -28,10 +28,9 @@ type Product = {
 };
 
 function ProductPage({ id }: { id: string }) {
-  // Create a Firestore document reference as normal
+  // Create a Firestore document reference
   const ref = doc(firestore, 'products', id);
 
-  // Subscribe to document updates
   const product = useFirestoreDocument<Product>(['product', id], ref, {
     // Subscribe to realtime changes
     subscribe: true,
