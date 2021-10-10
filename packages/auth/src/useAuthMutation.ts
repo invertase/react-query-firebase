@@ -8,6 +8,7 @@ import {
   AuthError,
   AuthProvider,
   checkActionCode,
+  createUserWithEmailAndPassword,
   ConfirmationResult,
   confirmPasswordReset,
   deleteUser,
@@ -99,7 +100,7 @@ export function useAuthCreateUserWithEmailAndPassword(
 ): UseMutationResult<void, AuthError, { email: string; password: string }> {
   return useMutation<void, AuthError, { email: string; password: string }>(
     ({ email, password }) => {
-      return confirmPasswordReset(auth, email, password);
+      return createUserWithEmailAndPassword(auth, email, password);
     },
     useMutationOptions
   );
