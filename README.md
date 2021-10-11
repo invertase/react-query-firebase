@@ -7,7 +7,7 @@
 </p>
 <br />
 
-React Query Firebase provides a set of easy to use hooks for handling asynchronous tasks with Firebase in your React application, with 
+React Query Firebase provides a set of easy to use hooks for handling asynchronous tasks with Firebase in your React application, with
 full TypeScript support.
 
 > **Note**: The library supports the Firebase JS SDK v9 - [learn more about it here](https://firebase.googleblog.com/2021/08/the-new-firebase-js-sdk-now-ga.html)!
@@ -16,11 +16,15 @@ Unlike other solutions, hooks are built on top of [React Query](https://react-qu
 such as caching, automatic refetching, realtime data subscriptions, pagination & infinite queries, mutations, SSR Support, data selectors, side effect handlers
 and more.
 
-As an example, let's use a Firestore hook to fetch a document whilst handing loading and error state with ease:
+As an example, let's use a Firestore hook to fetch a document & run a transaction whilst easily handling loading and error state:
 
 ```tsx
-import { useFirestoreDocument } from '@react-query-firebase/firestore';
-import { doc } from 'firebase/firestore';
+import {
+  useFirestoreDocument,
+  useFirestoreTransaction,
+} from "@react-query-firebase/firestore";
+import { doc } from "firebase/firestore";
+import { firestore } from "./config/firebase";
 
 type Product = {
   name: string;
@@ -29,19 +33,41 @@ type Product = {
 
 function ProductPage({ id }: { id: string }) {
   // Create a Firestore document reference
-  const ref = doc(firestore, 'products', id);
+  const ref = doc(firestore, "products", id);
 
-  const product = useFirestoreDocument<Product>(['product', id], ref, {
-    // Subscribe to realtime changes
-    subscribe: true,
-    // Include metadata changes in the updates
-    includeMetadataChanges: true,
-  }, {
-    // Optionally handle side effects with React Query hook options
-    onSuccess(snapshot) {
-      console.log('Successfully fetched product ID: ', snapshot.id);
+  // Query a Firestore document using useQuery
+  const product = useFirestoreDocument<Product>(
+    ["product", id],
+    ref,
+    {
+      // Subscribe to realtime changes
+      subscribe: true,
+      // Include metadata changes in the updates
+      includeMetadataChanges: true,
     },
-  });
+    {
+      // Optionally handle side effects with React Query hook options
+      onSuccess(snapshot) {
+        console.log("Successfully fetched product ID: ", snapshot.id);
+      },
+    }
+  );
+
+  // Run a Firestore transaction as Mutation using useMutation
+  const like = useFirestoreTransaction(
+    auth,
+    async (tsx) => {
+      const record = await tsx.get(ref);
+      tsx.update(ref, {
+        likes: record.data().likes + 1,
+      });
+    },
+    {
+      onError(error) {
+        console.error("Failed to like post!", error);
+      },
+    }
+  );
 
   if (product.isLoading) {
     return <div>Loading...</div>;
@@ -53,9 +79,18 @@ function ProductPage({ id }: { id: string }) {
 
   const snapshot = product.data; // DocumentSnapshot<Product>
 
-  return <div>Product: {snapshot.data().name}</div>;
+  return (
+    <div>
+      <h1>{snapshot.data().name}</h1>
+      <button disabled={like.isLoading} onClick={() => like.mutate()}>
+        Like Post!
+      </button>
+      {like.isError && <p>Failed to like post: {like.error.message}</p>}
+    </div>
+  );
 }
 ```
+
 ## Installation
 
 If you haven't done so already, install `react`, `react-query` & `firebase` (v9):
