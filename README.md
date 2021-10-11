@@ -64,7 +64,7 @@ function ProductPage({ id }: { id: string }) {
     },
     {
       onError(error) {
-        console.error("Failed to like post!", error);
+        console.error("Failed to like product!", error);
       },
     }
   );
@@ -83,9 +83,9 @@ function ProductPage({ id }: { id: string }) {
     <div>
       <h1>{snapshot.data().name}</h1>
       <button disabled={like.isLoading} onClick={() => like.mutate()}>
-        Like Post!
+        Like Product!
       </button>
-      {like.isError && <p>Failed to like post: {like.error.message}</p>}
+      {like.isError && <p>Failed to like product: {like.error.message}</p>}
     </div>
   );
 }
