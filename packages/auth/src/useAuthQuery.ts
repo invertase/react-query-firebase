@@ -15,6 +15,7 @@ import {
   AuthError,
   UserCredential,
   getRedirectResult,
+  PopupRedirectResolver,
 } from "firebase/auth";
 
 export function useAuthUser<R = User | null>(
@@ -106,7 +107,7 @@ export function useAuthIdToken<R = IdTokenResult | null>(
 export function useAuthGetRedirectResult(
   key: QueryKey,
   auth: Auth,
-  email: string,
+  resolver?: PopupRedirectResolver,
   useQueryOptions?: Omit<
     UseQueryOptions<UserCredential | null, AuthError>,
     "queryFn"
@@ -117,7 +118,7 @@ export function useAuthGetRedirectResult(
     queryKey: useQueryOptions?.queryKey ?? key,
     staleTime: useQueryOptions?.staleTime ?? Infinity,
     async queryFn() {
-      return getRedirectResult(auth, email);
+      return getRedirectResult(auth, resolver);
     },
   });
 }

@@ -1,6 +1,6 @@
 {
   "name": "@react-query-firebase/auth",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "React Query hooks for Firebase Authentication",
   "main": "dist/bundle.cjs.js",
   "module": "dist/bundle.es.js",
