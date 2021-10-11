@@ -13,6 +13,8 @@ import {
   IdTokenResult,
   fetchSignInMethodsForEmail,
   AuthError,
+  UserCredential,
+  getRedirectResult,
 } from "firebase/auth";
 
 export function useAuthUser<R = User | null>(
@@ -97,6 +99,25 @@ export function useAuthIdToken<R = IdTokenResult | null>(
           }
         }, reject);
       });
+    },
+  });
+}
+
+export function useAuthGetRedirectResult(
+  key: QueryKey,
+  auth: Auth,
+  email: string,
+  useQueryOptions?: Omit<
+    UseQueryOptions<UserCredential | null, AuthError>,
+    "queryFn"
+  >
+): UseQueryResult<UserCredential | null, AuthError> {
+  return useQuery<UserCredential | null, AuthError>({
+    ...useQueryOptions,
+    queryKey: useQueryOptions?.queryKey ?? key,
+    staleTime: useQueryOptions?.staleTime ?? Infinity,
+    async queryFn() {
+      return getRedirectResult(auth, email);
     },
   });
 }
