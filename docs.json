@@ -2,6 +2,10 @@
   "name": "React Query Firebase",
   "twitter": "invertaseio",
   "theme": "#FF4154",
+  "docsearch": {
+    "apiKey": "8838b79166d4839463db6aeafbbaa383",
+    "indexName": "react-query-firebase"
+  },
   "sidebar": [
     ["Getting Started", "/"],
     [
