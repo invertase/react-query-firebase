@@ -1,6 +1,6 @@
 {
   "name": "@react-query-firebase/database",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "React Query hooks for Firebase Realtime Database",
   "main": "dist/bundle.cjs.js",
   "module": "dist/bundle.es.js",
