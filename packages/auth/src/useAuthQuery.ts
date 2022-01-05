@@ -8,7 +8,6 @@ import {
 } from "react-query";
 import {
   Auth,
-  User,
   Unsubscribe,
   IdTokenResult,
   fetchSignInMethodsForEmail,
@@ -17,43 +16,6 @@ import {
   getRedirectResult,
   PopupRedirectResolver,
 } from "firebase/auth";
-
-export function useAuthUser<R = User | null>(
-  key: QueryKey,
-  auth: Auth,
-  useQueryOptions?: Omit<UseQueryOptions<User | null, AuthError, R>, "queryFn">
-): UseQueryResult<R, AuthError> {
-  const client = useQueryClient();
-  const unsubscribe = useRef<Unsubscribe>();
-
-  useEffect(() => {
-    return () => {
-      unsubscribe.current?.();
-    };
-  }, []);
-
-  return useQuery<User | null, AuthError, R>({
-    ...useQueryOptions,
-    queryKey: useQueryOptions?.queryKey ?? key,
-    staleTime: useQueryOptions?.staleTime ?? Infinity,
-    async queryFn() {
-      unsubscribe.current?.();
-
-      let resolved = false;
-
-      return new Promise<User | null>((resolve, reject) => {
-        unsubscribe.current = auth.onAuthStateChanged((user) => {
-          if (!resolved) {
-            resolved = true;
-            resolve(user);
-          } else {
-            client.setQueryData<User | null>(key, user);
-          }
-        }, reject);
-      });
-    },
-  });
-}
 
 export function useAuthIdToken<R = IdTokenResult | null>(
   key: QueryKey,

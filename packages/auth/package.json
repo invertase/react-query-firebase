@@ -4,7 +4,7 @@
   "description": "React Query hooks for Firebase Authentication",
   "main": "dist/bundle.cjs.js",
   "module": "dist/bundle.es.js",
-  "types": "dist/index.d.ts",
+  "types": "dist/auth/src/index.d.ts",
   "files": [
     "dist",
     "LICENSE",
