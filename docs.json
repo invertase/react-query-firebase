@@ -21,6 +21,7 @@
       "Authentication",
       [
         ["Getting Started", "/auth"],
+        ["Authentication State", "/auth/auth-state"],
         ["ID Token", "/auth/id-token"],
         ["Auth Actions", "/auth/actions"]
       ]
