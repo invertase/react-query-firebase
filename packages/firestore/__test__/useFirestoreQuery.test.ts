@@ -41,7 +41,7 @@ import {
   useFirestoreInfiniteQueryData,
 } from "../src";
 
-describe("useFirestoreQuery", () => {
+xdescribe("useFirestoreQuery", () => {
   let wrapper: React.FC<{ children: React.ReactNode }>;
   let firestore: Firestore;
 

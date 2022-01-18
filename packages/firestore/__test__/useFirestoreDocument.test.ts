@@ -28,7 +28,7 @@ import {
 import { useFirestoreDocument, useFirestoreDocumentData } from "../src";
 import { genId, init } from "./helpers";
 
-describe("useFirestoreDocument", () => {
+xdescribe("useFirestoreDocument", () => {
   let wrapper: React.FC<{ children: React.ReactNode }>;
   let firestore: Firestore;
 

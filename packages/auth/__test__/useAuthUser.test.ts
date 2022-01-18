@@ -5,7 +5,7 @@ import { Auth, UserCredential } from "firebase/auth";
 import { genId, init, signIn } from "./helpers";
 import { useAuthIdToken, useAuthUser } from "../src";
 
-describe("Authentication", () => {
+xdescribe("Authentication", () => {
   let client: QueryClient;
   let wrapper: React.FC<{ children: React.ReactNode }>;
   let auth: Auth;
