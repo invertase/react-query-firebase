@@ -21,92 +21,26 @@ import {
   useQueryClient,
   QueryKey,
   UseQueryOptions,
-  useInfiniteQuery,
-  QueryFunctionContext,
-  UseInfiniteQueryOptions,
   UseQueryResult,
-  UseInfiniteQueryResult,
+  hashQueryKey,
 } from "react-query";
 import {
-  getDocs,
-  Query,
   onSnapshot,
   Unsubscribe,
   QuerySnapshot,
-  getDocsFromCache,
-  getDocsFromServer,
-  namedQuery as firestoreNamedQuery,
   DocumentData,
-  Firestore,
-  SnapshotOptions,
   FirestoreError,
 } from "firebase/firestore";
 import {
-  GetSnapshotSource,
+  getQuerySnapshot,
+  QueryType,
+  resolveQuery,
   UseFirestoreHookOptions,
-  WithIdField,
 } from "./index";
+import { Completer } from "../../utils/src";
 
-const namedQueryCache: { [key: string]: Query } = {};
-
-export type NamedQueryPromise<T> = () => Promise<Query<T> | null>;
-
-export type NamedQuery<T = DocumentData> = Query<T> | NamedQueryPromise<T>;
-
-export type QueryType<T> = Query<T> | NamedQuery<T>;
-
-function isNamedQuery<T>(query: QueryType<T>): query is NamedQuery<T> {
-  return typeof query === "function";
-}
-
-export async function resolveQuery<T>(query: QueryType<T>): Promise<Query<T>> {
-  if (isNamedQuery(query)) {
-    if (typeof query === "function") {
-      // Firebase throws an error if the query doesn't exist.
-      const resolved = await query();
-      return resolved!;
-    }
-
-    return query;
-  }
-
-  return query;
-}
-
-async function getSnapshot<T>(query: Query<T>, source?: GetSnapshotSource) {
-  let snapshot: QuerySnapshot<T>;
-
-  if (source === "cache") {
-    snapshot = await getDocsFromCache(query);
-  } else if (source === "server") {
-    snapshot = await getDocsFromServer(query);
-  } else {
-    snapshot = await getDocs(query);
-  }
-
-  return snapshot;
-}
-
-export function namedQuery<T>(
-  firestore: Firestore,
-  name: string
-): NamedQuery<T> {
-  const key = `${firestore.app.name}:${name}`;
-
-  if (namedQueryCache[key]) {
-    return namedQueryCache[key] as Query<T>;
-  }
-
-  return () =>
-    firestoreNamedQuery(firestore, name).then((query) => {
-      if (query) {
-        namedQueryCache[key] = query;
-        return query as Query<T>;
-      }
-
-      return null;
-    });
-}
+const counts: { [key: string]: number } = {};
+const subscriptions: { [key: string]: Unsubscribe } = {};
 
 export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
   key: QueryKey,
@@ -118,259 +52,80 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
   >
 ): UseQueryResult<R, FirestoreError> {
   const client = useQueryClient();
-  const unsubscribe = useRef<Unsubscribe>();
+  const completer = useRef<Completer<QuerySnapshot<T>>>(new Completer());
+
+  const hashFn = useQueryOptions?.queryKeyHashFn || hashQueryKey;
+  const hash = hashFn(key);
+  const isSubscription = !!options?.subscribe;
 
   useEffect(() => {
-    return () => unsubscribe.current?.();
-  }, []);
+    if (!isSubscription) {
+      resolveQuery(query)
+        .then((resolvedQuery) => {
+          return getQuerySnapshot(resolvedQuery, options?.source);
+        })
+        .then((snapshot) => {
+          completer.current!.complete(snapshot);
+        })
+        .catch((error) => {
+          completer.current!.reject(error);
+        });
+    }
+  }, [isSubscription, hash, completer]);
+
+  useEffect(() => {
+    if (isSubscription) {
+      counts[hash] ??= 0;
+      counts[hash]++;
+
+      // If there is only one instance of this query key, subscribe
+      if (counts[hash] === 1) {
+        resolveQuery(query)
+          .then((resolveQuery) => {
+            subscriptions[hash] = onSnapshot(
+              resolveQuery,
+              {
+                includeMetadataChanges: options?.includeMetadataChanges,
+              },
+              (snapshot) => {
+                // Set the data each time state changes.
+                client.setQueryData<QuerySnapshot<T>>(key, snapshot);
+
+                // Resolve the completer with the current data.
+                if (!completer.current!.completed) {
+                  completer.current!.complete(snapshot);
+                }
+              },
+              (error) => {
+                completer.current!.reject(error);
+              }
+            );
+          })
+          .catch((error) => {
+            completer.current!.reject(error);
+          });
+      } else {
+        // Since there is already an active subscription, resolve the completer
+        // with the cached data.
+        completer.current!.complete(
+          client.getQueryData(key) as QuerySnapshot<T>
+        );
+      }
+
+      return () => {
+        counts[hash]--;
+
+        if (counts[hash] === 0) {
+          subscriptions[hash]();
+          delete subscriptions[hash];
+        }
+      };
+    }
+  }, [isSubscription, hash, completer]);
 
   return useQuery<QuerySnapshot<T>, FirestoreError, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
-    staleTime:
-      useQueryOptions?.staleTime ?? options?.subscribe ? Infinity : undefined,
-    async queryFn() {
-      unsubscribe.current?.();
-
-      const _query = await resolveQuery(query);
-
-      if (!options?.subscribe) {
-        return getSnapshot(_query, options?.source);
-      }
-
-      let resolved = false;
-
-      return new Promise<QuerySnapshot<T>>((resolve, reject) => {
-        unsubscribe.current = onSnapshot(
-          _query,
-          {
-            includeMetadataChanges: options?.includeMetadataChanges,
-          },
-          (snapshot) => {
-            if (!resolved) {
-              resolved = true;
-              return resolve(snapshot);
-            } else {
-              client.setQueryData<QuerySnapshot<T>>(key, snapshot);
-            }
-          },
-          reject
-        );
-      });
-    },
-  });
-}
-
-export function useFirestoreQueryData<T = DocumentData, R = WithIdField<T>[]>(
-  key: QueryKey,
-  query: QueryType<T>,
-  options?: UseFirestoreHookOptions & SnapshotOptions,
-  useQueryOptions?: Omit<
-    UseQueryOptions<WithIdField<T>[], FirestoreError, R>,
-    "queryFn"
-  >
-): UseQueryResult<R, FirestoreError>;
-
-export function useFirestoreQueryData<
-  ID extends string,
-  T = DocumentData,
-  R = WithIdField<T, ID>[]
->(
-  key: QueryKey,
-  query: QueryType<T>,
-  options?: UseFirestoreHookOptions & SnapshotOptions & { idField: ID },
-  useQueryOptions?: Omit<
-    UseQueryOptions<WithIdField<T, ID>[], FirestoreError, R>,
-    "queryFn"
-  >
-): UseQueryResult<R, FirestoreError>;
-
-export function useFirestoreQueryData<
-  ID extends string,
-  T = DocumentData,
-  R = WithIdField<T, ID>[]
->(
-  key: QueryKey,
-  query: QueryType<T>,
-  options?: UseFirestoreHookOptions & SnapshotOptions & { idField?: ID },
-  useQueryOptions?: Omit<
-    UseQueryOptions<WithIdField<T, ID>[], FirestoreError, R>,
-    "queryFn"
-  >
-): UseQueryResult<R, FirestoreError> {
-  const client = useQueryClient();
-  const unsubscribe = useRef<Unsubscribe>();
-
-  useEffect(() => {
-    return () => unsubscribe.current?.();
-  }, []);
-
-  return useQuery<WithIdField<T, ID>[], FirestoreError, R>({
-    ...useQueryOptions,
-    queryKey: useQueryOptions?.queryKey ?? key,
-    staleTime:
-      useQueryOptions?.staleTime ?? options?.subscribe ? Infinity : undefined,
-    async queryFn(): Promise<WithIdField<T, ID>[]> {
-      unsubscribe.current?.();
-
-      const _query = await resolveQuery(query);
-
-      if (!options?.subscribe) {
-        const snapshot = await getSnapshot(_query, options?.source);
-
-        return snapshot.docs.map((doc) => {
-          let data = doc.data({
-            serverTimestamps: options?.serverTimestamps,
-          });
-
-          if (options?.idField) {
-            data = {
-              ...data,
-              [options.idField]: doc.id,
-            };
-          }
-
-          return data as WithIdField<T, ID>;
-        });
-      }
-
-      let resolved = false;
-
-      return new Promise<WithIdField<T, ID>[]>((resolve, reject) => {
-        unsubscribe.current = onSnapshot(
-          _query,
-          {
-            includeMetadataChanges: options?.includeMetadataChanges,
-          },
-          (snapshot) => {
-            const docs = snapshot.docs.map((doc) => {
-              let data = doc.data({
-                serverTimestamps: options?.serverTimestamps,
-              });
-
-              if (options?.idField) {
-                data = {
-                  ...data,
-                  [options.idField]: doc.id,
-                };
-              }
-
-              return data as WithIdField<T, ID>;
-            });
-
-            if (!resolved) {
-              resolved = true;
-              return resolve(docs);
-            } else {
-              client.setQueryData<WithIdField<T, ID>[]>(key, docs);
-            }
-          },
-          reject
-        );
-      });
-    },
-  });
-}
-
-export function useFirestoreInfiniteQuery<
-  T = DocumentData,
-  R = QuerySnapshot<T>
->(
-  key: QueryKey,
-  initialQuery: Query<T>,
-  getNextQuery: (snapshot: QuerySnapshot<T>) => Query<T> | undefined,
-  options?: {
-    source?: GetSnapshotSource;
-  },
-  useInfiniteQueryOptions?: Omit<
-    UseInfiniteQueryOptions,
-    "queryFn" | "getNextPageParam"
-  >
-): UseInfiniteQueryResult<R, FirestoreError> {
-  return useInfiniteQuery<QuerySnapshot<T>, FirestoreError, R>({
-    queryKey: useInfiniteQueryOptions?.queryKey ?? key,
-    async queryFn(ctx: QueryFunctionContext<QueryKey, Query<T>>) {
-      const query: Query<T> = ctx.pageParam ?? initialQuery;
-      return getSnapshot(query, options?.source);
-    },
-    getNextPageParam(snapshot) {
-      return getNextQuery(snapshot);
-    },
-  });
-}
-
-export function useFirestoreInfiniteQueryData<
-  T = DocumentData,
-  R = WithIdField<T>[]
->(
-  key: QueryKey,
-  initialQuery: Query<T>,
-  getNextQuery: (data: T[]) => Query<T> | undefined,
-  options?: {
-    source?: GetSnapshotSource;
-  } & SnapshotOptions,
-  useInfiniteQueryOptions?: Omit<
-    UseInfiniteQueryOptions<WithIdField<T>[], FirestoreError, R>,
-    "queryFn" | "getNextPageParam"
-  >
-): UseInfiniteQueryResult<R, FirestoreError>;
-
-export function useFirestoreInfiniteQueryData<
-  ID extends string,
-  T = DocumentData,
-  R = WithIdField<T, ID>[]
->(
-  key: QueryKey,
-  initialQuery: Query<T>,
-  getNextQuery: (data: T[]) => Query<T> | undefined,
-  options?: {
-    source?: GetSnapshotSource;
-  } & SnapshotOptions & { idField: ID },
-  useInfiniteQueryOptions?: Omit<
-    UseInfiniteQueryOptions<WithIdField<T, ID>[], FirestoreError, R>,
-    "queryFn" | "getNextPageParam"
-  >
-): UseInfiniteQueryResult<R, FirestoreError>;
-
-export function useFirestoreInfiniteQueryData<
-  ID extends string,
-  T = DocumentData,
-  R = WithIdField<T, ID>[]
->(
-  key: QueryKey,
-  initialQuery: Query<T>,
-  getNextQuery: (data: T[]) => Query<T> | undefined,
-  options?: {
-    source?: GetSnapshotSource;
-  } & SnapshotOptions & { idField?: ID },
-  useInfiniteQueryOptions?: Omit<
-    UseInfiniteQueryOptions<WithIdField<T, ID>[], FirestoreError, R>,
-    "queryFn" | "getNextPageParam"
-  >
-): UseInfiniteQueryResult<R, FirestoreError> {
-  return useInfiniteQuery<WithIdField<T, ID>[], FirestoreError, R>({
-    queryKey: useInfiniteQueryOptions?.queryKey ?? key,
-    async queryFn(
-      ctx: QueryFunctionContext<QueryKey, Query<T>>
-    ): Promise<WithIdField<T, ID>[]> {
-      const query: Query<T> = ctx.pageParam ?? initialQuery;
-      const snapshot = await getSnapshot(query, options?.source);
-
-      return snapshot.docs.map((doc) => {
-        let data = doc.data({ serverTimestamps: options?.serverTimestamps });
-
-        if (options?.idField) {
-          data = {
-            ...data,
-            [options.idField]: doc.id,
-          };
-        }
-
-        return data as WithIdField<T, ID>;
-      });
-    },
-    getNextPageParam(data) {
-      return getNextQuery(data);
-    },
+    queryFn: () => completer.current!.promise,
   });
 }

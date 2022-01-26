@@ -27,28 +27,61 @@ import {
 import {
   DocumentData,
   DocumentReference,
-  DocumentSnapshot,
-  onSnapshot,
-  Unsubscribe,
   FirestoreError,
+  onSnapshot,
+  SnapshotOptions,
+  Unsubscribe,
 } from "firebase/firestore";
-import { getSnapshot, UseFirestoreHookOptions } from "./index";
+import { UseFirestoreHookOptions, WithIdField, getSnapshot } from "./index";
 import { Completer } from "../../utils/src";
 
 const counts: { [key: string]: number } = {};
 const subscriptions: { [key: string]: Unsubscribe } = {};
 
-export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
+export function useFirestoreDocumentData<
+  T = DocumentData,
+  R = WithIdField<T> | undefined
+>(
   key: QueryKey,
   ref: DocumentReference<T>,
-  options?: UseFirestoreHookOptions,
+  options?: UseFirestoreHookOptions & SnapshotOptions,
   useQueryOptions?: Omit<
-    UseQueryOptions<DocumentSnapshot<T>, FirestoreError, R>,
+    UseQueryOptions<WithIdField<T> | undefined, FirestoreError, R>,
+    "queryFn"
+  >
+): UseQueryResult<R, FirestoreError>;
+
+export function useFirestoreDocumentData<
+  ID extends string,
+  T = DocumentData,
+  R = WithIdField<T, ID> | undefined
+>(
+  key: QueryKey,
+  ref: DocumentReference<T>,
+  options?: UseFirestoreHookOptions & SnapshotOptions & { idField: ID },
+  useQueryOptions?: Omit<
+    UseQueryOptions<WithIdField<T, ID> | undefined, FirestoreError, R>,
+    "queryFn"
+  >
+): UseQueryResult<R | undefined, FirestoreError>;
+
+export function useFirestoreDocumentData<
+  ID extends string,
+  T = DocumentData,
+  R = WithIdField<T, ID> | undefined
+>(
+  key: QueryKey,
+  ref: DocumentReference<T>,
+  options?: UseFirestoreHookOptions & SnapshotOptions & { idField?: ID },
+  useQueryOptions?: Omit<
+    UseQueryOptions<WithIdField<T, ID> | undefined, FirestoreError, R>,
     "queryFn"
   >
 ): UseQueryResult<R, FirestoreError> {
   const client = useQueryClient();
-  const completer = useRef<Completer<DocumentSnapshot<T>>>(new Completer());
+  const completer = useRef<Completer<WithIdField<T, ID> | undefined>>(
+    new Completer()
+  );
 
   const hashFn = useQueryOptions?.queryKeyHashFn || hashQueryKey;
   const hash = hashFn(key);
@@ -59,7 +92,18 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
     if (!isSubscription) {
       getSnapshot(ref, options?.source)
         .then((snapshot) => {
-          completer.current!.complete(snapshot);
+          let data = snapshot.data({
+            serverTimestamps: options?.serverTimestamps,
+          });
+
+          if (data && options?.idField) {
+            data = {
+              ...data,
+              [options.idField]: snapshot.id,
+            };
+          }
+
+          completer.current!.complete(data as WithIdField<T, ID> | undefined);
         })
         .catch((error) => {
           completer.current!.reject(error);
@@ -80,12 +124,29 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
             includeMetadataChanges: options?.includeMetadataChanges,
           },
           (snapshot) => {
+            let data = snapshot.data({
+              serverTimestamps: options?.serverTimestamps,
+            });
+
+            if (data && options?.idField) {
+              data = {
+                ...data,
+                [options.idField]: snapshot.id,
+              };
+            }
+
+            // Cannot figure out how to get this working without a cast!
+            const _dataWithIdField = data as WithIdField<T, ID> | undefined;
+
             // Set the data each time state changes.
-            client.setQueryData<DocumentSnapshot<T>>(key, snapshot);
+            client.setQueryData<WithIdField<T, ID> | undefined>(
+              key,
+              _dataWithIdField
+            );
 
             // Resolve the completer with the current data.
             if (!completer.current!.completed) {
-              completer.current!.complete(snapshot);
+              completer.current!.complete(_dataWithIdField);
             }
           },
           (error) => completer.current!.reject(error)
@@ -94,7 +155,7 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
         // Since there is already an active subscription, resolve the completer
         // with the cached data.
         completer.current!.complete(
-          client.getQueryData(key) as DocumentSnapshot<T>
+          client.getQueryData(key) as WithIdField<T, ID> | undefined
         );
       }
 
@@ -109,7 +170,7 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
     }
   }, [isSubscription, hash, completer]);
 
-  return useQuery<DocumentSnapshot<T>, FirestoreError, R>({
+  return useQuery<WithIdField<T, ID> | undefined, FirestoreError, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
     queryFn: () => completer.current!.promise,
