@@ -279,12 +279,13 @@ export function useFirestoreInfiniteQuery<
   key: QueryKey,
   initialQuery: Query<T>,
   getNextQuery: (snapshot: QuerySnapshot<T>) => Query<T> | undefined,
+  getPreviousQuery: (snapshot: QuerySnapshot<T>) => Query<T> | undefined,
   options?: {
     source?: GetSnapshotSource;
   },
   useInfiniteQueryOptions?: Omit<
     UseInfiniteQueryOptions,
-    "queryFn" | "getNextPageParam"
+    "queryFn" | "getNextPageParam" | "getPreviousPageParam"
   >
 ): UseInfiniteQueryResult<R, FirestoreError> {
   return useInfiniteQuery<QuerySnapshot<T>, FirestoreError, R>({
@@ -296,6 +297,9 @@ export function useFirestoreInfiniteQuery<
     getNextPageParam(snapshot) {
       return getNextQuery(snapshot);
     },
+    getPreviousPageParam(snapshot) {
+      return getPreviousQuery(snapshot);
+    },
   });
 }
 
@@ -306,12 +310,13 @@ export function useFirestoreInfiniteQueryData<
   key: QueryKey,
   initialQuery: Query<T>,
   getNextQuery: (data: T[]) => Query<T> | undefined,
+  getPreviousQuery: (data: T[]) => Query<T> | undefined,
   options?: {
     source?: GetSnapshotSource;
   } & SnapshotOptions,
   useInfiniteQueryOptions?: Omit<
     UseInfiniteQueryOptions<WithIdField<T>[], FirestoreError, R>,
-    "queryFn" | "getNextPageParam"
+    "queryFn" | "getNextPageParam" | "getPreviousPageParam"
   >
 ): UseInfiniteQueryResult<R, FirestoreError>;
 
@@ -323,12 +328,13 @@ export function useFirestoreInfiniteQueryData<
   key: QueryKey,
   initialQuery: Query<T>,
   getNextQuery: (data: T[]) => Query<T> | undefined,
+  getPreviousQuery: (data: T[]) => Query<T> | undefined,
   options?: {
     source?: GetSnapshotSource;
   } & SnapshotOptions & { idField: ID },
   useInfiniteQueryOptions?: Omit<
     UseInfiniteQueryOptions<WithIdField<T, ID>[], FirestoreError, R>,
-    "queryFn" | "getNextPageParam"
+    "queryFn" | "getNextPageParam" | "getPreviousPageParam"
   >
 ): UseInfiniteQueryResult<R, FirestoreError>;
 
@@ -340,12 +346,13 @@ export function useFirestoreInfiniteQueryData<
   key: QueryKey,
   initialQuery: Query<T>,
   getNextQuery: (data: T[]) => Query<T> | undefined,
+  getPreviousQuery: (data: T[]) => Query<T> | undefined,
   options?: {
     source?: GetSnapshotSource;
   } & SnapshotOptions & { idField?: ID },
   useInfiniteQueryOptions?: Omit<
     UseInfiniteQueryOptions<WithIdField<T, ID>[], FirestoreError, R>,
-    "queryFn" | "getNextPageParam"
+    "queryFn" | "getNextPageParam" | "getPreviousPageParam"
   >
 ): UseInfiniteQueryResult<R, FirestoreError> {
   return useInfiniteQuery<WithIdField<T, ID>[], FirestoreError, R>({
@@ -371,6 +378,9 @@ export function useFirestoreInfiniteQueryData<
     },
     getNextPageParam(data) {
       return getNextQuery(data);
+    },
+    getPreviousPageParam(data) {
+      return getPreviousQuery(data);
     },
   });
 }
