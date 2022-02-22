@@ -37,12 +37,13 @@ export function useFirestoreInfiniteQuery<
   key: QueryKey,
   initialQuery: Query<T>,
   getNextQuery: (snapshot: QuerySnapshot<T>) => Query<T> | undefined,
+  getPreviousQuery: (snapshot: QuerySnapshot<T>) => Query<T> | undefined,
   options?: {
     source?: GetSnapshotSource;
   },
   useInfiniteQueryOptions?: Omit<
     UseInfiniteQueryOptions,
-    "queryFn" | "getNextPageParam"
+    "queryFn" | "getNextPageParam" | "getPreviousPageParam"
   >
 ): UseInfiniteQueryResult<R, FirestoreError> {
   return useInfiniteQuery<QuerySnapshot<T>, FirestoreError, R>({
@@ -53,6 +54,9 @@ export function useFirestoreInfiniteQuery<
     },
     getNextPageParam(snapshot) {
       return getNextQuery(snapshot);
+    },
+    getPreviousPageParam(snapshot) {
+      return getPreviousQuery(snapshot);
     },
   });
 }
