@@ -9,7 +9,8 @@
     "hooks"
   ],
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "examples/*"
   ],
   "devDependencies": {
     "@babel/core": "^7.15.5",
@@ -30,7 +31,7 @@
     "eslint-plugin-import": "^2.24.1",
     "eslint-plugin-jsx-a11y": "^6.4.1",
     "eslint-plugin-prettier": "^3.4.1",
-    "eslint-plugin-react": "^7.24.0",
+    "eslint-plugin-react": "^7.28.0",
     "eslint-plugin-react-hooks": "^4.2.0",
     "firebase": "^9.0.1",
     "firebase-admin": "^9.11.1",
@@ -43,8 +44,8 @@
     "react-query": "^3.23.2",
     "react-test-renderer": "^17.0.2",
     "rimraf": "^3.0.2",
-    "rollup": "^2.56.3",
-    "rollup-plugin-typescript2": "^0.30.0",
+    "rollup": "^2.63.0",
+    "rollup-plugin-typescript2": "^0.31.1",
     "ts-node": "^10.2.1",
     "typescript": "^4.4.3"
   },
