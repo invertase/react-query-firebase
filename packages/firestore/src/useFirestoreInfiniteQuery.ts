@@ -58,5 +58,6 @@ export function useFirestoreInfiniteQuery<
     getPreviousPageParam(snapshot) {
       return getPreviousQuery(snapshot);
     },
+    enabled: useInfiniteQueryOptions?.enabled ?? true,
   });
 }
