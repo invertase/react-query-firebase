@@ -38,7 +38,6 @@ describe("Database", () => {
 
       await waitFor(() => result.current.isSuccess);
 
-      expect(result.current.data).toBeInstanceOf(FirebaseDatabaseTypes.DataSnapshot);
       expect(result.current.data.exists()).toBe(false);
     });
 
@@ -57,7 +56,6 @@ describe("Database", () => {
 
       await waitFor(() => result.current.isSuccess);
 
-      expect(result.current.data).toBeInstanceOf(FirebaseDatabaseTypes.DataSnapshot);
       expect(result.current.data.exists()).toBe(true);
       expect(result.current.data.val()).toEqual({ foo: "bar" });
     });
@@ -88,7 +86,6 @@ describe("Database", () => {
 
       await waitFor(() => result.current.isSuccess);
 
-      expect(result.current.data).toBeInstanceOf(FirebaseDatabaseTypes.DataSnapshot);
       expect(result.current.data.exists()).toBe(true);
       expect(result.current.data.val()).toEqual({ foo: "bar" });
 
