@@ -4,31 +4,24 @@ import {
   UseMutationResult,
 } from "react-query";
 import {
-  DatabaseReference,
-  remove,
-  runTransaction,
-  set,
-  setWithPriority,
-  TransactionOptions,
-  TransactionResult,
-  update,
-} from "@firebase/database";
+  FirebaseDatabaseTypes
+} from "@react-native-firebase/database";
 
 export type UseDatabaseSetMutationOptions = {
   priority?: string | number | null;
 };
 
 export function useDatabaseSetMutation<T = unknown>(
-  ref: DatabaseReference,
+  ref: FirebaseDatabaseTypes.Reference,
   options?: UseDatabaseSetMutationOptions,
   useMutationOptions?: UseMutationOptions<void, Error, T>
 ): UseMutationResult<void, Error, T> {
   return useMutation<void, Error, T>((value) => {
     if (options?.priority !== undefined) {
-      return setWithPriority(ref, value, options.priority);
+      return ref.setWithPriority(value, options.priority);
     }
 
-    return set(ref, value);
+    return ref.set(value);
   }, useMutationOptions);
 }
 
@@ -37,30 +30,33 @@ type UpdateValues = Record<string, unknown>;
 export function useDatabaseUpdateMutation<
   T extends UpdateValues = UpdateValues
 >(
-  ref: DatabaseReference,
+  ref: FirebaseDatabaseTypes.Reference,
   useMutationOptions?: UseMutationOptions<void, Error, T>
 ): UseMutationResult<void, Error, T> {
   return useMutation<void, Error, T>((values) => {
-    return update(ref, values);
+    return ref.update(values);
   }, useMutationOptions);
 }
 
 export function useDatabaseRemoveMutation(
-  ref: DatabaseReference,
+  ref: FirebaseDatabaseTypes.Reference,
   useMutationOptions?: UseMutationOptions<void, Error, void>
 ): UseMutationResult<void, Error, void> {
   return useMutation<void, Error, void>(() => {
-    return remove(ref);
+    return ref.remove();
   }, useMutationOptions);
 }
 
 export function useDatabaseTransaction<T = any>(
-  ref: DatabaseReference,
+  ref: FirebaseDatabaseTypes.Reference,
   transactionUpdate: (currentData: T | null) => unknown,
-  options?: TransactionOptions,
-  useMutationOptions?: UseMutationOptions<TransactionResult, Error, void>
-): UseMutationResult<TransactionResult, Error, void> {
-  return useMutation<TransactionResult, Error, void>(() => {
-    return runTransaction(ref, transactionUpdate, options);
+  options: {applyLocally?: boolean},
+  useMutationOptions?: UseMutationOptions<FirebaseDatabaseTypes.TransactionResult, Error, void>
+): UseMutationResult<FirebaseDatabaseTypes.TransactionResult, Error, void> {
+  return useMutation<FirebaseDatabaseTypes.TransactionResult, Error, void>(() => {
+    return ref.transaction(
+      transactionUpdate as any,
+      undefined,
+      options.applyLocally);
   }, useMutationOptions);
 }

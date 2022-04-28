@@ -6,59 +6,50 @@ import {
   UseQueryResult,
 } from "react-query";
 import {
-  DatabaseReference,
-  Unsubscribe,
-  onValue,
-  DataSnapshot,
-} from "firebase/database";
+  FirebaseDatabaseTypes
+} from "@react-native-firebase/database";
 import { useEffect, useRef } from "react";
 
-export function useDatabaseSnapshot<R = DataSnapshot>(
+export function useDatabaseSnapshot<R = FirebaseDatabaseTypes.DataSnapshot>(
   key: QueryKey,
-  ref: DatabaseReference,
+  ref: FirebaseDatabaseTypes.Reference,
   options: { subscribe?: boolean } = {},
-  useQueryOptions?: Omit<UseQueryOptions<DataSnapshot, Error, R>, "queryFn">
+  useQueryOptions?: Omit<UseQueryOptions<FirebaseDatabaseTypes.DataSnapshot, Error, R>, "queryFn">
 ): UseQueryResult<R, Error> {
   const client = useQueryClient();
-  const unsubscribe = useRef<Unsubscribe>();
+  const unsubscribe = useRef<any>();
 
   useEffect(() => {
     return () => {
-      unsubscribe.current?.();
+      if (options.subscribe) ref.off(unsubscribe.current?.());
     };
   }, []);
 
-  return useQuery<DataSnapshot, Error, R>({
+  return useQuery<FirebaseDatabaseTypes.DataSnapshot, Error, R>({
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
     staleTime:
       useQueryOptions?.staleTime ?? options?.subscribe ? Infinity : undefined,
     async queryFn() {
-      unsubscribe.current?.();
+      if (options.subscribe) ref.off(unsubscribe.current?.());
       let resolved = false;
 
-      return new Promise<DataSnapshot>((resolve, reject) => {
-        unsubscribe.current = onValue(
-          ref,
-          (snapshot) => {
-            if (!resolved) {
-              resolved = true;
-              return resolve(snapshot);
-            } else {
-              client.setQueryData<DataSnapshot>(key, snapshot);
-            }
-          },
-          reject,
-          {
-            onlyOnce: !options.subscribe,
+      return new Promise<FirebaseDatabaseTypes.DataSnapshot>((resolve, reject) => {
+        unsubscribe.current = ref[options.subscribe ? "on" : "once"]("value", (snapshot) => {
+          if (!resolved) {
+            resolved = true;
+            return resolve(snapshot);
+          } else {
+            client.setQueryData<FirebaseDatabaseTypes.DataSnapshot>(key, snapshot);
           }
-        );
+        },
+        reject);
       });
     },
   });
 }
 
-function parseDataSnapshot(snapshot: DataSnapshot, toArray: boolean): any {
+function parseDataSnapshot(snapshot: FirebaseDatabaseTypes.DataSnapshot, toArray: boolean): any {
   if (!snapshot.exists()) {
     return null;
   }
@@ -67,6 +58,7 @@ function parseDataSnapshot(snapshot: DataSnapshot, toArray: boolean): any {
     const array: unknown[] = [];
     snapshot.forEach((snapshot) => {
       array.push(parseDataSnapshot(snapshot, toArray));
+      return true;
     });
     return array;
   }
@@ -81,16 +73,16 @@ export type UseDatabaseValueOptions = {
 
 export function useDatabaseValue<T = unknown | null, R = T>(
   key: QueryKey,
-  ref: DatabaseReference,
+  ref: FirebaseDatabaseTypes.Reference,
   options: UseDatabaseValueOptions = {},
   useQueryOptions?: Omit<UseQueryOptions<T, Error, R>, "queryFn">
 ): UseQueryResult<R, Error> {
   const client = useQueryClient();
-  const unsubscribe = useRef<Unsubscribe>();
+  const unsubscribe = useRef<any>();
 
   useEffect(() => {
     return () => {
-      unsubscribe.current?.();
+      if (options.subscribe) ref.off(unsubscribe.current?.());
     };
   }, []);
 
@@ -100,12 +92,11 @@ export function useDatabaseValue<T = unknown | null, R = T>(
     staleTime:
       useQueryOptions?.staleTime ?? options?.subscribe ? Infinity : undefined,
     async queryFn() {
-      unsubscribe.current?.();
+      if (options.subscribe) ref.off(unsubscribe.current?.());
       let resolved = false;
 
       return new Promise<T>((resolve, reject) => {
-        unsubscribe.current = onValue(
-          ref,
+        unsubscribe.current = ref[options.subscribe ? "on" : "once"]("value",
           (snapshot) => {
             if (!resolved) {
               resolved = true;
@@ -118,9 +109,6 @@ export function useDatabaseValue<T = unknown | null, R = T>(
             }
           },
           reject,
-          {
-            onlyOnce: !options.subscribe,
-          }
         );
       });
     },
