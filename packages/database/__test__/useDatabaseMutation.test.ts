@@ -9,16 +9,15 @@ import {
   useDatabaseUpdateMutation,
 } from "../src";
 import { act } from "react-test-renderer";
-import { Database, ref, set } from "@firebase/database";
-import { get } from "firebase/database";
+import { FirebaseDatabaseTypes } from "@react-native-firebase/database";
 
 describe("Database", () => {
   let client: QueryClient;
   let wrapper: React.FC<{ children: React.ReactNode }>;
-  let database: Database;
+  let database: FirebaseDatabaseTypes.Module;
 
-  beforeEach(() => {
-    const config = init();
+  beforeEach(async () => {
+    const config = await init();
     client = config.client;
     wrapper = config.wrapper;
     database = config.database;
@@ -30,7 +29,7 @@ describe("Database", () => {
 
   describe("useDatabaseSetMutation", () => {
     test("it sets data", async () => {
-      const dbRef = ref(database, genId());
+      const dbRef = database.ref(genId());
 
       const { result, waitFor } = renderHook(
         () => useDatabaseSetMutation<number>(dbRef),
@@ -45,12 +44,12 @@ describe("Database", () => {
 
       await waitFor(() => result.current.isSuccess);
 
-      const snapshot = await get(dbRef);
+      const snapshot = await dbRef.once("value");
       expect(snapshot.val()).toBe(1337);
     });
 
     test("it sets data with priority", async () => {
-      const dbRef = ref(database, genId());
+      const dbRef = database.ref(genId());
 
       const { result, waitFor } = renderHook(
         () => useDatabaseSetMutation<number>(dbRef, { priority: 10 }),
@@ -65,17 +64,17 @@ describe("Database", () => {
 
       await waitFor(() => result.current.isSuccess);
 
-      const snapshot = await get(dbRef);
+      const snapshot = await dbRef.once("value");
       expect(snapshot.val()).toBe(1339);
-      expect(snapshot.priority).toBe(10);
+      expect(snapshot.getPriority()).toBe(10);
     });
   });
 
   describe("useDatabaseUpdateMutation", () => {
     test("it updates data", async () => {
-      const dbRef = ref(database, genId());
+      const dbRef = database.ref(genId());
 
-      await set(dbRef, { foo: "bar", bar: { baz: 123 } });
+      await dbRef.set({ foo: "bar", bar: { baz: 123 } });
 
       const { result } = renderHook(() => useDatabaseUpdateMutation(dbRef), {
         wrapper,
@@ -88,7 +87,7 @@ describe("Database", () => {
         });
       });
 
-      const snapshot = await get(dbRef);
+      const snapshot = await dbRef.once("value");
       expect(snapshot.val()).toEqual({
         foo: "bar",
         bar: { baz: "123" },
@@ -99,9 +98,9 @@ describe("Database", () => {
 
   describe("useDatabaseRemoveMutation", () => {
     test("it removes data", async () => {
-      const dbRef = ref(database, genId());
+      const dbRef = database.ref(genId());
 
-      await set(dbRef, { foo: "bar" });
+      await dbRef.set({ foo: "bar" });
 
       const { result, waitFor } = renderHook(
         () => useDatabaseRemoveMutation(dbRef),
@@ -116,22 +115,15 @@ describe("Database", () => {
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
-      const snapshot = await get(dbRef);
+      const snapshot = await dbRef.once("value");
       expect(snapshot.exists()).toBe(false);
     });
   });
 
   describe("useDatabaseTransaction", () => {
     test("it performs a transaction", async () => {
-      const dbRef = ref(database, genId());
-
-      await set(dbRef, { foo: 10 });
-
-      // await new Promise<void>((r) => {
-      //   onValue(dbRef, () => r(), {
-      //     onlyOnce: true,
-      //   });
-      // });
+      const dbRef = database.ref(genId());
+      await dbRef.set({ foo: 10 });
 
       const { result } = renderHook(
         () =>
@@ -150,7 +142,7 @@ describe("Database", () => {
         await result.current.mutateAsync();
       });
 
-      const snapshot = await get(dbRef);
+      const snapshot = await dbRef.once("value");
       expect(snapshot.val().foo).toBe(11);
     });
   });

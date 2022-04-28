@@ -1,7 +1,7 @@
 import React from "react";
 import { QueryClient, QueryClientProvider, setLogger } from "react-query";
-import { initializeApp } from "firebase/app";
-import { connectDatabaseEmulator, getDatabase } from "firebase/database";
+import firebase from "@react-native-firebase/app";
+import database from "@react-native-firebase/database";
 
 setLogger({
   log: console.log,
@@ -16,16 +16,17 @@ export function genId(): string {
   return Math.random().toString(32).replace(".", "");
 }
 
-export function init(): any {
-  const firebase = initializeApp({
+export async function init(): Promise<any> {
+  const app = await firebase.initializeApp({
+    appId: "foo",
     projectId: "test-project",
     apiKey: "foo",
   });
 
-  const database = getDatabase(firebase);
+  const db = database(app);
 
   if (!emulatorsStarted) {
-    connectDatabaseEmulator(database, "localhost", 9000);
+    db.useEmulator("localhost", 9000);
     emulatorsStarted = true;
   }
 
@@ -43,5 +44,5 @@ export function init(): any {
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
 
-  return { client, wrapper, firebase, database };
+  return { client, wrapper, firebase, database: db };
 }

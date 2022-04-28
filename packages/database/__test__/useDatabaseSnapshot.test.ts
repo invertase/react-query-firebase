@@ -5,22 +5,16 @@ import { genId, init } from "./helpers";
 import { useDatabaseSnapshot, useDatabaseValue } from "../src";
 import { act } from "react-test-renderer";
 import {
-  Database,
-  DataSnapshot,
-  ref,
-  remove,
-  set,
-  update,
-} from "@firebase/database";
-import { push } from "firebase/database";
+  FirebaseDatabaseTypes
+} from "@react-native-firebase/database";
 
 describe("Database", () => {
   let client: QueryClient;
   let wrapper: React.FC<{ children: React.ReactNode }>;
-  let database: Database;
+  let database: FirebaseDatabaseTypes.Module;
 
-  beforeEach(() => {
-    const config = init();
+  beforeEach(async () => {
+    const config = await init();
     client = config.client;
     wrapper = config.wrapper;
     database = config.database;
@@ -33,7 +27,7 @@ describe("Database", () => {
   describe("useDatabaseSnapshot", () => {
     test("it returns a valid snapshot", async () => {
       const hookId = genId();
-      const dbRef = ref(database, "foo");
+      const dbRef = database.ref("foo");
 
       const { result, waitFor } = renderHook(
         () => useDatabaseSnapshot(hookId, dbRef),
@@ -44,15 +38,15 @@ describe("Database", () => {
 
       await waitFor(() => result.current.isSuccess);
 
-      expect(result.current.data).toBeInstanceOf(DataSnapshot);
+      expect(result.current.data).toBeInstanceOf(FirebaseDatabaseTypes.DataSnapshot);
       expect(result.current.data.exists()).toBe(false);
     });
 
     test("it returns a valid snapshot with data", async () => {
       const hookId = genId();
-      const dbRef = ref(database, genId());
+      const dbRef = database.ref(genId());
 
-      await set(dbRef, { foo: "bar" });
+      await dbRef.set({ foo: "bar" });
 
       const { result, waitFor } = renderHook(
         () => useDatabaseSnapshot(hookId, dbRef),
@@ -63,16 +57,16 @@ describe("Database", () => {
 
       await waitFor(() => result.current.isSuccess);
 
-      expect(result.current.data).toBeInstanceOf(DataSnapshot);
+      expect(result.current.data).toBeInstanceOf(FirebaseDatabaseTypes.DataSnapshot);
       expect(result.current.data.exists()).toBe(true);
       expect(result.current.data.val()).toEqual({ foo: "bar" });
     });
 
     test("it subscribes to data snapshots", async () => {
       const hookId = genId();
-      const dbRef = ref(database, genId());
+      const dbRef = database.ref(genId());
 
-      await set(dbRef, { foo: "bar" });
+      await dbRef.set({ foo: "bar" });
 
       const mock = jest.fn();
       const { result, waitFor, unmount } = renderHook(
@@ -94,12 +88,12 @@ describe("Database", () => {
 
       await waitFor(() => result.current.isSuccess);
 
-      expect(result.current.data).toBeInstanceOf(DataSnapshot);
+      expect(result.current.data).toBeInstanceOf(FirebaseDatabaseTypes.DataSnapshot);
       expect(result.current.data.exists()).toBe(true);
       expect(result.current.data.val()).toEqual({ foo: "bar" });
 
       await act(async () => {
-        await update(dbRef, { bar: "baz" });
+        await dbRef.update({ bar: "baz" });
       });
 
       await waitFor(() => result.current.isSuccess);
@@ -109,7 +103,7 @@ describe("Database", () => {
       unmount();
 
       await act(async () => {
-        await update(dbRef, { foo: "baz" });
+        await dbRef.update({ foo: "baz" });
       });
 
       expect(mock.mock.calls.length).toBe(2);
@@ -119,7 +113,7 @@ describe("Database", () => {
   describe("useDatabaseValue", () => {
     test("it returns null if ref doesn't exist", async () => {
       const hookId = genId();
-      const dbRef = ref(database, "foo");
+      const dbRef = database.ref("foo");
 
       const { result, waitFor } = renderHook(
         () => useDatabaseValue(hookId, dbRef),
@@ -135,9 +129,9 @@ describe("Database", () => {
 
     test("it returns data if exists", async () => {
       const hookId = genId();
-      const dbRef = ref(database, genId());
+      const dbRef = database.ref(genId());
 
-      await set(dbRef, 10);
+      await dbRef.set(10);
 
       const { result, waitFor } = renderHook(
         () => useDatabaseValue<number>(hookId, dbRef),
@@ -153,9 +147,9 @@ describe("Database", () => {
 
     test("it returns modified data", async () => {
       const hookId = genId();
-      const dbRef = ref(database, genId());
+      const dbRef = database.ref(genId());
 
-      await set(dbRef, 10);
+      await dbRef.set(10);
 
       const { result, waitFor } = renderHook(
         () =>
@@ -176,11 +170,11 @@ describe("Database", () => {
 
     test("it returns if ref is a list value", async () => {
       const hookId = genId();
-      const dbRef = ref(database, genId());
+      const dbRef = database.ref(genId());
 
       await Promise.all([
-        await set(push(dbRef), "foo"),
-        await set(push(dbRef), 123),
+        await dbRef.push().set("foo"),
+        await dbRef.push().set(123),
       ]);
 
       const { result, waitFor } = renderHook(
@@ -197,13 +191,13 @@ describe("Database", () => {
 
     test("it returns if ref is a list value with a nested list", async () => {
       const hookId = genId();
-      const dbRef = ref(database, genId());
-      const nestedRef = push(dbRef);
+      const dbRef = database.ref(genId());
+      const nestedRef = dbRef.push();
 
       await Promise.all([
-        await set(push(dbRef), "foo"),
-        await set(push(nestedRef), "foo"),
-        await set(push(nestedRef), 123),
+        await dbRef.push().set("foo"),
+        await nestedRef.push().set("foo"),
+        await nestedRef.push().set(123),
       ]);
 
       const { result, waitFor } = renderHook(
@@ -221,9 +215,9 @@ describe("Database", () => {
 
     test("it returns an object if no array option is set", async () => {
       const hookId = genId();
-      const dbRef = ref(database, genId());
+      const dbRef = database.ref(genId());
 
-      await set(dbRef, { foo: "bar", bar: "baz" });
+      await dbRef.set({ foo: "bar", bar: "baz" });
 
       const { result, waitFor } = renderHook(
         () => useDatabaseValue(hookId, dbRef, undefined),
@@ -239,11 +233,11 @@ describe("Database", () => {
 
     test("it subscribes to data changes", async () => {
       const hookId = genId();
-      const dbRef = ref(database, genId());
+      const dbRef = database.ref(genId());
 
       await Promise.all([
-        await set(push(dbRef), "foo"),
-        await set(push(dbRef), 123),
+        await dbRef.push().set("foo"),
+        await dbRef.push().set(123),
       ]);
 
       const mock = jest.fn();
@@ -269,7 +263,7 @@ describe("Database", () => {
       expect(result.current.data).toEqual(["foo", 123]);
 
       await act(async () => {
-        await set(push(dbRef), "baz");
+        await dbRef.push().set("baz");
       });
 
       await waitFor(() => result.current.isSuccess);
@@ -279,7 +273,7 @@ describe("Database", () => {
       unmount();
 
       await act(async () => {
-        await remove(dbRef);
+        await dbRef.remove();
       });
 
       expect(mock.mock.calls.length).toBe(2);
