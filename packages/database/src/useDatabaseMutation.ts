@@ -50,13 +50,13 @@ export function useDatabaseRemoveMutation(
 export function useDatabaseTransaction<T = any>(
   ref: FirebaseDatabaseTypes.Reference,
   transactionUpdate: (currentData: T | null) => unknown,
-  options: {applyLocally?: boolean},
+  options?: {applyLocally?: boolean},
   useMutationOptions?: UseMutationOptions<FirebaseDatabaseTypes.TransactionResult, Error, void>
 ): UseMutationResult<FirebaseDatabaseTypes.TransactionResult, Error, void> {
   return useMutation<FirebaseDatabaseTypes.TransactionResult, Error, void>(() => {
     return ref.transaction(
       transactionUpdate as any,
       undefined,
-      options.applyLocally);
+      options?.applyLocally);
   }, useMutationOptions);
 }
