@@ -1,63 +1,25 @@
-import {
-  ActionCodeInfo,
-  ActionCodeSettings,
-  ApplicationVerifier,
-  applyActionCode,
-  Auth,
-  AuthCredential,
-  AuthError,
-  AuthProvider,
-  checkActionCode,
-  createUserWithEmailAndPassword,
-  ConfirmationResult,
-  confirmPasswordReset,
-  deleteUser,
-  linkWithCredential,
-  linkWithPhoneNumber,
-  linkWithPopup,
-  linkWithRedirect,
-  PhoneAuthCredential,
-  PopupRedirectResolver,
-  reauthenticateWithCredential,
-  reauthenticateWithPhoneNumber,
-  reauthenticateWithPopup,
-  reauthenticateWithRedirect,
-  reload,
-  sendEmailVerification,
-  sendPasswordResetEmail,
-  sendSignInLinkToEmail,
-  signInAnonymously,
-  signInWithCredential,
-  signInWithCustomToken,
-  signInWithEmailAndPassword,
-  signInWithEmailLink,
-  signInWithPhoneNumber,
-  signInWithPopup,
-  signInWithRedirect,
-  signOut,
-  unlink,
-  updateCurrentUser,
-  updateEmail,
-  updatePassword,
-  updatePhoneNumber,
-  updateProfile,
-  User,
-  UserCredential,
-  verifyBeforeUpdateEmail,
-  verifyPasswordResetCode,
-} from "@firebase/auth";
+import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import {
   useMutation,
   UseMutationOptions,
   UseMutationResult,
 } from "react-query";
 
+type User = FirebaseAuthTypes.User;
+type Auth = FirebaseAuthTypes.Module;
+type AuthError = FirebaseAuthTypes.NativeFirebaseAuthError;
+type UserCredential = FirebaseAuthTypes.UserCredential;
+type AuthCredential = FirebaseAuthTypes.AuthCredential;
+type ConfirmationResult = FirebaseAuthTypes.ConfirmationResult;
+type ActionCodeSettings = FirebaseAuthTypes.ActionCodeSettings;
+type ActionCodeInfo = FirebaseAuthTypes.ActionCodeInfo;
+
 export function useAuthApplyActionCode(
   auth: Auth,
   useMutationOptions?: UseMutationOptions<void, AuthError, string>
 ): UseMutationResult<void, AuthError, string> {
   return useMutation<void, AuthError, string>((oobCode) => {
-    return applyActionCode(auth, oobCode);
+    return auth.applyActionCode(oobCode);
   }, useMutationOptions);
 }
 
@@ -66,7 +28,7 @@ export function useAuthCheckActionCode(
   useMutationOptions?: UseMutationOptions<ActionCodeInfo, AuthError, string>
 ): UseMutationResult<ActionCodeInfo, AuthError, string> {
   return useMutation<ActionCodeInfo, AuthError, string>((oobCode) => {
-    return checkActionCode(auth, oobCode);
+    return auth.checkActionCode(oobCode);
   }, useMutationOptions);
 }
 
@@ -84,7 +46,7 @@ export function useAuthConfirmPasswordReset(
 > {
   return useMutation<void, AuthError, { oobCode: string; newPassword: string }>(
     ({ oobCode, newPassword }) => {
-      return confirmPasswordReset(auth, oobCode, newPassword);
+      return auth.confirmPasswordReset(oobCode, newPassword);
     },
     useMutationOptions
   );
@@ -107,7 +69,7 @@ export function useAuthCreateUserWithEmailAndPassword(
     AuthError,
     { email: string; password: string }
   >(({ email, password }) => {
-    return createUserWithEmailAndPassword(auth, email, password);
+    return auth.createUserWithEmailAndPassword(email, password);
   }, useMutationOptions);
 }
 
@@ -115,7 +77,7 @@ export function useAuthDeleteUser(
   useMutationOptions?: UseMutationOptions<void, AuthError, User>
 ): UseMutationResult<void, AuthError, User> {
   return useMutation<void, AuthError, User>((user) => {
-    return deleteUser(user);
+    return user.delete();
   }, useMutationOptions);
 }
 
@@ -135,67 +97,7 @@ export function useAuthLinkWithCredential(
     AuthError,
     { user: User; credential: AuthCredential }
   >(({ user, credential }) => {
-    return linkWithCredential(user, credential);
-  }, useMutationOptions);
-}
-
-export function useAuthLinkWithPhoneNumber(
-  useMutationOptions?: UseMutationOptions<
-    ConfirmationResult,
-    AuthError,
-    { user: User; phoneNumber: string; appVerifier: ApplicationVerifier }
-  >
-): UseMutationResult<
-  ConfirmationResult,
-  AuthError,
-  { user: User; phoneNumber: string; appVerifier: ApplicationVerifier }
-> {
-  return useMutation<
-    ConfirmationResult,
-    AuthError,
-    { user: User; phoneNumber: string; appVerifier: ApplicationVerifier }
-  >(({ user, phoneNumber, appVerifier }) => {
-    return linkWithPhoneNumber(user, phoneNumber, appVerifier);
-  }, useMutationOptions);
-}
-
-export function useAuthLinkWithPopup(
-  useMutationOptions?: UseMutationOptions<
-    UserCredential,
-    AuthError,
-    { user: User; provider: AuthProvider; resolver?: PopupRedirectResolver }
-  >
-): UseMutationResult<
-  UserCredential,
-  AuthError,
-  { user: User; provider: AuthProvider; resolver?: PopupRedirectResolver }
-> {
-  return useMutation<
-    UserCredential,
-    AuthError,
-    { user: User; provider: AuthProvider; resolver?: PopupRedirectResolver }
-  >(({ user, provider, resolver }) => {
-    return linkWithPopup(user, provider, resolver);
-  }, useMutationOptions);
-}
-
-export function useAuthLinkWithRedirect(
-  useMutationOptions?: UseMutationOptions<
-    never,
-    AuthError,
-    { user: User; provider: AuthProvider; resolver?: PopupRedirectResolver }
-  >
-): UseMutationResult<
-  never,
-  AuthError,
-  { user: User; provider: AuthProvider; resolver?: PopupRedirectResolver }
-> {
-  return useMutation<
-    never,
-    AuthError,
-    { user: User; provider: AuthProvider; resolver?: PopupRedirectResolver }
-  >(({ user, provider, resolver }) => {
-    return linkWithRedirect(user, provider, resolver);
+    return user.linkWithCredential(credential);
   }, useMutationOptions);
 }
 
@@ -215,67 +117,7 @@ export function useAuthReauthenticateWithCredential(
     AuthError,
     { user: User; credential: AuthCredential }
   >(({ user, credential }) => {
-    return reauthenticateWithCredential(user, credential);
-  }, useMutationOptions);
-}
-
-export function useAuthReauthenticateWithPhoneNumber(
-  useMutationOptions?: UseMutationOptions<
-    ConfirmationResult,
-    AuthError,
-    { user: User; phoneNumber: string; appVerifier: ApplicationVerifier }
-  >
-): UseMutationResult<
-  ConfirmationResult,
-  AuthError,
-  { user: User; phoneNumber: string; appVerifier: ApplicationVerifier }
-> {
-  return useMutation<
-    ConfirmationResult,
-    AuthError,
-    { user: User; phoneNumber: string; appVerifier: ApplicationVerifier }
-  >(({ user, phoneNumber, appVerifier }) => {
-    return reauthenticateWithPhoneNumber(user, phoneNumber, appVerifier);
-  }, useMutationOptions);
-}
-
-export function useAuthReauthenticateWithPopup(
-  useMutationOptions?: UseMutationOptions<
-    UserCredential,
-    AuthError,
-    { user: User; provider: AuthProvider; resolver?: PopupRedirectResolver }
-  >
-): UseMutationResult<
-  UserCredential,
-  AuthError,
-  { user: User; provider: AuthProvider; resolver?: PopupRedirectResolver }
-> {
-  return useMutation<
-    UserCredential,
-    AuthError,
-    { user: User; provider: AuthProvider; resolver?: PopupRedirectResolver }
-  >(({ user, provider, resolver }) => {
-    return reauthenticateWithPopup(user, provider, resolver);
-  }, useMutationOptions);
-}
-
-export function useAuthReauthenticateWithRedirect(
-  useMutationOptions?: UseMutationOptions<
-    never,
-    AuthError,
-    { user: User; provider: AuthProvider; resolver?: PopupRedirectResolver }
-  >
-): UseMutationResult<
-  never,
-  AuthError,
-  { user: User; provider: AuthProvider; resolver?: PopupRedirectResolver }
-> {
-  return useMutation<
-    never,
-    AuthError,
-    { user: User; provider: AuthProvider; resolver?: PopupRedirectResolver }
-  >(({ user, provider, resolver }) => {
-    return reauthenticateWithRedirect(user, provider, resolver);
+    return user.reauthenticateWithCredential(credential);
   }, useMutationOptions);
 }
 
@@ -283,7 +125,7 @@ export function useAuthReload(
   useMutationOptions?: UseMutationOptions<void, AuthError, User>
 ): UseMutationResult<void, AuthError, User> {
   return useMutation<void, AuthError, User>((user) => {
-    return reload(user);
+    return user.reload();
   }, useMutationOptions);
 }
 
@@ -303,7 +145,7 @@ export function useAuthSendEmailVerification(
     AuthError,
     { user: User; actionCodeSettings?: ActionCodeSettings | null }
   >(({ user, actionCodeSettings }) => {
-    return sendEmailVerification(user, actionCodeSettings);
+    return user.sendEmailVerification(actionCodeSettings as ActionCodeSettings);
   }, useMutationOptions);
 }
 
@@ -324,7 +166,7 @@ export function useAuthSendPasswordResetEmail(
     AuthError,
     { email: string; actionCodeSettings?: ActionCodeSettings }
   >(({ email, actionCodeSettings }) => {
-    return sendPasswordResetEmail(auth, email, actionCodeSettings);
+    return auth.sendPasswordResetEmail(email, actionCodeSettings);
   }, useMutationOptions);
 }
 
@@ -345,7 +187,7 @@ export function useAuthSendSignInLinkToEmail(
     AuthError,
     { email: string; actionCodeSettings: ActionCodeSettings }
   >(({ email, actionCodeSettings }) => {
-    return sendSignInLinkToEmail(auth, email, actionCodeSettings);
+    return auth.sendSignInLinkToEmail(email, actionCodeSettings);
   }, useMutationOptions);
 }
 
@@ -366,7 +208,7 @@ export function useAuthSignInAnonymously(
     AuthError,
     { email: string; password: string }
   >(() => {
-    return signInAnonymously(auth);
+    return auth.signInAnonymously();
   }, useMutationOptions);
 }
 
@@ -380,7 +222,7 @@ export function useAuthSignInWithCredential(
 ): UseMutationResult<UserCredential, AuthError, AuthCredential> {
   return useMutation<UserCredential, AuthError, AuthCredential>(
     (credential) => {
-      return signInWithCredential(auth, credential);
+      return auth.signInWithCredential(credential);
     },
     useMutationOptions
   );
@@ -391,7 +233,7 @@ export function useAuthSignInWithCustomToken(
   useMutationOptions?: UseMutationOptions<UserCredential, AuthError, string>
 ): UseMutationResult<UserCredential, AuthError, string> {
   return useMutation<UserCredential, AuthError, string>((customToken) => {
-    return signInWithCustomToken(auth, customToken);
+    return auth.signInWithCustomToken(customToken);
   }, useMutationOptions);
 }
 
@@ -412,7 +254,7 @@ export function useAuthSignInWithEmailAndPassword(
     AuthError,
     { email: string; password: string }
   >(({ email, password }) => {
-    return signInWithEmailAndPassword(auth, email, password);
+    return auth.signInWithEmailAndPassword(email, password);
   }, useMutationOptions);
 }
 
@@ -433,7 +275,7 @@ export function useAuthSignInWithEmailLink(
     AuthError,
     { email: string; emailLink?: string }
   >(({ email, emailLink }) => {
-    return signInWithEmailLink(auth, email, emailLink);
+    return auth.signInWithEmailLink(email, emailLink as string);
   }, useMutationOptions);
 }
 
@@ -442,61 +284,19 @@ export function useAuthSignInWithPhoneNumber(
   useMutationOptions?: UseMutationOptions<
     ConfirmationResult,
     AuthError,
-    { phoneNumber: string; appVerifier: ApplicationVerifier }
+    { phoneNumber: string; forceResend?: boolean }
   >
 ): UseMutationResult<
   ConfirmationResult,
   AuthError,
-  { phoneNumber: string; appVerifier: ApplicationVerifier }
+  { phoneNumber: string; forceResend?: boolean }
 > {
   return useMutation<
     ConfirmationResult,
     AuthError,
-    { phoneNumber: string; appVerifier: ApplicationVerifier }
-  >(({ phoneNumber, appVerifier }) => {
-    return signInWithPhoneNumber(auth, phoneNumber, appVerifier);
-  }, useMutationOptions);
-}
-
-export function useAuthSignInWithPopup(
-  auth: Auth,
-  useMutationOptions?: UseMutationOptions<
-    UserCredential,
-    AuthError,
-    { provider: AuthProvider; resolver?: PopupRedirectResolver }
-  >
-): UseMutationResult<
-  UserCredential,
-  AuthError,
-  { provider: AuthProvider; resolver?: PopupRedirectResolver }
-> {
-  return useMutation<
-    UserCredential,
-    AuthError,
-    { provider: AuthProvider; resolver?: PopupRedirectResolver }
-  >(({ provider, resolver }) => {
-    return signInWithPopup(auth, provider, resolver);
-  }, useMutationOptions);
-}
-
-export function useAuthSignInWithRedirect(
-  auth: Auth,
-  useMutationOptions?: UseMutationOptions<
-    never,
-    AuthError,
-    { provider: AuthProvider; resolver?: PopupRedirectResolver }
-  >
-): UseMutationResult<
-  never,
-  AuthError,
-  { provider: AuthProvider; resolver?: PopupRedirectResolver }
-> {
-  return useMutation<
-    never,
-    AuthError,
-    { provider: AuthProvider; resolver?: PopupRedirectResolver }
-  >(({ provider, resolver }) => {
-    return signInWithRedirect(auth, provider, resolver);
+    { phoneNumber: string; forceResend?: boolean }
+  >(({ phoneNumber, forceResend }) => {
+    return auth.signInWithPhoneNumber(phoneNumber, forceResend);
   }, useMutationOptions);
 }
 
@@ -505,7 +305,7 @@ export function useAuthSignOut(
   useMutationOptions?: UseMutationOptions<void, AuthError, void>
 ): UseMutationResult<void, AuthError, void> {
   return useMutation<void, AuthError, void>(() => {
-    return signOut(auth);
+    return auth.signOut();
   }, useMutationOptions);
 }
 
@@ -518,19 +318,10 @@ export function useAuthUnlink(
 ): UseMutationResult<User, AuthError, { user: User; providerId: string }> {
   return useMutation<User, AuthError, { user: User; providerId: string }>(
     ({ user, providerId }) => {
-      return unlink(user, providerId);
+      return user.unlink(providerId);
     },
     useMutationOptions
   );
-}
-
-export function useAuthUpdateCurrentUser(
-  auth: Auth,
-  useMutationOptions?: UseMutationOptions<void, AuthError, User | null>
-): UseMutationResult<void, AuthError, User | null> {
-  return useMutation<void, AuthError, User | null>((user) => {
-    return updateCurrentUser(auth, user);
-  }, useMutationOptions);
 }
 
 export function useAuthUpdateEmail(
@@ -542,7 +333,7 @@ export function useAuthUpdateEmail(
 ): UseMutationResult<void, AuthError, { user: User; newEmail: string }> {
   return useMutation<void, AuthError, { user: User; newEmail: string }>(
     ({ user, newEmail }) => {
-      return updateEmail(user, newEmail);
+      return user.updateEmail(newEmail);
     },
     useMutationOptions
   );
@@ -557,7 +348,7 @@ export function useAuthUpdatePassword(
 ): UseMutationResult<void, AuthError, { user: User; newPassword: string }> {
   return useMutation<void, AuthError, { user: User; newPassword: string }>(
     ({ user, newPassword }) => {
-      return updatePassword(user, newPassword);
+      return user.updatePassword(newPassword);
     },
     useMutationOptions
   );
@@ -567,19 +358,19 @@ export function useAuthUpdatePhoneNumber(
   useMutationOptions?: UseMutationOptions<
     void,
     AuthError,
-    { user: User; credential: PhoneAuthCredential }
+    { user: User; credential: AuthCredential }
   >
 ): UseMutationResult<
   void,
   AuthError,
-  { user: User; credential: PhoneAuthCredential }
+  { user: User; credential: AuthCredential }
 > {
   return useMutation<
     void,
     AuthError,
-    { user: User; credential: PhoneAuthCredential }
+    { user: User; credential: AuthCredential }
   >(({ user, credential }) => {
-    return updatePhoneNumber(user, credential);
+    return user.updatePhoneNumber(credential);
   }, useMutationOptions);
 }
 
@@ -599,7 +390,7 @@ export function useAuthUpdateProfile(
     AuthError,
     { user: User; displayName?: string | null; photoURL?: string | null }
   >(({ user, ...update }) => {
-    return updateProfile(user, update);
+    return user.updateProfile(update);
   }, useMutationOptions);
 }
 
@@ -619,15 +410,15 @@ export function useAuthVerifyBeforeUpdateEmail(
     AuthError,
     { user: User; newEmail: string; actionCodeSettings?: ActionCodeSettings }
   >(({ user, newEmail, actionCodeSettings }) => {
-    return verifyBeforeUpdateEmail(user, newEmail, actionCodeSettings);
+    return user.verifyBeforeUpdateEmail(newEmail, actionCodeSettings);
   }, useMutationOptions);
 }
 
 export function useAuthVerifyPasswordResetCode(
   auth: Auth,
-  useMutationOptions?: UseMutationOptions<string, AuthError, string>
-): UseMutationResult<string, AuthError, string> {
-  return useMutation<string, AuthError, string>((code) => {
-    return verifyPasswordResetCode(auth, code);
+  useMutationOptions?: UseMutationOptions<void, AuthError, string>
+): UseMutationResult<void, AuthError, string> {
+  return useMutation<void, AuthError, string>((code) => {
+    return auth.verifyPasswordResetCode(code);
   }, useMutationOptions);
 }
