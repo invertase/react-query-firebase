@@ -1,13 +1,10 @@
 import React from "react";
 import { QueryClient, QueryClientProvider, setLogger } from "react-query";
-import { initializeApp } from "firebase/app";
-import {
-  getAuth,
-  connectAuthEmulator,
-  Auth,
-  UserCredential,
-  createUserWithEmailAndPassword,
-} from "firebase/auth";
+import firebase from "@react-native-firebase/app";
+import { FirebaseAuthTypes } from "@react-native-firebase/auth";
+
+type Auth = FirebaseAuthTypes.Module;
+type UserCredential = FirebaseAuthTypes.UserCredential;
 
 setLogger({
   log: console.log,
@@ -19,23 +16,24 @@ setLogger({
 let emulatorsStarted = false;
 
 export function genId(): string {
-  return Math.random().toString(32);
+  return Math.random().toString(32).replace(".", "");
 }
 
 export async function signIn(auth: Auth): Promise<UserCredential> {
-  return createUserWithEmailAndPassword(auth, `${genId()}@foo.com`, "123456");
+  return auth.createUserWithEmailAndPassword(`${genId()}@foo.com`, "123456");
 }
 
-export function init(): any {
-  const firebase = initializeApp({
+export async function init(): Promise<any> {
+  const app = await firebase.initializeApp({
+    appId: "foo",
     projectId: "test-project",
     apiKey: "foo",
   });
 
-  const auth = getAuth(firebase);
+  const auth = app.auth();
 
   if (!emulatorsStarted) {
-    connectAuthEmulator(auth, "http://localhost:9099");
+    auth.useEmulator("localhost");
     emulatorsStarted = true;
   }
 

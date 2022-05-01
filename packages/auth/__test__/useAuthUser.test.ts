@@ -1,17 +1,20 @@
 import React from "react";
 import { QueryClient } from "react-query";
 import { renderHook, act } from "@testing-library/react-hooks";
-import { Auth, UserCredential } from "firebase/auth";
+import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { genId, init, signIn } from "./helpers";
 import { useAuthIdToken, useAuthUser } from "../src";
+
+type Auth = FirebaseAuthTypes.Module;
+type UserCredential = FirebaseAuthTypes.UserCredential;
 
 describe("Authentication", () => {
   let client: QueryClient;
   let wrapper: React.FC<{ children: React.ReactNode }>;
   let auth: Auth;
 
-  beforeEach(() => {
-    const config = init();
+  beforeEach(async () => {
+    const config = await init();
     client = config.client;
     wrapper = config.wrapper;
     auth = config.auth;
