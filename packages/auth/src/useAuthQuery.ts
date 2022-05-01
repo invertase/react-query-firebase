@@ -6,17 +6,13 @@ import {
   UseQueryOptions,
   UseQueryResult,
 } from "react-query";
-import {
-  Auth,
-  User,
-  Unsubscribe,
-  IdTokenResult,
-  fetchSignInMethodsForEmail,
-  AuthError,
-  UserCredential,
-  getRedirectResult,
-  PopupRedirectResolver,
-} from "firebase/auth";
+
+import { FirebaseAuthTypes } from "@react-native-firebase/auth";
+type User = FirebaseAuthTypes.User;
+type Auth = FirebaseAuthTypes.Module;
+type AuthError = FirebaseAuthTypes.NativeFirebaseAuthError;
+type IdTokenResult = FirebaseAuthTypes.IdTokenResult;
+type Unsubscribe = () => void;
 
 export function useAuthUser<R = User | null>(
   key: QueryKey,
@@ -84,7 +80,7 @@ export function useAuthIdToken<R = IdTokenResult | null>(
 
       let resolved = false;
 
-      return new Promise<IdTokenResult | null>((resolve, reject) => {
+      return new Promise<IdTokenResult | null>((resolve) => {
         unsubscribe.current = auth.onIdTokenChanged(async (user) => {
           let token: IdTokenResult | null = null;
 
@@ -98,30 +94,14 @@ export function useAuthIdToken<R = IdTokenResult | null>(
           } else {
             client.setQueryData<IdTokenResult | null>(key, token);
           }
-        }, reject);
+        });
       });
     },
   });
 }
 
-export function useAuthGetRedirectResult(
-  key: QueryKey,
-  auth: Auth,
-  resolver?: PopupRedirectResolver,
-  useQueryOptions?: Omit<
-    UseQueryOptions<UserCredential | null, AuthError>,
-    "queryFn"
-  >
-): UseQueryResult<UserCredential | null, AuthError> {
-  return useQuery<UserCredential | null, AuthError>({
-    ...useQueryOptions,
-    queryKey: useQueryOptions?.queryKey ?? key,
-    staleTime: useQueryOptions?.staleTime ?? Infinity,
-    async queryFn() {
-      return getRedirectResult(auth, resolver);
-    },
-  });
-}
+// memo: getRedirectResult is not exists on React Native Firebase.
+// export function useAuthGetRedirectResult;
 
 export function useAuthFetchSignInMethodsForEmail(
   key: QueryKey,
@@ -133,7 +113,7 @@ export function useAuthFetchSignInMethodsForEmail(
     ...useQueryOptions,
     queryKey: useQueryOptions?.queryKey ?? key,
     async queryFn() {
-      return fetchSignInMethodsForEmail(auth, email);
+      return auth.fetchSignInMethodsForEmail(email);
     },
   });
 }
