@@ -35,6 +35,7 @@
     "firebase": "^9.0.1",
     "@react-native-firebase/app": "^14.9.1",
     "@react-native-firebase/database": "^14.9.1",
+    "@react-native-firebase/auth": "^14.9.1",
     "firebase-admin": "^9.11.1",
     "jest": "^27.1.1",
     "jest-environment-jsdom": "^27.2.0",
