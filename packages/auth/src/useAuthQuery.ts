@@ -37,7 +37,7 @@ export function useAuthUser<R = User | null>(
 
       let resolved = false;
 
-      return new Promise<User | null>((resolve, reject) => {
+      return new Promise<User | null>((resolve) => {
         unsubscribe.current = auth.onAuthStateChanged((user) => {
           if (!resolved) {
             resolved = true;
@@ -45,7 +45,7 @@ export function useAuthUser<R = User | null>(
           } else {
             client.setQueryData<User | null>(key, user);
           }
-        }, reject);
+        });
       });
     },
   });
