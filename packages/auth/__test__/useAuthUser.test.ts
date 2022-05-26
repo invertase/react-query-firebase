@@ -10,11 +10,17 @@ describe("Authentication", () => {
   let wrapper: React.FC<{ children: React.ReactNode }>;
   let auth: Auth;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     const config = init();
     client = config.client;
     wrapper = config.wrapper;
     auth = config.auth;
+
+    try {
+      await auth.signOut();
+    } catch {
+      // No user to sign out
+    }
   });
 
   afterEach(async () => {
@@ -154,6 +160,8 @@ describe("Authentication", () => {
         }
       );
 
+      console.log(result);
+
       await waitFor(() => result.current.isSuccess);
 
       expect(result.current.data).toBeNull();
@@ -209,6 +217,7 @@ describe("Authentication", () => {
           useAuthIdToken(hookId, auth, undefined, {
             onSuccess(user) {
               mock(user);
+
               return user;
             },
           }),
@@ -266,6 +275,85 @@ describe("Authentication", () => {
       await waitFor(() => result.current.isSuccess);
 
       expect(mock.mock.calls.length).toBe(2);
+    });
+
+    test("two hooks", async () => {
+      const id = genId();
+      // await signIn(auth);
+
+      const mock1 = jest.fn();
+      const mock2 = jest.fn();
+      // starts sub
+      const hook1 = renderHook<
+        {
+          id: string;
+        },
+        any
+      >(
+        ({ id }) =>
+          useAuthIdToken(id, auth, undefined, {
+            onSuccess(user) {
+              mock1(user);
+              console.log("hook 1 success", user);
+
+              return user;
+            },
+          }),
+        {
+          wrapper: (props) => wrapper({ children: props.children }),
+          initialProps: {
+            id,
+          },
+        }
+      );
+      // should reuse sub of 1
+      const hook2 = renderHook<
+        {
+          id: string;
+        },
+        any
+      >(
+        ({ id }) =>
+          useAuthIdToken(id, auth, undefined, {
+            onSuccess(user) {
+              mock2(user);
+              return user;
+            },
+          }),
+        {
+          wrapper: (props) => wrapper({ children: props.children }),
+          initialProps: {
+            id,
+          },
+        }
+      );
+      await hook1.waitFor(() => hook1.result.current.isSuccess);
+
+      // unmount 1, 2 should still get events
+      hook1.unmount();
+
+      await act(async () => {
+        await signIn(auth);
+      });
+
+      await hook2.waitFor(() => hook2.result.current.isSuccess);
+
+      console.log(mock2.mock.calls);
+
+      expect(mock2.mock.calls.length).toBe(2);
+
+      // then unmount 2, should unsubscribe, no subscriptions.
+
+      hook2.unmount();
+
+      await act(async () => {
+        await signIn(auth);
+      });
+
+      await hook2.waitFor(() => hook2.result.current.isSuccess);
+      expect(mock1.mock.calls.length).toBe(1);
+
+      expect(mock2.mock.calls.length).toBe(2);
     });
   });
 });

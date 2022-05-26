@@ -37,7 +37,10 @@ function Example() {
     <div>
       <div dangerouslySetInnerHTML={{ __html: joke || "" }} />
       <br />
-      <button onClick={() => mutation.mutate(undefined)} disabled={mutation.isLoading}>
+      <button
+        onClick={() => mutation.mutate(undefined)}
+        disabled={mutation.isLoading}
+      >
         {mutation.isLoading ? "Loading joke..." : "Load a new joke"}
       </button>
     </div>

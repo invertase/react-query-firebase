@@ -21,4 +21,5 @@ export default {
   setupFilesAfterEnv: ["./config/setup-tests.ts"],
 
   forceExit: true,
+  verbose: false,
 };

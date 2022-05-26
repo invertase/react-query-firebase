@@ -35,7 +35,7 @@ function App() {
 ```
 
 Anytime your users state changes, the hooks data will be updated allowing you to reactively handle updates
-within your application. If the user is authenticated, the hook returns the 
+within your application. If the user is authenticated, the hook returns the
 [`User`](https://firebase.google.com/docs/reference/js/auth.user) interface, otherwise it's `null`.
 
 ## Sharing a Query Key
@@ -86,13 +86,11 @@ side effects with ease:
 const user = useAuthUser(["user"], auth, {
   onSuccess(user) {
     if (user) {
-      console.log('User is authenticated!', user);
+      console.log("User is authenticated!", user);
     }
   },
   onError(error) {
-    console.error('Failed to subscribe to users authentication state!');
-  }
+    console.error("Failed to subscribe to users authentication state!");
+  },
 });
 ```
-
-

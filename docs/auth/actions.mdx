@@ -487,7 +487,7 @@ const mutation = useAuthUnlink();
 
 mutation.mutate({
   user: auth.currentUser,
-  providerId: 'google.com',
+  providerId: "google.com",
 });
 ```
 
@@ -515,7 +515,7 @@ const mutation = useAuthUpdateEmail();
 
 mutation.mutate({
   user: auth.currentUser,
-  newEmail: 'bar@foo.com',
+  newEmail: "bar@foo.com",
 });
 ```
 
@@ -530,7 +530,7 @@ const mutation = useAuthUpdatePassword();
 
 mutation.mutate({
   user: auth.currentUser,
-  newPassword: '...',
+  newPassword: "...",
 });
 ```
 
@@ -561,8 +561,8 @@ const mutation = useAuthUpdateProfile();
 
 mutation.mutate({
   user: auth.currentUser,
-  displayName: '...', // optional
-  photoURL: 'https://...', // optional
+  displayName: "...", // optional
+  photoURL: "https://...", // optional
 });
 ```
 
@@ -577,7 +577,7 @@ const mutation = useAuthVerifyBeforeUpdateEmail();
 
 mutation.mutate({
   user: auth.currentUser,
-  newEmail: 'bar@foo.com',
+  newEmail: "bar@foo.com",
   actionCodeSettings: {}, // optional
 });
 ```
@@ -591,6 +591,5 @@ Checks a password reset code sent to the user by email or other out-of-band mech
 ```js
 const mutation = useAuthVerifyPasswordResetCode(auth);
 
-mutation.mutate('oobCode');
+mutation.mutate("oobCode");
 ```
-
