@@ -58,8 +58,5 @@
     "emulators:stop": "lsof -t -i:4001 -i:8080 -i:9000 -i:9099 -i:9199 | xargs kill -9",
     "format": "prettier --write ."
   },
-  "dependencies": {
-    "react-query-subscription": "^1.4.0",
-    "rxjs": "^7.5.5"
-  }
+  "dependencies": {}
 }

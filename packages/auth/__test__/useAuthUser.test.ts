@@ -36,11 +36,20 @@ describe("Authentication", () => {
     test("it returns null when not signed in", async () => {
       const hookId = genId();
 
-      const { result, waitFor } = renderHook(() => useAuthUser(hookId, auth), {
-        wrapper,
-      });
+      const { result, waitForNextUpdate } = renderHook(
+        () => {
+          const r = useAuthUser(hookId, auth);
+          console.log(r);
 
-      await waitFor(() => result.current.isSuccess);
+          return r;
+        },
+        {
+          wrapper,
+        }
+      );
+
+      await waitForNextUpdate();
+      // await waitFor(() => result.current.isSuccess);
 
       expect(result.current.data).toBeNull();
     });
@@ -62,15 +71,19 @@ describe("Authentication", () => {
     test("subscribes to state changes", async () => {
       const hookId = genId();
 
-      const { result, waitFor } = renderHook(() => useAuthUser(hookId, auth), {
-        wrapper,
-      });
+      const { result, waitFor, unmount } = renderHook(
+        () => useAuthUser(hookId, auth),
+        {
+          wrapper,
+        }
+      );
 
       await waitFor(() => result.current.isSuccess);
 
       expect(result.current.data).toBeNull();
 
       let credential: UserCredential;
+
       await act(async () => {
         credential = await signIn(auth);
       });
@@ -78,6 +91,9 @@ describe("Authentication", () => {
       await waitFor(() => result.current.isSuccess);
 
       expect(result.current.data.uid).toBe(credential.user.uid);
+
+      // waitForNextUpdate();
+      unmount();
     });
 
     test("unsubscribes from state changes", async () => {
@@ -116,7 +132,7 @@ describe("Authentication", () => {
       const hookId2 = genId();
       const mock = jest.fn();
 
-      const { result, waitFor, rerender } = renderHook<
+      const { result, waitFor, rerender, waitForNextUpdate } = renderHook<
         {
           id: string;
         },
@@ -140,12 +156,93 @@ describe("Authentication", () => {
       await waitFor(() => result.current.isSuccess);
 
       expect(result.current.data).toBeNull();
+      console.log("and now to rerender");
 
       rerender({ id: hookId2 });
 
-      await waitFor(() => result.current.isSuccess);
+      await waitForNextUpdate();
+      console.log(result.all);
 
       expect(mock.mock.calls.length).toBe(2);
+    });
+
+    test("two hooks", async () => {
+      const id = genId();
+      // await signIn(auth);
+
+      const mock1 = jest.fn();
+      const mock2 = jest.fn();
+      // starts sub
+      const hook1 = renderHook<
+        {
+          id: string;
+        },
+        any
+      >(
+        ({ id }) =>
+          useAuthUser(id, auth, {
+            onSuccess(user) {
+              mock1(user);
+              console.log("hook 1 success", user);
+
+              return user;
+            },
+          }),
+        {
+          wrapper: (props) => wrapper({ children: props.children }),
+          initialProps: {
+            id,
+          },
+        }
+      );
+      // should reuse sub of 1
+      const hook2 = renderHook<
+        {
+          id: string;
+        },
+        any
+      >(
+        ({ id }) =>
+          useAuthUser(id, auth, {
+            onSuccess(user) {
+              mock2(user);
+              return user;
+            },
+          }),
+        {
+          wrapper: (props) => wrapper({ children: props.children }),
+          initialProps: {
+            id,
+          },
+        }
+      );
+      await hook1.waitFor(() => hook1.result.current.isSuccess);
+
+      // unmount 1, 2 should still get events
+      hook1.unmount();
+
+      await act(async () => {
+        await signIn(auth);
+      });
+
+      await hook2.waitFor(() => hook2.result.current.isSuccess);
+
+      console.log(mock2.mock.calls);
+
+      expect(mock2.mock.calls.length).toBe(2);
+
+      // then unmount 2, should unsubscribe, no subscriptions.
+
+      hook2.unmount();
+
+      await act(async () => {
+        await signIn(auth);
+      });
+
+      await hook2.waitFor(() => hook2.result.current.isSuccess);
+      expect(mock1.mock.calls.length).toBe(1);
+
+      expect(mock2.mock.calls.length).toBe(2);
     });
   });
 
