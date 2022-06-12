@@ -1,4 +1,4 @@
-import { Auth, Unsubscribe, User } from "firebase/auth";
+import { NextOrObserver, Unsubscribe, User } from "firebase/auth";
 import { useEffect } from "react";
 import {
   QueryKey,
@@ -17,8 +17,7 @@ const unsubscribesCount: Record<string, any> = {};
 export function useSubscription(
   queryKey: QueryKey,
   subscriptionKey: QueryKey,
-  // subscribeFn: (nextOrObserver: NextOrObserver<User | null>) => Unsubscribe
-  auth: Auth,
+  subscribeFn: (nextOrObserver: NextOrObserver<User | null>) => Unsubscribe,
   options: UseQueryOptions
 ): UseQueryResult<unknown, unknown> {
   const queryClient = useQueryClient();
@@ -42,7 +41,7 @@ export function useSubscription(
     const old = queryClient.getQueryData<TData>(queryKey);
     resolvePromise(old || null);
   } else {
-    unsubscribe = auth.onAuthStateChanged((data) => {
+    unsubscribe = subscribeFn((data) => {
       count++;
       if (count === 1) {
         resolvePromise(data || null);

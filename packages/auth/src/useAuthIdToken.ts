@@ -1,11 +1,11 @@
-import { QueryKey } from "react-query";
+import {
+  QueryKey,
+  useQuery,
+  UseQueryOptions,
+  UseQueryResult,
+} from "react-query";
 import { Auth, IdTokenResult, AuthError } from "firebase/auth";
 import { Observable } from "rxjs";
-import {
-  useSubscription,
-  UseSubscriptionOptions,
-} from "react-query-subscription";
-import { UseSubscriptionResult } from "react-query-subscription/types/use-subscription";
 
 export function idTokenFromAuth(
   auth: Auth,
@@ -34,11 +34,11 @@ export function useAuthIdToken<R = IdTokenResult | null>(
     forceRefresh?: boolean;
   },
   useSubscriptionOptions?: Omit<
-    UseSubscriptionOptions<IdTokenResult | null, AuthError, R>,
+    UseQueryOptions<any | null, AuthError, R>,
     "queryFn"
   >
-): UseSubscriptionResult<R | AuthError> {
-  return useSubscription(key, () => idTokenFromAuth(auth, options), {
+): UseQueryResult<R | AuthError> {
+  return useQuery(key, () => idTokenFromAuth(auth, options), {
     ...useSubscriptionOptions,
   });
 }

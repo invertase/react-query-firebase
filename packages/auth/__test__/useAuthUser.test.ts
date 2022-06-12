@@ -11,6 +11,8 @@ describe("Authentication", () => {
   let auth: Auth;
 
   beforeEach(async () => {
+    jest.clearAllMocks();
+
     const config = init();
     client = config.client;
     wrapper = config.wrapper;
@@ -25,6 +27,8 @@ describe("Authentication", () => {
 
   afterEach(async () => {
     client.clear();
+    jest.clearAllMocks();
+
     try {
       await auth.signOut();
     } catch {

@@ -1,5 +1,5 @@
 import { QueryKey, UseQueryOptions, UseQueryResult } from "react-query";
-import { Auth } from "firebase/auth";
+import { Auth, NextOrObserver, User } from "firebase/auth";
 import { useSubscription } from "../../utils/src/useSubscription";
 
 export function useAuthUser(
@@ -7,6 +7,8 @@ export function useAuthUser(
   auth: Auth,
   options: UseQueryOptions = {}
 ): UseQueryResult<unknown, unknown> {
-  const r = useSubscription(queryKey, "__useAuthUser", auth, options);
-  return r;
+  const subscribeFn = (cb: NextOrObserver<User | null>) =>
+    auth.onAuthStateChanged(cb);
+
+  return useSubscription(queryKey, "__useAuthUser", subscribeFn, options);
 }
