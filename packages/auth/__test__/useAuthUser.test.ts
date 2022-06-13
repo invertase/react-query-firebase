@@ -1,6 +1,6 @@
 import React from "react";
 import { QueryClient } from "react-query";
-import { renderHook, act } from "@testing-library/react-hooks";
+import { renderHook, act, cleanup } from "@testing-library/react-hooks";
 import { Auth, UserCredential } from "firebase/auth";
 import { genId, init, signIn } from "./helpers";
 import { useAuthIdToken, useAuthUser } from "../src";
@@ -28,7 +28,7 @@ describe("Authentication", () => {
   afterEach(async () => {
     client.clear();
     jest.clearAllMocks();
-
+    await cleanup();
     try {
       await auth.signOut();
     } catch {
@@ -37,39 +37,22 @@ describe("Authentication", () => {
   });
 
   describe("useAuthUser", () => {
-    test("it returns null when not signed in", async () => {
+    test("it returns a User when signed in", async () => {
       const hookId = genId();
+      const credential = await signIn(auth);
 
-      const { result, waitForNextUpdate } = renderHook(
-        () => {
-          const r = useAuthUser(hookId, auth);
-          console.log(r);
-
-          return r;
-        },
+      const { result, waitFor, unmount } = renderHook(
+        () => useAuthUser(hookId, auth),
         {
           wrapper,
         }
       );
 
-      await waitForNextUpdate();
-      // await waitFor(() => result.current.isSuccess);
-
-      expect(result.current.data).toBeNull();
-    });
-
-    test("it returns a User when signed in", async () => {
-      const hookId = genId();
-      const credential = await signIn(auth);
-
-      const { result, waitFor } = renderHook(() => useAuthUser(hookId, auth), {
-        wrapper,
-      });
-
       await waitFor(() => result.current.isSuccess);
 
       expect(result.current.data).toBeDefined();
       expect(result.current.data.uid).toBe(credential.user.uid);
+      unmount();
     });
 
     test("subscribes to state changes", async () => {
@@ -97,6 +80,26 @@ describe("Authentication", () => {
       expect(result.current.data.uid).toBe(credential.user.uid);
 
       // waitForNextUpdate();
+      unmount();
+    });
+    test("it returns null when not signed in", async () => {
+      const hookId = genId();
+
+      const { result, waitForNextUpdate, unmount } = renderHook(
+        () => {
+          const r = useAuthUser(hookId, auth);
+
+          return r;
+        },
+        {
+          wrapper,
+        }
+      );
+
+      await waitForNextUpdate();
+      // await waitFor(() => result.current.isSuccess);
+
+      expect(result.current.data).toBeNull();
       unmount();
     });
 
@@ -129,6 +132,7 @@ describe("Authentication", () => {
       });
 
       expect(mock.mock.calls.length).toBe(1);
+      unmount();
     });
 
     test("resubscribes on key change", async () => {
@@ -136,41 +140,43 @@ describe("Authentication", () => {
       const hookId2 = genId();
       const mock = jest.fn();
 
-      const { result, waitFor, rerender, waitForNextUpdate } = renderHook<
-        {
-          id: string;
-        },
-        any
-      >(
-        ({ id }) =>
-          useAuthUser(id, auth, {
-            onSuccess(user) {
-              mock(user);
-              return user;
-            },
-          }),
-        {
-          wrapper: (props) => wrapper({ children: props.children }),
-          initialProps: {
-            id: hookId1,
+      const { result, waitFor, rerender, waitForNextUpdate, unmount } =
+        renderHook<
+          {
+            id: string;
           },
-        }
-      );
+          any
+        >(
+          ({ id }) =>
+            useAuthUser(id, auth, {
+              onSuccess(user) {
+                mock(user);
+                return user;
+              },
+            }),
+          {
+            wrapper: (props) => wrapper({ children: props.children }),
+            initialProps: {
+              id: hookId1,
+            },
+          }
+        );
 
       await waitFor(() => result.current.isSuccess);
 
       expect(result.current.data).toBeNull();
-      console.log("and now to rerender");
 
       rerender({ id: hookId2 });
 
       await waitForNextUpdate();
-      console.log(result.all);
 
       expect(mock.mock.calls.length).toBe(2);
+      unmount();
     });
 
     test("two hooks", async () => {
+      console.log("two hook test ____________________ \n");
+
       const id = genId();
       // await signIn(auth);
 

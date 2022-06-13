@@ -8,11 +8,11 @@ import {
   UseQueryResult,
 } from "react-query";
 
-let count = 0;
 const unsubscribes: Record<string, any> = {};
 type TData = User | null;
 
-const unsubscribesCount: Record<string, any> = {};
+const observerCount: Record<string, number> = {};
+const eventCount: Record<string, number> = {};
 
 export function useSubscription(
   queryKey: QueryKey,
@@ -20,6 +20,8 @@ export function useSubscription(
   subscribeFn: (nextOrObserver: NextOrObserver<User | null>) => Unsubscribe,
   options: UseQueryOptions
 ): UseQueryResult<unknown, unknown> {
+  observerCount[JSON.stringify(subscriptionKey)] ??= 1;
+
   const queryClient = useQueryClient();
 
   let resolvePromise: (data: TData) => void = () => undefined;
@@ -42,8 +44,9 @@ export function useSubscription(
     resolvePromise(old || null);
   } else {
     unsubscribe = subscribeFn((data) => {
-      count++;
-      if (count === 1) {
+      eventCount[JSON.stringify(subscriptionKey)] ??= 0;
+      eventCount[JSON.stringify(subscriptionKey)]++;
+      if (eventCount[JSON.stringify(subscriptionKey)] === 1) {
         resolvePromise(data || null);
       } else {
         queryClient.setQueryData(queryKey, data);
@@ -57,7 +60,11 @@ export function useSubscription(
   };
 
   useEffect(() => {
+    observerCount[JSON.stringify(subscriptionKey)] += 1;
+    console.log("run useEffect");
+
     return function cleanup() {
+      observerCount[JSON.stringify(subscriptionKey)] -= 1;
       cleanupSubscription(subscriptionKey);
     };
   }, []);
@@ -73,11 +80,14 @@ export function useSubscription(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
+  console.log(r);
+
   return r;
 }
 
 function cleanupSubscription(subscriptionKey: QueryKey) {
-  if (unsubscribesCount[JSON.stringify(subscriptionKey)] === 1) {
+  if (observerCount[JSON.stringify(subscriptionKey)] === 1) {
+    console.log("cleaning up");
     const unsubscribe = unsubscribes[JSON.stringify(subscriptionKey)];
     unsubscribe();
     delete unsubscribes[JSON.stringify(subscriptionKey)];
