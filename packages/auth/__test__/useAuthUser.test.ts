@@ -305,6 +305,7 @@ describe("Authentication", () => {
       await waitFor(() => result.current.isSuccess);
 
       expect(result.current.data).toBeDefined();
+      // TODO: keep as token? or use accessToken like firebase does
       expect(result.current.data.token).toBeDefined();
     });
 
@@ -314,7 +315,7 @@ describe("Authentication", () => {
 
       const { result, waitFor, unmount } = renderHook(
         () =>
-          useAuthIdToken(hookId, auth, undefined, {
+          useAuthIdToken(hookId, auth, {
             onSuccess(user) {
               mock(user);
 
@@ -352,7 +353,7 @@ describe("Authentication", () => {
         any
       >(
         ({ id }) =>
-          useAuthIdToken(id, auth, undefined, {
+          useAuthIdToken(id, auth, {
             onSuccess(user) {
               mock(user);
               return user;
@@ -391,7 +392,7 @@ describe("Authentication", () => {
         any
       >(
         ({ id }) =>
-          useAuthIdToken(id, auth, undefined, {
+          useAuthIdToken(id, auth, {
             onSuccess(user) {
               mock1(user);
 
@@ -413,7 +414,7 @@ describe("Authentication", () => {
         any
       >(
         ({ id }) =>
-          useAuthIdToken(id, auth, undefined, {
+          useAuthIdToken(id, auth, {
             onSuccess(user) {
               mock2(user);
               return user;

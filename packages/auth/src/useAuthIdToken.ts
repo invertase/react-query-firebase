@@ -1,44 +1,28 @@
-import {
-  QueryKey,
-  useQuery,
-  UseQueryOptions,
-  UseQueryResult,
-} from "react-query";
-import { Auth, IdTokenResult, AuthError } from "firebase/auth";
-import { Observable } from "rxjs";
+import { QueryKey, UseQueryOptions, UseQueryResult } from "react-query";
+import { Auth, IdTokenResult, NextOrObserver, User } from "firebase/auth";
+import { useSubscription } from "../../utils/src/useSubscription";
 
-export function idTokenFromAuth(
+export function useAuthIdToken(
+  queryKey: QueryKey,
   auth: Auth,
-  options?: {
-    forceRefresh?: boolean;
-  }
-): Observable<IdTokenResult | null> {
-  return new Observable<IdTokenResult | null>(function subscribe(subscriber) {
-    const unsubscribe = auth.onIdTokenChanged(async (user) => {
-      let token: IdTokenResult | null = null;
-
-      if (user) {
-        token = await user.getIdTokenResult(options?.forceRefresh);
-      }
-
-      subscriber.next(token);
-    });
-    subscriber.add(unsubscribe);
-  });
-}
-
-export function useAuthIdToken<R = IdTokenResult | null>(
-  key: QueryKey,
-  auth: Auth,
-  options?: {
-    forceRefresh?: boolean;
-  },
-  useSubscriptionOptions?: Omit<
-    UseQueryOptions<any | null, AuthError, R>,
-    "queryFn"
-  >
-): UseQueryResult<R | AuthError> {
-  return useQuery(key, () => idTokenFromAuth(auth, options), {
-    ...useSubscriptionOptions,
-  });
+  options: UseQueryOptions = {}
+): UseQueryResult<unknown, unknown> {
+  const subscribeFn = (cb: NextOrObserver<User | null>) =>
+    auth.onIdTokenChanged(cb);
+  const formatData = async (x: User) => {
+    if (x === null) {
+      return null;
+    }
+    const token = await x.getIdTokenResult();
+    return { token };
+  };
+  return useSubscription<User, { token: IdTokenResult }>(
+    queryKey,
+    "__useAuthIdToken",
+    subscribeFn,
+    {
+      ...options,
+      formatData,
+    }
+  );
 }

@@ -1,4 +1,4 @@
-import { NextOrObserver, Unsubscribe, User } from "firebase/auth";
+import { NextOrObserver, Unsubscribe } from "firebase/auth";
 import { useEffect } from "react";
 import {
   hashQueryKey,
@@ -10,16 +10,16 @@ import {
 } from "react-query";
 
 const unsubscribes: Record<string, any> = {};
-type TData = User | null;
-
 const observerCount: Record<string, number> = {};
 const eventCount: Record<string, number> = {};
 
-export function useSubscription(
+export function useSubscription<TData, TFormattedData>(
   queryKey: QueryKey,
   subscriptionKey: QueryKey,
-  subscribeFn: (nextOrObserver: NextOrObserver<User | null>) => Unsubscribe,
-  options: UseQueryOptions
+  subscribeFn: (nextOrObserver: NextOrObserver<TData | null>) => Unsubscribe,
+  options: UseQueryOptions & {
+    formatData?: (x: TData) => Promise<TFormattedData | null>;
+  }
 ): UseQueryResult<unknown, unknown> {
   const hashFn = options?.queryKeyHashFn || hashQueryKey;
   const subscriptionHash = hashFn(subscriptionKey);
@@ -28,13 +28,12 @@ export function useSubscription(
 
   const queryClient = useQueryClient();
 
-  let resolvePromise: (data: TData) => void = () => undefined;
+  let resolvePromise: (data: TData | null) => void = () => undefined;
 
-  const result: Promise<TData> & { cancel?: () => void } = new Promise<TData>(
-    (resolve) => {
+  const result: Promise<TData | null> & { cancel?: () => void } =
+    new Promise<TData | null>((resolve) => {
       resolvePromise = resolve;
-    }
-  );
+    });
 
   result.cancel = () => {
     queryClient.invalidateQueries(queryKey);
@@ -47,13 +46,19 @@ export function useSubscription(
     const old = queryClient.getQueryData<TData>(queryKey);
     resolvePromise(old || null);
   } else {
-    unsubscribe = subscribeFn((data) => {
+    unsubscribe = subscribeFn(async (data) => {
+      let formattedData: TData | null;
+      if (options.formatData) {
+        formattedData = await options.formatData(data);
+      } else {
+        formattedData = data;
+      }
       eventCount[subscriptionHash] ??= 0;
       eventCount[subscriptionHash]++;
       if (eventCount[subscriptionHash] === 1) {
-        resolvePromise(data || null);
+        resolvePromise(formattedData || null);
       } else {
-        queryClient.setQueryData(queryKey, data);
+        queryClient.setQueryData(queryKey, formattedData);
       }
     });
     unsubscribes[subscriptionHash] = unsubscribe;
