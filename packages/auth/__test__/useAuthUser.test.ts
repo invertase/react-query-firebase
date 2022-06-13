@@ -175,8 +175,6 @@ describe("Authentication", () => {
     });
 
     test("two hooks", async () => {
-      console.log("two hook test ____________________ \n");
-
       const id = genId();
       // await signIn(auth);
 
@@ -193,7 +191,6 @@ describe("Authentication", () => {
           useAuthUser(id, auth, {
             onSuccess(user) {
               mock1(user);
-              console.log("hook 1 success", user);
 
               return user;
             },
@@ -237,8 +234,6 @@ describe("Authentication", () => {
 
       await hook2.waitFor(() => hook2.result.current.isSuccess);
 
-      console.log(mock2.mock.calls);
-
       expect(mock2.mock.calls.length).toBe(2);
 
       // then unmount 2, should unsubscribe, no subscriptions.
@@ -266,8 +261,6 @@ describe("Authentication", () => {
           wrapper,
         }
       );
-
-      console.log(result);
 
       await waitFor(() => result.current.isSuccess);
 
@@ -401,7 +394,6 @@ describe("Authentication", () => {
           useAuthIdToken(id, auth, undefined, {
             onSuccess(user) {
               mock1(user);
-              console.log("hook 1 success", user);
 
               return user;
             },
@@ -444,8 +436,6 @@ describe("Authentication", () => {
       });
 
       await hook2.waitFor(() => hook2.result.current.isSuccess);
-
-      console.log(mock2.mock.calls);
 
       expect(mock2.mock.calls.length).toBe(2);
 
