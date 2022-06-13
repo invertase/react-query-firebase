@@ -18,7 +18,7 @@ export function useSubscription<TData, TFormattedData>(
   subscriptionKey: QueryKey,
   subscribeFn: (nextOrObserver: NextOrObserver<TData | null>) => Unsubscribe,
   options: UseQueryOptions & {
-    formatData?: (x: TData) => Promise<TFormattedData | null>;
+    formatData?: (x: TData | null) => Promise<TFormattedData | null>;
   }
 ): UseQueryResult<unknown, unknown> {
   const hashFn = options?.queryKeyHashFn || hashQueryKey;
@@ -28,10 +28,10 @@ export function useSubscription<TData, TFormattedData>(
 
   const queryClient = useQueryClient();
 
-  let resolvePromise: (data: TData | null) => void = () => undefined;
+  let resolvePromise: (data: TFormattedData | null) => void = () => undefined;
 
-  const result: Promise<TData | null> & { cancel?: () => void } =
-    new Promise<TData | null>((resolve) => {
+  const result: Promise<TFormattedData | null> & { cancel?: () => void } =
+    new Promise<TFormattedData | null>((resolve) => {
       resolvePromise = resolve;
     });
 
@@ -43,16 +43,12 @@ export function useSubscription<TData, TFormattedData>(
 
   if (unsubscribes[subscriptionHash]) {
     unsubscribe = unsubscribes[subscriptionHash];
-    const old = queryClient.getQueryData<TData>(queryKey);
+    const old = queryClient.getQueryData<TFormattedData | null>(queryKey);
     resolvePromise(old || null);
   } else {
     unsubscribe = subscribeFn(async (data) => {
-      let formattedData: TData | null;
-      if (options.formatData) {
-        formattedData = await options.formatData(data);
-      } else {
-        formattedData = data;
-      }
+      const formattedData = (await options?.formatData?.(data)) ?? data;
+
       eventCount[subscriptionHash] ??= 0;
       eventCount[subscriptionHash]++;
       if (eventCount[subscriptionHash] === 1) {
@@ -70,7 +66,7 @@ export function useSubscription<TData, TFormattedData>(
 
   useEffect(() => {
     observerCount[subscriptionHash] += 1;
-    return function cleanup() {
+    return () => {
       observerCount[subscriptionHash] -= 1;
       cleanupSubscription(subscriptionHash);
     };

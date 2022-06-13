@@ -10,5 +10,10 @@ export function useAuthUser(
   const subscribeFn = (cb: NextOrObserver<User | null>) =>
     auth.onAuthStateChanged(cb);
 
-  return useSubscription(queryKey, "__useAuthUser", subscribeFn, options);
+  return useSubscription<User | null, User | null>(
+    queryKey,
+    "useAuthUser",
+    subscribeFn,
+    options
+  );
 }

@@ -9,6 +9,7 @@ export function useAuthIdToken(
 ): UseQueryResult<unknown, unknown> {
   const subscribeFn = (cb: NextOrObserver<User | null>) =>
     auth.onIdTokenChanged(cb);
+
   const formatData = async (x: User) => {
     if (x === null) {
       return null;
@@ -18,7 +19,7 @@ export function useAuthIdToken(
   };
   return useSubscription<User, { token: IdTokenResult }>(
     queryKey,
-    "__useAuthIdToken",
+    "useAuthIdToken",
     subscribeFn,
     {
       ...options,
