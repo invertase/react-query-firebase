@@ -1,5 +1,5 @@
 import { QueryKey, UseQueryOptions, UseQueryResult } from "react-query";
-import { Auth, IdTokenResult, NextOrObserver, User } from "firebase/auth";
+import { Auth, IdTokenResult } from "firebase/auth";
 import { useSubscription } from "../../utils/src/useSubscription";
 
 export function useAuthIdToken(
@@ -7,23 +7,19 @@ export function useAuthIdToken(
   auth: Auth,
   options: UseQueryOptions = {}
 ): UseQueryResult<unknown, unknown> {
-  const subscribeFn = (cb: NextOrObserver<User | null>) =>
-    auth.onIdTokenChanged(cb);
+  const subscribeFn = (
+    callback: (data: { token: IdTokenResult } | null) => Promise<void>
+  ) =>
+    auth.onIdTokenChanged(async (data) => {
+      const token = await data?.getIdTokenResult();
 
-  const formatData = async (x: User) => {
-    if (x === null) {
-      return null;
-    }
-    const token = await x.getIdTokenResult();
-    return { token };
-  };
-  return useSubscription<User, { token: IdTokenResult }>(
+      return callback(token ? { token } : null);
+    });
+
+  return useSubscription<{ token: IdTokenResult }>(
     queryKey,
     "useAuthIdToken",
     subscribeFn,
-    {
-      ...options,
-      formatData,
-    }
+    options
   );
 }
