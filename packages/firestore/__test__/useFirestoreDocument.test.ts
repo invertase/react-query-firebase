@@ -213,7 +213,7 @@ describe("useFirestoreDocument", () => {
       expect(mock.mock.calls[1][0]).toEqual({ foo: "baz" });
     });
 
-    test("it re-subscribes when the key changes", async () => {
+    test("it re-subscribes when the ref changes", async () => {
       const hookId1 = genId();
       const hookId2 = genId();
       const id1 = `1-${genId()}`;
@@ -239,6 +239,9 @@ describe("useFirestoreDocument", () => {
             },
             {
               onSuccess(snapshot) {
+                console.log("snapshot!");
+                console.log("id", snapshot && snapshot.id);
+
                 mock(snapshot);
               },
             }
@@ -256,6 +259,8 @@ describe("useFirestoreDocument", () => {
 
       // Subscription call
       expect(mock.mock.calls[0][0].id).toBe(id1);
+
+      console.log("now to rerender");
 
       rerender({ id: hookId2, reference: ref2 });
 
