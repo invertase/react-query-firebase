@@ -2,6 +2,7 @@ import { Unsubscribe } from "firebase/auth";
 import { useEffect } from "react";
 import {
   hashQueryKey,
+  QueryFunction,
   QueryKey,
   useQuery,
   useQueryClient,
@@ -13,12 +14,16 @@ const unsubscribes: Record<string, any> = {};
 const observerCount: Record<string, number> = {};
 const eventCount: Record<string, number> = {};
 
-export function useSubscription<TData>(
+interface CancellablePromise<T = void> extends Promise<T> {
+  cancel?: () => void;
+}
+
+export function useSubscription<TData, TError>(
   queryKey: QueryKey,
   subscriptionKey: QueryKey,
   subscribeFn: (cb: (data: TData | null) => Promise<void>) => Unsubscribe,
   options: UseQueryOptions
-): UseQueryResult<unknown, unknown> {
+): UseQueryResult<TData, TError> {
   const hashFn = options?.queryKeyHashFn || hashQueryKey;
   const subscriptionHash = hashFn(subscriptionKey);
 
@@ -28,10 +33,11 @@ export function useSubscription<TData>(
 
   let resolvePromise: (data: TData | null) => void = () => undefined;
 
-  const result: Promise<TData | null> & { cancel?: () => void } =
-    new Promise<TData | null>((resolve) => {
+  const result: CancellablePromise<TData | null> = new Promise<TData | null>(
+    (resolve) => {
       resolvePromise = resolve;
-    });
+    }
+  );
 
   result.cancel = () => {
     queryClient.invalidateQueries(queryKey);
@@ -56,8 +62,8 @@ export function useSubscription<TData>(
     unsubscribes[subscriptionHash] = unsubscribe;
   }
 
-  const queryFn = () => {
-    return result;
+  const queryFn: QueryFunction<TData, QueryKey> = () => {
+    return result as Promise<TData>;
   };
 
   useEffect(() => {
@@ -68,9 +74,9 @@ export function useSubscription<TData>(
     };
   }, []);
 
-  return useQuery({
-    ...options,
-    queryFn: queryFn,
+  return useQuery<TData, TError, TData>({
+    ...(options as Partial<UseQueryOptions<TData, TError, TData>>),
+    queryFn,
     queryKey,
     retry: false,
     staleTime: Infinity,
