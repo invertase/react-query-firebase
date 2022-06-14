@@ -53,9 +53,6 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
     [ref]
   );
 
-  console.log(options);
-  console.log("queryKey", queryKey);
-
   return useSubscription<DocumentSnapshot<T>, FirestoreError, R>(
     queryKey,
     ["useFirestoreDocument", ref.id],

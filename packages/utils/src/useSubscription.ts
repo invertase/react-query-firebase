@@ -30,8 +30,6 @@ export function useSubscription<TData, TError, R = TData>(
     if (!disableSubscribe) {
       observerCount[subscriptionHash] += 1;
       return () => {
-        console.log("cleanup");
-
         observerCount[subscriptionHash] -= 1;
         cleanupSubscription(subscriptionHash);
       };

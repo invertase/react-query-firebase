@@ -239,9 +239,6 @@ describe("useFirestoreDocument", () => {
             },
             {
               onSuccess(snapshot) {
-                console.log("snapshot!");
-                console.log("id", snapshot && snapshot.id);
-
                 mock(snapshot);
               },
             }
@@ -259,8 +256,6 @@ describe("useFirestoreDocument", () => {
 
       // Subscription call
       expect(mock.mock.calls[0][0].id).toBe(id1);
-
-      console.log("now to rerender");
 
       rerender({ id: hookId2, reference: ref2 });
 
