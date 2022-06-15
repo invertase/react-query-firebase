@@ -15,20 +15,19 @@
  *
  */
 
-import { useEffect, useRef } from "react";
+import { useCallback } from "react";
 import {
   useQuery,
-  useQueryClient,
   QueryKey,
   UseQueryOptions,
   UseQueryResult,
 } from "react-query";
 import {
   onSnapshot,
-  Unsubscribe,
   DocumentData,
   SnapshotOptions,
   FirestoreError,
+  QuerySnapshot,
 } from "firebase/firestore";
 import {
   getQuerySnapshot,
@@ -37,6 +36,11 @@ import {
   UseFirestoreHookOptions,
   WithIdField,
 } from "./index";
+import { useSubscription } from "../../utils/src/useSubscription";
+
+type NextOrObserver<T, ID> = (
+  data: WithIdField<T, ID>[] | null
+) => Promise<void>;
 
 export function useFirestoreQueryData<T = DocumentData, R = WithIdField<T>[]>(
   key: QueryKey,
@@ -67,7 +71,7 @@ export function useFirestoreQueryData<
   T = DocumentData,
   R = WithIdField<T, ID>[]
 >(
-  key: QueryKey,
+  queryKey: QueryKey,
   query: QueryType<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions & { idField?: ID },
   useQueryOptions?: Omit<
@@ -75,16 +79,74 @@ export function useFirestoreQueryData<
     "queryFn"
   >
 ): UseQueryResult<R, FirestoreError> {
-  const client = useQueryClient();
-  const unsubscribe = useRef<Unsubscribe>();
+  const isSubscription = !!options?.subscribe;
 
-  useEffect(() => {
-    return () => unsubscribe.current?.();
-  }, []);
+  const subscribeFn = useCallback(
+    (callback: NextOrObserver<T, ID>) => {
+      let unsubscribe = () => {
+        // noop
+      };
+      resolveQuery(query).then((res) => {
+        unsubscribe = onSnapshot(
+          res,
+          {
+            includeMetadataChanges: options?.includeMetadataChanges,
+          },
+          (snapshot: QuerySnapshot<T>) => {
+            const docs = snapshot.docs.map((doc) => {
+              const data = doc.data({
+                serverTimestamps: options?.serverTimestamps,
+              });
+              if (options?.idField) {
+                const withIdData = {
+                  ...data,
+                  [options.idField as ID]: doc.id,
+                } as WithIdField<T, ID>;
+                return withIdData;
+              }
+
+              return data as WithIdField<T, ID>;
+            });
+            callback(docs);
+          }
+        );
+      });
+      return unsubscribe;
+    },
+    [query, queryKey]
+  );
+
+  return useSubscription<WithIdField<T, ID>[], FirestoreError, R>(
+    queryKey,
+    ["useFirestoreDocument", queryKey],
+    subscribeFn,
+    useQueryOptions,
+    !isSubscription,
+    async () => {
+      const resolvedQuery = await resolveQuery(query);
+
+      const snapshot = await getQuerySnapshot(resolvedQuery, options?.source);
+
+      return snapshot.docs.map((doc) => {
+        let data = doc.data({
+          serverTimestamps: options?.serverTimestamps,
+        });
+
+        if (options?.idField) {
+          data = {
+            ...data,
+            [options.idField]: doc.id,
+          };
+        }
+
+        return data as WithIdField<T, ID>;
+      });
+    }
+  );
 
   return useQuery<WithIdField<T, ID>[], FirestoreError, R>({
     ...useQueryOptions,
-    queryKey: useQueryOptions?.queryKey ?? key,
+    queryKey: useQueryOptions?.queryKey ?? queryKey,
     staleTime:
       useQueryOptions?.staleTime ?? options?.subscribe ? Infinity : undefined,
     async queryFn(): Promise<WithIdField<T, ID>[]> {
@@ -139,7 +201,7 @@ export function useFirestoreQueryData<
               resolved = true;
               return resolve(docs);
             } else {
-              client.setQueryData<WithIdField<T, ID>[]>(key, docs);
+              client.setQueryData<WithIdField<T, ID>[]>(queryKey, docs);
             }
           },
           reject

@@ -15,12 +15,8 @@
  *
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  QueryKey,
-  UseQueryOptions,
-  UseQueryResult,
-} from "react-query";
+import { useCallback } from "react";
+import { QueryKey, UseQueryOptions, UseQueryResult } from "react-query";
 import {
   onSnapshot,
   QuerySnapshot,
@@ -48,23 +44,26 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
 ): UseQueryResult<R, FirestoreError> {
   const isSubscription = !!options?.subscribe;
 
-  const subscribeFn = useCallback((callback: NextOrObserver<T>) => {
-    let unsubscribe = () => {
-      // noop
-    };
-    resolveQuery(query).then((res) => {
-      unsubscribe = onSnapshot(
-        res,
-        {
-          includeMetadataChanges: options?.includeMetadataChanges,
-        },
-        (snapshot: QuerySnapshot<T>) => {
-          return callback(snapshot);
-        }
-      );
-    });
-    return unsubscribe;
-  }, [query, queryKey]);
+  const subscribeFn = useCallback(
+    (callback: NextOrObserver<T>) => {
+      let unsubscribe = () => {
+        // noop
+      };
+      resolveQuery(query).then((res) => {
+        unsubscribe = onSnapshot(
+          res,
+          {
+            includeMetadataChanges: options?.includeMetadataChanges,
+          },
+          (snapshot: QuerySnapshot<T>) => {
+            return callback(snapshot);
+          }
+        );
+      });
+      return unsubscribe;
+    },
+    [query, queryKey]
+  );
 
   return useSubscription<QuerySnapshot<T>, FirestoreError, R>(
     queryKey,
