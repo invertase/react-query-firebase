@@ -225,10 +225,13 @@ describe("useFirestoreQuery", () => {
       });
 
       // getDocs, onSubscribe, onSubscribe (add), onSubscribe (add),
-      expect(mock).toHaveBeenCalledTimes(2);
 
       const call1 = mock.mock.calls[0][0];
+      console.log(
+        mock.mock.calls.map((call) => call[0].docs.map((doc) => doc.data()))
+      );
       const call2 = mock.mock.calls[1][0];
+      expect(mock).toHaveBeenCalledTimes(2);
       expect(call1.size).toEqual(1);
       expect(call1.docs[0].data().foo).toEqual("bar");
       expect(call2.size).toEqual(2);

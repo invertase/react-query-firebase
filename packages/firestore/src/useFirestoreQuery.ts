@@ -15,18 +15,14 @@
  *
  */
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  useQuery,
-  useQueryClient,
   QueryKey,
   UseQueryOptions,
   UseQueryResult,
-  hashQueryKey,
 } from "react-query";
 import {
   onSnapshot,
-  Unsubscribe,
   QuerySnapshot,
   DocumentData,
   FirestoreError,
@@ -37,13 +33,12 @@ import {
   resolveQuery,
   UseFirestoreHookOptions,
 } from "./index";
-import { Completer } from "../../utils/src";
+import { useSubscription } from "../../utils/src/useSubscription";
 
-const counts: { [key: string]: number } = {};
-const subscriptions: { [key: string]: Unsubscribe } = {};
+type NextOrObserver<T> = (data: QuerySnapshot<T> | null) => Promise<void>;
 
 export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
-  key: QueryKey,
+  queryKey: QueryKey,
   query: QueryType<T>,
   options?: UseFirestoreHookOptions,
   useQueryOptions?: Omit<
@@ -51,81 +46,35 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
     "queryFn"
   >
 ): UseQueryResult<R, FirestoreError> {
-  const client = useQueryClient();
-  const completer = useRef<Completer<QuerySnapshot<T>>>(new Completer());
-
-  const hashFn = useQueryOptions?.queryKeyHashFn || hashQueryKey;
-  const hash = hashFn(key);
   const isSubscription = !!options?.subscribe;
 
-  useEffect(() => {
-    if (!isSubscription) {
-      resolveQuery(query)
-        .then((resolvedQuery) => {
-          return getQuerySnapshot(resolvedQuery, options?.source);
-        })
-        .then((snapshot) => {
-          completer.current!.complete(snapshot);
-        })
-        .catch((error) => {
-          completer.current!.reject(error);
-        });
-    }
-  }, [isSubscription, hash, completer]);
-
-  useEffect(() => {
-    if (isSubscription) {
-      counts[hash] ??= 0;
-      counts[hash]++;
-
-      // If there is only one instance of this query key, subscribe
-      if (counts[hash] === 1) {
-        resolveQuery(query)
-          .then((resolveQuery) => {
-            subscriptions[hash] = onSnapshot(
-              resolveQuery,
-              {
-                includeMetadataChanges: options?.includeMetadataChanges,
-              },
-              (snapshot) => {
-                // Set the data each time state changes.
-                client.setQueryData<QuerySnapshot<T>>(key, snapshot);
-
-                // Resolve the completer with the current data.
-                if (!completer.current!.completed) {
-                  completer.current!.complete(snapshot);
-                }
-              },
-              (error) => {
-                completer.current!.reject(error);
-              }
-            );
-          })
-          .catch((error) => {
-            completer.current!.reject(error);
-          });
-      } else {
-        // Since there is already an active subscription, resolve the completer
-        // with the cached data.
-        completer.current!.complete(
-          client.getQueryData(key) as QuerySnapshot<T>
-        );
-      }
-
-      return () => {
-        counts[hash]--;
-
-        if (counts[hash] === 0) {
-          subscriptions[hash]();
-          delete subscriptions[hash];
+  const subscribeFn = useCallback((callback: NextOrObserver<T>) => {
+    let unsubscribe = () => {
+      // noop
+    };
+    resolveQuery(query).then((res) => {
+      unsubscribe = onSnapshot(
+        res,
+        {
+          includeMetadataChanges: options?.includeMetadataChanges,
+        },
+        (snapshot: QuerySnapshot<T>) => {
+          return callback(snapshot);
         }
-      };
-    }
-  }, [isSubscription, hash, completer]);
+      );
+    });
+    return unsubscribe;
+  }, [query, queryKey]);
 
-  return useQuery<QuerySnapshot<T>, FirestoreError, R>({
-    ...useQueryOptions,
-    queryKey: useQueryOptions?.queryKey ?? key,
-    queryFn: () => completer.current!.promise,
-  });
+  return useSubscription<QuerySnapshot<T>, FirestoreError, R>(
+    queryKey,
+    ["useFirestoreDocument", queryKey],
+    subscribeFn,
+    useQueryOptions,
+    !isSubscription,
+    () =>
+      resolveQuery(query).then((resolvedQuery) => {
+        return getQuerySnapshot(resolvedQuery, options?.source);
+      })
+  );
 }

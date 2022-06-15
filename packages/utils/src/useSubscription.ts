@@ -1,4 +1,6 @@
-import { Unsubscribe } from "firebase/auth";
+import { Unsubscribe as AuthUnsubscribe } from "firebase/auth";
+import { Unsubscribe as FirestoreUnsubscribe } from "firebase/firestore";
+import { Unsubscribe as DatabaseUnsubscribe } from "firebase/database";
 import { useEffect } from "react";
 import {
   hashQueryKey,
@@ -9,6 +11,8 @@ import {
   UseQueryOptions,
   UseQueryResult,
 } from "react-query";
+
+type Unsubscribe = AuthUnsubscribe | FirestoreUnsubscribe | DatabaseUnsubscribe;
 
 const unsubscribes: Record<string, any> = {};
 const observerCount: Record<string, number> = {};
@@ -53,7 +57,7 @@ export function useSubscription<TData, TError, R = TData>(
     }
   }
 
-  let resolvePromise: (data: TData | null) => void = () => undefined;
+  let resolvePromise: (data: TData | null) => void = () => null;
 
   const result: CancellablePromise<TData | null> = new Promise<TData | null>(
     (resolve) => {
@@ -70,6 +74,7 @@ export function useSubscription<TData, TError, R = TData>(
     if (unsubscribes[subscriptionHash]) {
       unsubscribe = unsubscribes[subscriptionHash];
       const old = queryClient.getQueryData<TData | null>(queryKey);
+
       resolvePromise(old || null);
     } else {
       unsubscribe = subscribeFn(async (data) => {
