@@ -363,7 +363,7 @@ describe("useFirestoreDocument", () => {
         await updateDoc(ref1, { foo: "bar" });
       });
 
-      await hook2.waitFor(() => hook2.result.current.isSuccess);
+      // await hook2.waitFor(() => hook2.result.current.isSuccess);
 
       expect(mock1.mock.calls.length).toBe(1);
 

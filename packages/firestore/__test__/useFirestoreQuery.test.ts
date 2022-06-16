@@ -306,6 +306,92 @@ describe("useFirestoreQuery", () => {
 
       expect(mock).toHaveBeenCalledTimes(2);
     });
+
+    test("it should not unsubscribe if there is still a hook listening", async () => {
+      const hookId1 = genId();
+
+      const id1 = `1-${genId()}`;
+
+      const ref1 = collection(firestore, id1);
+      const col = collection(firestore, id1);
+
+      const mock1 = jest.fn();
+      const mock2 = jest.fn();
+      const hook1 = renderHook<
+        {
+          id: string;
+          reference: CollectionReference;
+        },
+        any
+      >(
+        ({ id, reference }) =>
+          useFirestoreQuery(
+            id,
+            reference,
+            {
+              subscribe: true,
+            },
+            {
+              onSuccess(snapshot) {
+                mock1(snapshot);
+              },
+            }
+          ),
+        {
+          wrapper: (props) => wrapper({ children: props.children }),
+          initialProps: {
+            id: hookId1,
+            reference: ref1,
+          },
+        }
+      );
+      const hook2 = renderHook<
+        {
+          id: string;
+          reference: CollectionReference;
+        },
+        any
+      >(
+        ({ id, reference }) =>
+          useFirestoreQuery(
+            id,
+            reference,
+            {
+              subscribe: true,
+            },
+            {
+              onSuccess(snapshot) {
+                mock2(snapshot);
+              },
+            }
+          ),
+        {
+          wrapper: (props) => wrapper({ children: props.children }),
+          initialProps: {
+            id: hookId1,
+            reference: ref1,
+          },
+        }
+      );
+
+      await hook1.waitFor(() => hook1.result.current.isSuccess, {
+        timeout: 5000,
+      });
+
+      hook1.unmount();
+
+      await act(async () => {
+        await addDoc(col, { foo: "baz" });
+      });
+
+      await hook2.waitFor(() => hook2.result.current.isSuccess, {
+        timeout: 5000,
+      });
+
+      expect(mock1.mock.calls.length).toBe(1);
+
+      expect(mock2.mock.calls.length).toBe(2);
+    });
   });
 
   describe("useFirestoreQueryData", () => {
