@@ -2,11 +2,14 @@ import { QueryKey, UseQueryOptions, UseQueryResult } from "react-query";
 import { Auth, AuthError, IdTokenResult } from "firebase/auth";
 import { useSubscription } from "../../utils/src/useSubscription";
 
-export function useAuthIdToken(
+export function useAuthIdToken<R = { token: IdTokenResult }>(
   queryKey: QueryKey,
   auth: Auth,
-  options: UseQueryOptions = {}
-): UseQueryResult<{ token: IdTokenResult }, AuthError> {
+  options: Omit<
+    UseQueryOptions<{ token: IdTokenResult }, AuthError, R>,
+    "queryFn"
+  > = {}
+): UseQueryResult<R, AuthError> {
   const subscribeFn = (
     callback: (data: { token: IdTokenResult } | null) => Promise<void>
   ) =>
@@ -16,7 +19,7 @@ export function useAuthIdToken(
       return callback(token ? { token } : null);
     });
 
-  return useSubscription<{ token: IdTokenResult }, AuthError>(
+  return useSubscription<{ token: IdTokenResult }, AuthError, R>(
     queryKey,
     "useAuthIdToken",
     subscribeFn,

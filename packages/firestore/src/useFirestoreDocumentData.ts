@@ -103,26 +103,30 @@ export function useFirestoreDocumentData<
     [ref]
   );
 
+  const fetchFn = async () => {
+    return getSnapshot(ref, options?.source).then((snapshot) => {
+      let data = snapshot.data({
+        serverTimestamps: options?.serverTimestamps,
+      });
+
+      if (data && options?.idField) {
+        data = {
+          ...data,
+          [options.idField]: snapshot.id,
+        };
+      }
+      return data as WithIdField<T, ID> | undefined;
+    });
+  };
+
   return useSubscription<WithIdField<T, ID> | undefined, FirestoreError, R>(
     queryKey,
     ["useFirestoreDocument", ref.id],
     subscribeFn,
-    useQueryOptions,
-    !isSubscription,
-    async () => {
-      return getSnapshot(ref, options?.source).then((snapshot) => {
-        let data = snapshot.data({
-          serverTimestamps: options?.serverTimestamps,
-        });
-
-        if (data && options?.idField) {
-          data = {
-            ...data,
-            [options.idField]: snapshot.id,
-          };
-        }
-        return data as WithIdField<T, ID> | undefined;
-      });
+    {
+      ...useQueryOptions,
+      onlyOnce: !isSubscription,
+      fetchFn,
     }
   );
 }

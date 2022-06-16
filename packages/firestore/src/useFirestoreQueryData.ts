@@ -110,32 +110,30 @@ export function useFirestoreQueryData<
     },
     [query, queryKey]
   );
+  const fetchFn = async () => {
+    const resolvedQuery = await resolveQuery(query);
 
+    const snapshot = await getQuerySnapshot(resolvedQuery, options?.source);
+
+    return snapshot.docs.map((doc) => {
+      let data = doc.data({
+        serverTimestamps: options?.serverTimestamps,
+      });
+
+      if (options?.idField) {
+        data = {
+          ...data,
+          [options.idField]: doc.id,
+        };
+      }
+
+      return data as WithIdField<T, ID>;
+    });
+  };
   return useSubscription<WithIdField<T, ID>[], FirestoreError, R>(
     queryKey,
     ["useFirestoreDocument", queryKey],
     subscribeFn,
-    useQueryOptions,
-    !isSubscription,
-    async () => {
-      const resolvedQuery = await resolveQuery(query);
-
-      const snapshot = await getQuerySnapshot(resolvedQuery, options?.source);
-
-      return snapshot.docs.map((doc) => {
-        let data = doc.data({
-          serverTimestamps: options?.serverTimestamps,
-        });
-
-        if (options?.idField) {
-          data = {
-            ...data,
-            [options.idField]: doc.id,
-          };
-        }
-
-        return data as WithIdField<T, ID>;
-      });
-    }
+    { ...useQueryOptions, onlyOnce: !isSubscription, fetchFn }
   );
 }
