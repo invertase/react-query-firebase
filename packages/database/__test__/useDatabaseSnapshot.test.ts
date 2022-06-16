@@ -342,5 +342,64 @@ describe("Database", () => {
 
       expect(mock.mock.calls.length).toBe(2);
     });
+
+    test("it should not unsubscribe if there is still a hook listening", async () => {
+      const hookId = genId();
+      const dbRef = ref(database, genId());
+
+      await set(push(dbRef), 123);
+
+      const mock1 = jest.fn();
+      const mock2 = jest.fn();
+      const hook1 = renderHook(
+        () =>
+          useDatabaseValue(
+            hookId,
+            dbRef,
+            { subscribe: true },
+            {
+              onSuccess(data) {
+                mock1(data);
+              },
+            }
+          ),
+        {
+          wrapper,
+        }
+      );
+      const hook2 = renderHook(
+        () =>
+          useDatabaseValue(
+            hookId,
+            dbRef,
+            { subscribe: true },
+            {
+              onSuccess(data) {
+                mock2(data);
+              },
+            }
+          ),
+        {
+          wrapper,
+        }
+      );
+
+      await hook1.waitFor(() => hook1.result.current.isSuccess);
+      await hook2.waitFor(() => hook2.result.current.isSuccess);
+      hook1.unmount();
+
+      await act(async () => {
+        await set(push(dbRef), "baz");
+      });
+
+      await hook2.waitFor(() => hook2.result.current.isSuccess, {
+        timeout: 5000,
+      });
+      console.log(mock2.mock.calls.map((call) => call[0]));
+
+      expect(mock1.mock.calls.length).toBe(1);
+
+      expect(mock2.mock.calls.length).toBe(2);
+    });
   });
 });
