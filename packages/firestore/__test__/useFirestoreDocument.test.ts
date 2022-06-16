@@ -23,6 +23,7 @@ import {
   DocumentSnapshot,
   Firestore,
   setDoc,
+  updateDoc,
 } from "firebase/firestore";
 
 import { useFirestoreDocument, useFirestoreDocumentData } from "../src";
@@ -267,6 +268,106 @@ describe("useFirestoreDocument", () => {
       unmount();
 
       expect(mock).toHaveBeenCalledTimes(2);
+    });
+
+    test("two hooks instances, same ref and id", async () => {
+      const hookId1 = genId();
+      const id1 = `1-${genId()}`;
+
+      const ref1 = doc(firestore, genId(), id1);
+
+      await act(async () => {
+        await setDoc(ref1, { foo: "..." });
+      });
+
+      const mock1 = jest.fn();
+      const mock2 = jest.fn();
+
+      const hook1 = renderHook<
+        {
+          id: string;
+          reference: DocumentReference;
+        },
+        any
+      >(
+        ({ id, reference }) =>
+          useFirestoreDocument(
+            id,
+            reference,
+            {
+              subscribe: true,
+            },
+            {
+              onSuccess(snapshot) {
+                mock1(snapshot);
+              },
+            }
+          ),
+        {
+          wrapper: (props) => wrapper({ children: props.children }),
+          initialProps: {
+            id: hookId1,
+            reference: ref1,
+          },
+        }
+      );
+      const hook2 = renderHook<
+        {
+          id: string;
+          reference: DocumentReference;
+        },
+        any
+      >(
+        ({ id, reference }) =>
+          useFirestoreDocument(
+            id,
+            reference,
+            {
+              subscribe: true,
+            },
+            {
+              onSuccess(snapshot) {
+                mock2(snapshot);
+              },
+            }
+          ),
+        {
+          wrapper: (props) => wrapper({ children: props.children }),
+          initialProps: {
+            id: hookId1,
+            reference: ref1,
+          },
+        }
+      );
+
+      await hook1.waitFor(() => hook1.result.current.isSuccess, {
+        timeout: 5000,
+      });
+
+      hook1.unmount();
+
+      // act here to trigger doc event
+      await act(async () => {
+        await updateDoc(ref1, { foo: "baz" });
+      });
+
+      await hook2.waitFor(() => hook2.result.current.isSuccess);
+
+      // Subscription call
+      expect(mock2.mock.calls[0][0].id).toBe(id1);
+
+      hook2.unmount();
+
+      // act again
+      await act(async () => {
+        await updateDoc(ref1, { foo: "bar" });
+      });
+
+      await hook2.waitFor(() => hook2.result.current.isSuccess);
+
+      expect(mock1.mock.calls.length).toBe(1);
+
+      expect(mock2.mock.calls.length).toBe(2);
     });
   });
 
