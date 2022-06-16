@@ -26,6 +26,8 @@ import { getSnapshot, UseFirestoreHookOptions } from "./index";
 import { useSubscription } from "../../utils/src/useSubscription";
 import { useCallback } from "react";
 
+type NextOrObserver<T> = (data: DocumentSnapshot<T> | null) => Promise<void>;
+
 export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
   queryKey: QueryKey,
   ref: DocumentReference<T>,
@@ -38,7 +40,7 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
   const isSubscription = !!options?.subscribe;
 
   const subscribeFn = useCallback(
-    (callback: (data: DocumentSnapshot<T> | null) => Promise<void>) => {
+    (callback: NextOrObserver<T>) => {
       return onSnapshot(
         ref,
         {

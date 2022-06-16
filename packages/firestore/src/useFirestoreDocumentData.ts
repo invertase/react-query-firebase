@@ -15,28 +15,21 @@
  *
  */
 
-import { useEffect, useRef } from "react";
-import {
-  useQuery,
-  useQueryClient,
-  QueryKey,
-  UseQueryOptions,
-  UseQueryResult,
-  hashQueryKey,
-} from "react-query";
+import { useCallback } from "react";
+import { QueryKey, UseQueryOptions, UseQueryResult } from "react-query";
 import {
   DocumentData,
   DocumentReference,
   FirestoreError,
   onSnapshot,
   SnapshotOptions,
-  Unsubscribe,
 } from "firebase/firestore";
 import { UseFirestoreHookOptions, WithIdField, getSnapshot } from "./index";
-import { Completer } from "../../utils/src";
+import { useSubscription } from "../../utils/src/useSubscription";
 
-const counts: { [key: string]: number } = {};
-const subscriptions: { [key: string]: Unsubscribe } = {};
+type NextOrObserver<T, ID> = (
+  data: WithIdField<T, ID> | undefined
+) => Promise<void>;
 
 export function useFirestoreDocumentData<
   T = DocumentData,
@@ -70,7 +63,7 @@ export function useFirestoreDocumentData<
   T = DocumentData,
   R = WithIdField<T, ID> | undefined
 >(
-  key: QueryKey,
+  queryKey: QueryKey,
   ref: DocumentReference<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions & { idField?: ID },
   useQueryOptions?: Omit<
@@ -78,20 +71,16 @@ export function useFirestoreDocumentData<
     "queryFn"
   >
 ): UseQueryResult<R, FirestoreError> {
-  const client = useQueryClient();
-  const completer = useRef<Completer<WithIdField<T, ID> | undefined>>(
-    new Completer()
-  );
-
-  const hashFn = useQueryOptions?.queryKeyHashFn || hashQueryKey;
-  const hash = hashFn(key);
-
   const isSubscription = !!options?.subscribe;
 
-  useEffect(() => {
-    if (!isSubscription) {
-      getSnapshot(ref, options?.source)
-        .then((snapshot) => {
+  const subscribeFn = useCallback(
+    (callback: NextOrObserver<T, ID>) => {
+      const unsubscribe = onSnapshot(
+        ref,
+        {
+          includeMetadataChanges: options?.includeMetadataChanges,
+        },
+        (snapshot: DocumentData) => {
           let data = snapshot.data({
             serverTimestamps: options?.serverTimestamps,
           });
@@ -103,76 +92,37 @@ export function useFirestoreDocumentData<
             };
           }
 
-          completer.current!.complete(data as WithIdField<T, ID> | undefined);
-        })
-        .catch((error) => {
-          completer.current!.reject(error);
-        });
-    }
-  }, [isSubscription, hash, completer]);
+          // Cannot figure out how to get this working without a cast!
+          const _dataWithIdField = data as WithIdField<T, ID> | undefined;
 
-  useEffect(() => {
-    if (isSubscription) {
-      counts[hash] ??= 0;
-      counts[hash]++;
-
-      // If there is only one instance of this query key, subscribe
-      if (counts[hash] === 1) {
-        subscriptions[hash] = onSnapshot(
-          ref,
-          {
-            includeMetadataChanges: options?.includeMetadataChanges,
-          },
-          (snapshot) => {
-            let data = snapshot.data({
-              serverTimestamps: options?.serverTimestamps,
-            });
-
-            if (data && options?.idField) {
-              data = {
-                ...data,
-                [options.idField]: snapshot.id,
-              };
-            }
-
-            // Cannot figure out how to get this working without a cast!
-            const _dataWithIdField = data as WithIdField<T, ID> | undefined;
-
-            // Set the data each time state changes.
-            client.setQueryData<WithIdField<T, ID> | undefined>(
-              key,
-              _dataWithIdField
-            );
-
-            // Resolve the completer with the current data.
-            if (!completer.current!.completed) {
-              completer.current!.complete(_dataWithIdField);
-            }
-          },
-          (error) => completer.current!.reject(error)
-        );
-      } else {
-        // Since there is already an active subscription, resolve the completer
-        // with the cached data.
-        completer.current!.complete(
-          client.getQueryData(key) as WithIdField<T, ID> | undefined
-        );
-      }
-
-      return () => {
-        counts[hash]--;
-
-        if (counts[hash] === 0) {
-          subscriptions[hash]();
-          delete subscriptions[hash];
+          callback(_dataWithIdField);
         }
-      };
-    }
-  }, [isSubscription, hash, completer]);
+      );
+      return unsubscribe;
+    },
+    [ref]
+  );
 
-  return useQuery<WithIdField<T, ID> | undefined, FirestoreError, R>({
-    ...useQueryOptions,
-    queryKey: useQueryOptions?.queryKey ?? key,
-    queryFn: () => completer.current!.promise,
-  });
+  return useSubscription<WithIdField<T, ID> | undefined, FirestoreError, R>(
+    queryKey,
+    ["useFirestoreDocument", ref.id],
+    subscribeFn,
+    useQueryOptions,
+    !isSubscription,
+    async () => {
+      return getSnapshot(ref, options?.source).then((snapshot) => {
+        let data = snapshot.data({
+          serverTimestamps: options?.serverTimestamps,
+        });
+
+        if (data && options?.idField) {
+          data = {
+            ...data,
+            [options.idField]: snapshot.id,
+          };
+        }
+        return data as WithIdField<T, ID> | undefined;
+      });
+    }
+  );
 }

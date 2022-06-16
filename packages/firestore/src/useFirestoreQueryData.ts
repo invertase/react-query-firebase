@@ -16,12 +16,7 @@
  */
 
 import { useCallback } from "react";
-import {
-  useQuery,
-  QueryKey,
-  UseQueryOptions,
-  UseQueryResult,
-} from "react-query";
+import { QueryKey, UseQueryOptions, UseQueryResult } from "react-query";
 import {
   onSnapshot,
   DocumentData,
