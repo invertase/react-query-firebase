@@ -23,15 +23,15 @@ export function useDatabaseSnapshot<R = DataSnapshot>(
     [ref]
   );
 
-return useSubscription<DataSnapshot, Error, R>(
+  return useSubscription<DataSnapshot, Error, R>(
     queryKey,
-    ['useDatabaseSnapshot', queryKey],
+    ["useDatabaseSnapshot", queryKey],
     subscribeFn,
     {
       ...useQueryOptions,
       onlyOnce: !isSubscription,
       fetchFn: async () => get(ref),
-    },
+    }
   );
 }
 
@@ -74,14 +74,15 @@ export function useDatabaseValue<T = unknown | null, R = T>(
     [ref]
   );
 
-return useSubscription<T, Error, R>(
+  return useSubscription<T, Error, R>(
     queryKey,
-    ['useDatabaseValue', queryKey],
+    ["useDatabaseValue", queryKey],
     subscribeFn,
     {
       ...useQueryOptions,
       onlyOnce: !isSubscription,
-      fetchFn: async () => parseDataSnapshot(await get(ref), !!options?.toArray),
-    },
+      fetchFn: async () =>
+        parseDataSnapshot(await get(ref), !!options?.toArray),
+    }
   );
 }
