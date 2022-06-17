@@ -369,6 +369,37 @@ describe("useFirestoreDocument", () => {
 
       expect(mock2.mock.calls.length).toBe(2);
     });
+
+    test("it should propagate the error when not subscribing", async () => {
+      const hookId = genId();
+      const id = genId();
+      const ref = doc(firestore, "noread", id);
+      const { result, waitFor } = renderHook(
+        () =>
+          useFirestoreDocument(hookId, ref, {
+            subscribe: false,
+          }),
+        {
+          wrapper,
+        }
+      );
+      await waitFor(() => result.current.isError, { timeout: 5000 });
+    });
+    test("it should propagate the error when subscribing", async () => {
+      const hookId = genId();
+      const id = genId();
+      const ref = doc(firestore, "noread", id);
+      const { result, waitFor } = renderHook(
+        () =>
+          useFirestoreDocument(hookId, ref, {
+            subscribe: true,
+          }),
+        {
+          wrapper,
+        }
+      );
+      await waitFor(() => result.current.isError, { timeout: 5000 });
+    });
   });
 
   describe("useFirestoreDocumentData", () => {

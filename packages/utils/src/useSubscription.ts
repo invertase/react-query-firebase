@@ -51,7 +51,7 @@ type UseSubscriptionOptions<TData, TError, R> = UseQueryOptions<
  * Utility hook to subscribe to events, given a function that returns an observer callback.
  * @param queryKey The react-query queryKey
  * @param subscriptionKey A hashable key to store the subscription
- * @param subscribeFn Returns an unsubscribe function to the event, the argument of subscribeFn is a callback to set data.
+ * @param subscribeFn Returns an unsubscribe function to the event
  * @param options
  * @returns
  */
@@ -89,10 +89,11 @@ export function useSubscription<TData, TError, R = TData>(
   }, []);
 
   let resolvePromise: (data: TData | null) => void = () => null;
-
+  let rejectPromise: (err: any) => void = () => null;
   const result: CancellablePromise<TData | null> = new Promise<TData | null>(
-    (resolve) => {
+    (resolve, reject) => {
       resolvePromise = resolve;
+      rejectPromise = reject;
     }
   );
 
@@ -121,9 +122,9 @@ export function useSubscription<TData, TError, R = TData>(
     }
   } else {
     if (!options.fetchFn) {
-      throw new Error("please specify fetchFn");
+      throw new Error("You must specify fetchFn if using onlyOnce mode.");
     } else {
-      options.fetchFn().then((res: TData) => resolvePromise(res));
+      options.fetchFn().then(resolvePromise).catch(rejectPromise);
     }
   }
 
