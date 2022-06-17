@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2016-present Invertase Limited & Contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this library except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 import { Unsubscribe as AuthUnsubscribe } from "firebase/auth";
 import { Unsubscribe as FirestoreUnsubscribe } from "firebase/firestore";
 import { Unsubscribe as DatabaseUnsubscribe } from "firebase/database";
@@ -31,12 +47,37 @@ type UseSubscriptionOptions<TData, TError, R> = UseQueryOptions<
   fetchFn?: () => Promise<TData>;
 };
 
+/**
+ * Utility hook to subscribe to events, given a function that returns an observer callback.
+ * @param queryKey The react-query queryKey
+ * @param subscriptionKey A hashable key to store the subscription
+ * @param subscribeFn Returns an unsubscribe function to the event, the argument of subscribeFn is a callback to set data.
+ * @param options
+ * @returns
+ */
 export function useSubscription<TData, TError, R = TData>(
   queryKey: QueryKey,
   subscriptionKey: QueryKey,
   subscribeFn: (cb: (data: TData | null) => Promise<void>) => Unsubscribe,
   options?: UseSubscriptionOptions<TData, TError, R>
 ): UseQueryResult<R, TError> {
+  const hashFn = options?.queryKeyHashFn || hashQueryKey;
+  const subscriptionHash = hashFn(subscriptionKey);
+  const queryClient = useQueryClient();
+
+  if (!options?.onlyOnce) {
+    // if it's a subscription, we have at least one observer now
+    observerCount[subscriptionHash] ??= 1;
+  }
+
+  function cleanupSubscription(subscriptionHash: string) {
+    if (observerCount[subscriptionHash] === 1) {
+      const unsubscribe = unsubscribes[subscriptionHash];
+      unsubscribe();
+      delete unsubscribes[subscriptionHash];
+    }
+  }
+
   useEffect(() => {
     if (!options?.onlyOnce) {
       observerCount[subscriptionHash] += 1;
@@ -46,23 +87,6 @@ export function useSubscription<TData, TError, R = TData>(
       };
     }
   }, []);
-
-  const hashFn = options?.queryKeyHashFn || hashQueryKey;
-  const subscriptionHash = hashFn(subscriptionKey);
-
-  if (!options?.onlyOnce) {
-    observerCount[subscriptionHash] ??= 1;
-  }
-
-  const queryClient = useQueryClient();
-
-  function cleanupSubscription(subscriptionHash: string) {
-    if (observerCount[subscriptionHash] === 1) {
-      const unsubscribe = unsubscribes[subscriptionHash];
-      unsubscribe();
-      delete unsubscribes[subscriptionHash];
-    }
-  }
 
   let resolvePromise: (data: TData | null) => void = () => null;
 

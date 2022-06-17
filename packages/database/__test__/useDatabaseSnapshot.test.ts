@@ -166,7 +166,6 @@ describe("Database", () => {
       await hook2.waitFor(() => hook2.result.current.isSuccess, {
         timeout: 5000,
       });
-      console.log(mock2.mock.calls.map((call) => call[0]));
 
       expect(mock1.mock.calls.length).toBe(1);
 
@@ -395,7 +394,6 @@ describe("Database", () => {
       await hook2.waitFor(() => hook2.result.current.isSuccess, {
         timeout: 5000,
       });
-      console.log(mock2.mock.calls.map((call) => call[0]));
 
       expect(mock1.mock.calls.length).toBe(1);
 
