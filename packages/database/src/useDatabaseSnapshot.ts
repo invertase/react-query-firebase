@@ -72,12 +72,14 @@ export function useDatabaseValue<T = unknown | null, R = T>(
     [ref]
   );
 
-  return useSubscription<T, Error, R>(
+return useSubscription<T, Error, R>(
     queryKey,
-    ["useFirestoreDatabase", ref.key],
+    ['useDatabaseValue', queryKey],
     subscribeFn,
-    useQueryOptions,
-    !isSubscription,
-    async () => parseDataSnapshot(await get(ref), !!options?.toArray)
+    {
+      ...useQueryOptions,
+      onlyOnce: !isSubscription,
+      fetchFn: async () => parseDataSnapshot(await get(ref), !!options?.toArray),
+    },
   );
 }
