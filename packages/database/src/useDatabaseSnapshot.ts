@@ -23,13 +23,15 @@ export function useDatabaseSnapshot<R = DataSnapshot>(
     [ref]
   );
 
-  return useSubscription<DataSnapshot, Error, R>(
+return useSubscription<DataSnapshot, Error, R>(
     queryKey,
-    ["useFirestoreDatabase", ref.key],
+    ['useDatabaseSnapshot', queryKey],
     subscribeFn,
-    useQueryOptions,
-    !isSubscription,
-    async () => get(ref)
+    {
+      ...useQueryOptions,
+      onlyOnce: !isSubscription,
+      fetchFn: async () => get(ref),
+    },
   );
 }
 
