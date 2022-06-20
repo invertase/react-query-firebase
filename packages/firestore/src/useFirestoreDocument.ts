@@ -57,12 +57,12 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
 
   return useSubscription<DocumentSnapshot<T>, FirestoreError, R>(
     queryKey,
-    ["useFirestoreDocument", ref.id],
+    ["useFirestoreDocument", queryKey],
     subscribeFn,
     {
       ...useQueryOptions,
       onlyOnce: !isSubscription,
-      fetchFn: () => getSnapshot(ref, options?.source),
+      fetchFn: async () => getSnapshot(ref, options?.source),
     }
   );
 }

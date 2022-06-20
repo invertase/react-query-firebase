@@ -40,13 +40,17 @@ import {
   useFirestoreInfiniteQuery,
   useFirestoreInfiniteQueryData,
 } from "../src";
+import axios from "axios";
 
 describe("useFirestoreQuery", () => {
   let wrapper: React.FC<{ children: React.ReactNode }>;
   let firestore: Firestore;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     const config = init();
+    await axios.delete(
+      `http://localhost:8080/emulator/v1/projects/${config.projectId}/databases/(default)/documents`
+    );
     wrapper = config.wrapper;
     firestore = config.firestore;
   });
@@ -55,7 +59,7 @@ describe("useFirestoreQuery", () => {
     test("it returns a QuerySnapshot", async () => {
       const hookId = genId();
       const id = genId();
-      const ref = collection(firestore, id);
+      const ref = collection(firestore, "tests", id, id);
 
       const { result, waitFor } = renderHook(
         () => useFirestoreQuery(hookId, ref),
@@ -73,9 +77,11 @@ describe("useFirestoreQuery", () => {
     test("it returns a QuerySnapshot using a data cache source", async () => {
       const hookId = genId();
       const id = genId();
-      const ref = collection(firestore, id);
+      const ref = collection(firestore, "tests", id, id);
 
-      await addDoc(ref, { foo: "bar" });
+      await act(async () => {
+        addDoc(ref, { foo: "bar" });
+      });
 
       const { result, waitFor } = renderHook(
         () =>
@@ -94,9 +100,11 @@ describe("useFirestoreQuery", () => {
     test("it returns a QuerySnapshot using a data server source", async () => {
       const hookId = genId();
       const id = genId();
-      const ref = collection(firestore, id);
+      const ref = collection(firestore, "tests", id, id);
 
-      await addDoc(ref, { foo: "bar" });
+      await act(async () => {
+        addDoc(ref, { foo: "bar" });
+      });
 
       const { result, waitFor } = renderHook(
         () =>
@@ -120,10 +128,17 @@ describe("useFirestoreQuery", () => {
       };
 
       // Quick cast a reference.
-      const id = genId();
-      const ref = collection(firestore, id) as CollectionReference<Foo>;
 
-      await addDoc(ref, { bar: 123 });
+      const ref = collection(
+        firestore,
+        "tests",
+        genId(),
+        genId()
+      ) as CollectionReference<Foo>;
+
+      await act(async () => {
+        await addDoc(ref, { bar: 123 });
+      });
 
       const { result, waitFor } = renderHook(
         () => useFirestoreQuery(hookId, ref),
@@ -152,11 +167,17 @@ describe("useFirestoreQuery", () => {
         bar: string;
       };
 
-      // Quick cast a reference.
       const id = genId();
-      const ref = collection(firestore, id) as CollectionReference<Foo>;
+      const ref = collection(
+        firestore,
+        "tests",
+        id,
+        id
+      ) as CollectionReference<Foo>;
 
-      await addDoc(ref, { bar: 123 });
+      await act(async () => {
+        await addDoc(ref, { bar: 123 });
+      });
 
       const { result, waitFor } = renderHook(
         () =>
@@ -182,9 +203,8 @@ describe("useFirestoreQuery", () => {
 
     test("it subscribes and unsubscribes to data events", async () => {
       const hookId = genId();
-
       const id = genId();
-      const col = collection(firestore, id);
+      const col = collection(firestore, "tests", id, id);
       const ref = query(col, orderBy("order", "asc"));
       const mock = jest.fn();
 
@@ -227,9 +247,6 @@ describe("useFirestoreQuery", () => {
       // getDocs, onSubscribe, onSubscribe (add), onSubscribe (add),
 
       const call1 = mock.mock.calls[0][0];
-      console.log(
-        mock.mock.calls.map((call) => call[0].docs.map((doc) => doc.data()))
-      );
       const call2 = mock.mock.calls[1][0];
       expect(mock).toHaveBeenCalledTimes(2);
       expect(call1.size).toEqual(1);
@@ -248,11 +265,13 @@ describe("useFirestoreQuery", () => {
       const id1 = `1-${genId()}`;
       const id2 = `2-${genId()}`;
 
-      const ref1 = collection(firestore, id1);
-      const ref2 = collection(firestore, id2);
+      const ref1 = collection(firestore, "tests", id1, id1);
+      const ref2 = collection(firestore, "tests", id2, id2);
 
-      await addDoc(ref1, { foo: "bar" });
-      await addDoc(ref2, { foo: "bar" });
+      await act(async () => {
+        await addDoc(ref1, { foo: "bar" });
+        await addDoc(ref2, { foo: "bar" });
+      });
 
       const mock = jest.fn();
       const { result, waitFor, unmount, rerender } = renderHook<
@@ -309,11 +328,8 @@ describe("useFirestoreQuery", () => {
 
     test("it should not unsubscribe if there is still a hook listening", async () => {
       const hookId1 = genId();
-
-      const id1 = `1-${genId()}`;
-
-      const ref1 = collection(firestore, id1);
-      const col = collection(firestore, id1);
+      const id = genId();
+      const col = collection(firestore, "tests", id, id);
 
       const mock1 = jest.fn();
       const mock2 = jest.fn();
@@ -341,7 +357,7 @@ describe("useFirestoreQuery", () => {
           wrapper: (props) => wrapper({ children: props.children }),
           initialProps: {
             id: hookId1,
-            reference: ref1,
+            reference: col,
           },
         }
       );
@@ -369,7 +385,7 @@ describe("useFirestoreQuery", () => {
           wrapper: (props) => wrapper({ children: props.children }),
           initialProps: {
             id: hookId1,
-            reference: ref1,
+            reference: col,
           },
         }
       );
@@ -397,11 +413,12 @@ describe("useFirestoreQuery", () => {
   describe("useFirestoreQueryData", () => {
     test("it returns document data and not a snapshot", async () => {
       const hookId = genId();
-
       const id = genId();
-      const ref = collection(firestore, id);
+      const ref = collection(firestore, "tests", id, id);
 
-      await addDoc(ref, { foo: "bar" });
+      await act(async () => {
+        await addDoc(ref, { foo: "bar" });
+      });
 
       const { result, waitFor } = renderHook(
         () => useFirestoreQueryData(hookId, ref),
@@ -417,11 +434,12 @@ describe("useFirestoreQuery", () => {
 
     test("it overrides the select option", async () => {
       const hookId = genId();
-
       const id = genId();
-      const ref = collection(firestore, id);
+      const ref = collection(firestore, "tests", id, id);
 
-      await addDoc(ref, { foo: "bar" });
+      await act(async () => {
+        await addDoc(ref, { foo: "bar" });
+      });
 
       const { result, waitFor } = renderHook(
         () =>
@@ -446,11 +464,12 @@ describe("useFirestoreQuery", () => {
 
     test("it provides the id key", async () => {
       const hookId = genId();
-
       const id = genId();
-      const ref = collection(firestore, id);
+      const ref = collection(firestore, "tests", id, id);
 
-      await addDoc(ref, { foo: "bar" });
+      await act(async () => {
+        await addDoc(ref, { foo: "bar" });
+      });
 
       const { result, waitFor } = renderHook(
         () =>
@@ -486,20 +505,27 @@ describe("useFirestoreQuery", () => {
     });
   });
 
-  describe("useFirestoreInfiniteQuery", () => {
+  describe("useFirestoreInfiniteQuery hook", () => {
+    beforeEach(async () => {
+      const config = init();
+      await axios.delete(
+        `http://localhost:8080/emulator/v1/projects/${config.projectId}/databases/(default)/documents`
+      );
+    });
     test("it returns a snapshot", async () => {
       const hookId = genId();
-
       const id = genId();
-      const ref = collection(firestore, id);
+      const ref = collection(firestore, "tests", id, id);
 
-      await Promise.all([
-        addDoc(ref, { foo: 1 }),
-        addDoc(ref, { foo: 2 }),
-        addDoc(ref, { foo: 3 }),
-        addDoc(ref, { foo: 4 }),
-        addDoc(ref, { foo: 5 }),
-      ]);
+      await act(async () => {
+        await Promise.all([
+          addDoc(ref, { foo: 1 }),
+          addDoc(ref, { foo: 2 }),
+          addDoc(ref, { foo: 3 }),
+          addDoc(ref, { foo: 4 }),
+          addDoc(ref, { foo: 5 }),
+        ]);
+      });
 
       const q = query(ref, limit(2));
 
@@ -518,8 +544,8 @@ describe("useFirestoreQuery", () => {
       expect(result.current.data.pages.length).toBe(1); // QuerySnapshot
       expect(result.current.data.pages[0].docs.length).toBe(2);
 
-      act(() => {
-        result.current.fetchNextPage();
+      await act(async () => {
+        await result.current.fetchNextPage();
       });
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -531,17 +557,19 @@ describe("useFirestoreQuery", () => {
 
     test("it loads the next page of snapshots", async () => {
       const hookId = genId();
-
       const id = genId();
-      const ref = collection(firestore, id);
 
-      await Promise.all([
-        addDoc(ref, { foo: 1 }),
-        addDoc(ref, { foo: 2 }),
-        addDoc(ref, { foo: 3 }),
-        addDoc(ref, { foo: 4 }),
-        addDoc(ref, { foo: 5 }),
-      ]);
+      const ref = collection(firestore, "tests", id, id);
+
+      await act(async () => {
+        await Promise.all([
+          addDoc(ref, { foo: 1 }),
+          addDoc(ref, { foo: 2 }),
+          addDoc(ref, { foo: 3 }),
+          addDoc(ref, { foo: 4 }),
+          addDoc(ref, { foo: 5 }),
+        ]);
+      });
 
       const q = query(ref, limit(2));
 
@@ -569,20 +597,22 @@ describe("useFirestoreQuery", () => {
     });
   });
 
-  describe("useFirestoreInfiniteQueryData", () => {
+  describe("useFirestoreInfiniteQueryData hook", () => {
     test("it returns a data", async () => {
       const hookId = genId();
-
       const id = genId();
-      const ref = collection(firestore, id);
 
-      await Promise.all([
-        addDoc(ref, { foo: 1 }),
-        addDoc(ref, { foo: 2 }),
-        addDoc(ref, { foo: 3 }),
-        addDoc(ref, { foo: 4 }),
-        addDoc(ref, { foo: 5 }),
-      ]);
+      const ref = collection(firestore, "tests", id, id);
+
+      await act(async () => {
+        await Promise.all([
+          addDoc(ref, { foo: 1 }),
+          addDoc(ref, { foo: 2 }),
+          addDoc(ref, { foo: 3 }),
+          addDoc(ref, { foo: 4 }),
+          addDoc(ref, { foo: 5 }),
+        ]);
+      });
 
       const q = query(ref, limit(2), orderBy("foo"));
 
@@ -602,8 +632,8 @@ describe("useFirestoreQuery", () => {
       expect(result.current.data.pages[0].length).toBe(2);
       expect(result.current.data.pages[0]).toEqual([{ foo: 1 }, { foo: 2 }]);
 
-      act(() => {
-        result.current.fetchNextPage();
+      await act(async () => {
+        await result.current.fetchNextPage();
       });
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -615,17 +645,18 @@ describe("useFirestoreQuery", () => {
 
     test("it loads the next page of data", async () => {
       const hookId = genId();
-
       const id = genId();
-      const ref = collection(firestore, id);
+      const ref = collection(firestore, "tests", id, id);
 
-      await Promise.all([
-        addDoc(ref, { foo: 1 }),
-        addDoc(ref, { foo: 2 }),
-        addDoc(ref, { foo: 3 }),
-        addDoc(ref, { foo: 4 }),
-        addDoc(ref, { foo: 5 }),
-      ]);
+      await act(async () => {
+        await Promise.all([
+          addDoc(ref, { foo: 1 }),
+          addDoc(ref, { foo: 2 }),
+          addDoc(ref, { foo: 3 }),
+          addDoc(ref, { foo: 4 }),
+          addDoc(ref, { foo: 5 }),
+        ]);
+      });
 
       const q = query(ref, limit(2), orderBy("foo"));
 
@@ -655,55 +686,56 @@ describe("useFirestoreQuery", () => {
 
     test("it provides the idField", async () => {
       const hookId = genId();
-
       const id = genId();
-      const ref = collection(firestore, id);
-
-      await Promise.all([
-        addDoc(ref, { foo: 1 }),
-        addDoc(ref, { foo: 2 }),
-        addDoc(ref, { foo: 3 }),
-        addDoc(ref, { foo: 4 }),
-        addDoc(ref, { foo: 5 }),
-      ]);
-
-      const q = query(ref, limit(2), orderBy("foo"));
-
-      const { result, waitFor } = renderHook(
-        () =>
-          useFirestoreInfiniteQueryData<"id">(
-            hookId,
-            q,
-            () => {
-              return query(q, startAfter(2));
-            },
-            {
-              idField: "id",
-            }
-          ),
-        { wrapper }
-      );
-
-      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
-
-      expect(result.current.data.pages[0].length).toBe(2);
-      expect(result.current.data.pages[0][0].foo).toEqual(1);
-      expect(typeof result.current.data.pages[0][0].id).toBe("string");
-      expect(result.current.data.pages[0][1].foo).toEqual(2);
-      expect(typeof result.current.data.pages[0][1].id).toBe("string");
+      const ref = collection(firestore, "tests", id, id);
 
       await act(async () => {
-        await result.current.fetchNextPage();
+        await Promise.all([
+          addDoc(ref, { foo: 1 }),
+          addDoc(ref, { foo: 2 }),
+          addDoc(ref, { foo: 3 }),
+          addDoc(ref, { foo: 4 }),
+          addDoc(ref, { foo: 5 }),
+        ]);
+
+        const q = query(ref, limit(2), orderBy("foo"));
+
+        const { result, waitFor } = renderHook(
+          () =>
+            useFirestoreInfiniteQueryData<"id">(
+              hookId,
+              q,
+              () => {
+                return query(q, startAfter(2));
+              },
+              {
+                idField: "id",
+              }
+            ),
+          { wrapper }
+        );
+
+        await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+
+        expect(result.current.data.pages[0].length).toBe(2);
+        expect(result.current.data.pages[0][0].foo).toEqual(1);
+        expect(typeof result.current.data.pages[0][0].id).toBe("string");
+        expect(result.current.data.pages[0][1].foo).toEqual(2);
+        expect(typeof result.current.data.pages[0][1].id).toBe("string");
+
+        await act(async () => {
+          await result.current.fetchNextPage();
+        });
+
+        await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+
+        expect(result.current.data.pages.length).toBe(2);
+        expect(result.current.data.pages[1].length).toBe(2);
+        expect(result.current.data.pages[1][0].foo).toEqual(3);
+        expect(typeof result.current.data.pages[1][0].id).toBe("string");
+        expect(result.current.data.pages[1][1].foo).toEqual(4);
+        expect(typeof result.current.data.pages[1][1].id).toBe("string");
       });
-
-      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
-
-      expect(result.current.data.pages.length).toBe(2);
-      expect(result.current.data.pages[1].length).toBe(2);
-      expect(result.current.data.pages[1][0].foo).toEqual(3);
-      expect(typeof result.current.data.pages[1][0].id).toBe("string");
-      expect(result.current.data.pages[1][1].foo).toEqual(4);
-      expect(typeof result.current.data.pages[1][1].id).toBe("string");
     });
   });
 });

@@ -36,20 +36,24 @@ import {
   useFirestoreTransaction,
   useFirestoreWriteBatch,
 } from "../src";
+import axios from "axios";
 
 describe("useFirestoreMutation", () => {
   let wrapper: React.FC<{ children: React.ReactNode }>;
   let firestore: Firestore;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     const config = init();
+    await axios.delete(
+      `http://localhost:8080/emulator/v1/projects/${config.projectId}/databases/(default)/documents`
+    );
     wrapper = config.wrapper;
     firestore = config.firestore;
   });
 
   describe("useFirestoreCollectionMutation", () => {
     test("it adds a document", async () => {
-      const ref = collection(firestore, genId());
+      const ref = collection(firestore, "tests");
 
       const { result, waitFor } = renderHook(
         () => useFirestoreCollectionMutation(ref),
@@ -73,7 +77,7 @@ describe("useFirestoreMutation", () => {
 
   describe("useFirestoreDocumentMutation", () => {
     test("it sets a document", async () => {
-      const ref = doc(firestore, genId(), genId());
+      const ref = doc(firestore, "tests", genId());
 
       await setDoc(ref, { foo: "baz" });
 
@@ -95,7 +99,7 @@ describe("useFirestoreMutation", () => {
     });
 
     test("it sets a document with merge", async () => {
-      const ref = doc(firestore, genId(), genId());
+      const ref = doc(firestore, "tests", genId());
 
       await setDoc(ref, { foo: "baz" });
 
@@ -120,7 +124,7 @@ describe("useFirestoreMutation", () => {
 
   describe("useFirestoreDocumentDeletion", () => {
     it("deletes a document", async () => {
-      const ref = doc(firestore, genId(), genId());
+      const ref = doc(firestore, "tests", genId());
 
       await setDoc(ref, { foo: "baz" });
 
@@ -145,7 +149,7 @@ describe("useFirestoreMutation", () => {
 
   describe("useFirestoreTransaction", () => {
     it("transacts a document", async () => {
-      const ref = doc(firestore, genId(), genId()) as DocumentReference<Doc>;
+      const ref = doc(firestore, "tests", genId()) as DocumentReference<Doc>;
 
       type Doc = {
         foo: number;
@@ -190,9 +194,9 @@ describe("useFirestoreMutation", () => {
 
   describe("useFirestoreWriteBatch", () => {
     it("commits documents", async () => {
-      const ref1 = doc(firestore, genId(), genId());
-      const ref2 = doc(firestore, genId(), genId());
-      const ref3 = doc(firestore, genId(), genId());
+      const ref1 = doc(firestore, "tests", genId());
+      const ref2 = doc(firestore, "tests", genId());
+      const ref3 = doc(firestore, "tests", genId());
 
       await Promise.all([
         setDoc(ref1, { foo: "bar" }),
