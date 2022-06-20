@@ -45,7 +45,7 @@ import {
 import { firestore } from "../firebase";
 
 function Product({ id }) {
-  const ref = doc(firestore, 'products', id);
+  const ref = doc(firestore, "products", id);
 
   const product = useFirestoreDocument(["products", id], ref);
 

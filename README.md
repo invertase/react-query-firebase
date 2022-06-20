@@ -10,16 +10,17 @@
 <br />
 
 React Query Firebase provides a set of easy to use hooks for handling asynchronous tasks with Firebase in your React application.
+
 ## Why should I use React Query Firebase?
 
 - **Backed by React Query** - Unlike other solutions, hooks are built on top of [React Query](https://react-query.tanstack.com) which takes care of complex challenges
-such as caching, automatic refetching, realtime data subscriptions, pagination & infinite queries, mutations, SSR Support, data selectors, side effect handlers and more. You also get [DevTool](https://react-query.tanstack.com/devtools)
-support out of the box!
+  such as caching, automatic refetching, realtime data subscriptions, pagination & infinite queries, mutations, SSR Support, data selectors, side effect handlers and more. You also get [DevTool](https://react-query.tanstack.com/devtools)
+  support out of the box!
 - **Un-opinionated** - You provide the Query Keys, Configuration & Firebase instances, allowing for full control over how your data is integrated and cached. You can also roll it alongside any existing Firebase usage.
-- **Performant & Efficient** - Whether your queries are one-off or realtime, the library is designed to be performant and efficient. Data fetching is handled via [Queries](https://react-query.tanstack.com/guides/queries) and 
-[Query Keys](https://react-query.tanstack.com/guides/query-keys), meaning components can share data throughout your application without needless database reads.
-- **Mutations** - Sign a user in, delete a document, run a transaction, log an event...  React Query Firebase takes care of that for you via [Mutations](https://react-query.tanstack.com/guides/mutations), allowing you to focus
-on your application and not managing complex local loading & error states.
+- **Performant & Efficient** - Whether your queries are one-off or realtime, the library is designed to be performant and efficient. Data fetching is handled via [Queries](https://react-query.tanstack.com/guides/queries) and
+  [Query Keys](https://react-query.tanstack.com/guides/query-keys), meaning components can share data throughout your application without needless database reads.
+- **Mutations** - Sign a user in, delete a document, run a transaction, log an event... React Query Firebase takes care of that for you via [Mutations](https://react-query.tanstack.com/guides/mutations), allowing you to focus
+  on your application and not managing complex local loading & error states.
 - **Fully Typed** - The library is built with and has full compatibility with TypeScript.
 
 > **Note**: The library supports the Firebase JS SDK v9 - [learn more about it here](https://firebase.googleblog.com/2021/08/the-new-firebase-js-sdk-now-ga.html)!

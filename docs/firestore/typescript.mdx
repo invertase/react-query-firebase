@@ -5,12 +5,12 @@ description: TypeScript usage with React Query Firebase.
 
 # Typescript
 
-The library comes with support for a full typesafe API. 
+The library comes with support for a full typesafe API.
 
 ## Response types
 
-When fetching a or modifying documents the default return type from 
-Firestore is a [`QuerySnapshot`](https://firebase.google.com/docs/reference/js/firestore_.querysnapshot) or 
+When fetching a or modifying documents the default return type from
+Firestore is a [`QuerySnapshot`](https://firebase.google.com/docs/reference/js/firestore_.querysnapshot) or
 [`DocumentSnapshot`](https://firebase.google.com/docs/reference/js/firestore_.documentsnapshot) whose data type is
 [`DocumentData`](https://firebase.google.com/docs/reference/js/firestore_.documentdata).
 
@@ -36,7 +36,7 @@ useFirestoreDocumentData<Product>(); // Product | null
 
 ### Inferred types
 
-The hooks will inferr any types from the provided reference, for example you could 
+The hooks will inferr any types from the provided reference, for example you could
 define [Firestore converters](https://firebase.google.com/docs/reference/js/firestore_.firestoredataconverter):
 
 ```ts
@@ -58,28 +58,28 @@ useFirestoreDocumentData('...', docRef); // Product | null
 
 ## Data modifications
 
-When returning modified data, you can pass a second type to the hooks for 
+When returning modified data, you can pass a second type to the hooks for
 typesafe result data.
 
 ```ts
 type Product = {
   name: string;
   price: number;
-}
+};
 
-const query = useFirestoreQuery<Product, number | null>('...', ref, undefined, {
+const query = useFirestoreQuery<Product, number | null>("...", ref, undefined, {
   select(snapshot: QuerySnapshot<Product>): number | null {
     if (!snapshot.exists()) {
       return null;
     }
 
     return snapshot.data().price;
-  }
+  },
 });
 
 if (query.isSuccess) {
   const price = query.data; // number | null
-} 
+}
 ```
 
 ## Mutations
@@ -113,7 +113,7 @@ const mutation = useFirestoreCollectionMutation<Product>(ref);
 
 // mutate expects a Product
 mutation.mutate({
-  name: 'New product',
+  name: "New product",
   price: 10,
 });
 ```
@@ -122,7 +122,7 @@ If working with transactions, you can provide a custom type as the expected
 response of the transaction:
 
 ```ts
-const ref = collection(firebase, 'posts').doc('123');
+const ref = collection(firebase, "posts").doc("123");
 
 const mutation = useFirestoreTransaction<number>(firestore, async (tsx) => {
   const post = await tsx.get(ref);
@@ -135,6 +135,6 @@ const mutation = useFirestoreTransaction<number>(firestore, async (tsx) => {
 });
 
 if (mutation.isSuccess) {
-  console.log('New likes: ', mutation.data);
+  console.log("New likes: ", mutation.data);
 }
 ```

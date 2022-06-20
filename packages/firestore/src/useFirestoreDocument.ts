@@ -14,52 +14,22 @@
  * limitations under the License.
  *
  */
-
-import { useEffect, useRef } from "react";
-import {
-  useQuery,
-  useQueryClient,
-  QueryKey,
-  UseQueryOptions,
-  UseQueryResult,
-} from "react-query";
+import { QueryKey, UseQueryOptions, UseQueryResult } from "react-query";
 import {
   DocumentData,
   DocumentReference,
   DocumentSnapshot,
-  getDoc,
-  getDocFromCache,
-  getDocFromServer,
   onSnapshot,
-  SnapshotOptions,
-  Unsubscribe,
   FirestoreError,
 } from "firebase/firestore";
-import {
-  GetSnapshotSource,
-  UseFirestoreHookOptions,
-  WithIdField,
-} from "./index";
+import { getSnapshot, UseFirestoreHookOptions } from "./index";
+import { useSubscription } from "../../utils/src/useSubscription";
+import { useCallback } from "react";
 
-async function getSnapshot<T>(
-  ref: DocumentReference<T>,
-  source?: GetSnapshotSource
-): Promise<DocumentSnapshot<T>> {
-  let snapshot: DocumentSnapshot<T>;
-
-  if (source === "cache") {
-    snapshot = await getDocFromCache(ref);
-  } else if (source === "server") {
-    snapshot = await getDocFromServer(ref);
-  } else {
-    snapshot = await getDoc(ref);
-  }
-
-  return snapshot;
-}
+type NextOrObserver<T> = (data: DocumentSnapshot<T> | null) => Promise<void>;
 
 export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
-  key: QueryKey,
+  queryKey: QueryKey,
   ref: DocumentReference<T>,
   options?: UseFirestoreHookOptions,
   useQueryOptions?: Omit<
@@ -67,153 +37,32 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
     "queryFn"
   >
 ): UseQueryResult<R, FirestoreError> {
-  const client = useQueryClient();
-  const unsubscribe = useRef<Unsubscribe>();
+  const isSubscription = !!options?.subscribe;
 
-  useEffect(() => {
-    return () => unsubscribe.current?.();
-  }, []);
-
-  return useQuery<DocumentSnapshot<T>, FirestoreError, R>({
-    ...useQueryOptions,
-    queryKey: useQueryOptions?.queryKey ?? key,
-    staleTime:
-      useQueryOptions?.staleTime ?? options?.subscribe ? Infinity : undefined,
-    async queryFn() {
-      unsubscribe.current?.();
-
-      if (!options?.subscribe) {
-        return getSnapshot(ref, options?.source);
-      }
-
-      let resolved = false;
-
-      return new Promise<DocumentSnapshot<T>>((resolve, reject) => {
-        unsubscribe.current = onSnapshot(
-          ref,
-          {
-            includeMetadataChanges: options?.includeMetadataChanges,
-          },
-          (snapshot) => {
-            if (!resolved) {
-              resolved = true;
-              return resolve(snapshot);
-            } else {
-              client.setQueryData<DocumentSnapshot<T>>(key, snapshot);
-            }
-          },
-          reject
-        );
-      });
-    },
-  });
-}
-
-export function useFirestoreDocumentData<
-  T = DocumentData,
-  R = WithIdField<T> | undefined
->(
-  key: QueryKey,
-  ref: DocumentReference<T>,
-  options?: UseFirestoreHookOptions & SnapshotOptions,
-  useQueryOptions?: Omit<
-    UseQueryOptions<WithIdField<T> | undefined, FirestoreError, R>,
-    "queryFn"
-  >
-): UseQueryResult<R, FirestoreError>;
-
-export function useFirestoreDocumentData<
-  ID extends string,
-  T = DocumentData,
-  R = WithIdField<T, ID> | undefined
->(
-  key: QueryKey,
-  ref: DocumentReference<T>,
-  options?: UseFirestoreHookOptions & SnapshotOptions & { idField: ID },
-  useQueryOptions?: Omit<
-    UseQueryOptions<WithIdField<T, ID> | undefined, FirestoreError, R>,
-    "queryFn"
-  >
-): UseQueryResult<R | undefined, FirestoreError>;
-
-export function useFirestoreDocumentData<
-  ID extends string,
-  T = DocumentData,
-  R = WithIdField<T, ID> | undefined
->(
-  key: QueryKey,
-  ref: DocumentReference<T>,
-  options?: UseFirestoreHookOptions & SnapshotOptions & { idField?: ID },
-  useQueryOptions?: Omit<
-    UseQueryOptions<WithIdField<T, ID> | undefined, FirestoreError, R>,
-    "queryFn"
-  >
-): UseQueryResult<R, FirestoreError> {
-  const client = useQueryClient();
-  const unsubscribe = useRef<Unsubscribe>();
-
-  useEffect(() => {
-    return () => unsubscribe.current?.();
-  }, []);
-
-  return useQuery<WithIdField<T, ID> | undefined, FirestoreError, R>({
-    ...useQueryOptions,
-    queryKey: useQueryOptions?.queryKey ?? key,
-    staleTime:
-      useQueryOptions?.staleTime ?? options?.subscribe ? Infinity : undefined,
-    async queryFn(): Promise<WithIdField<T, ID> | undefined> {
-      unsubscribe.current?.();
-
-      if (!options?.subscribe) {
-        const snapshot = await getSnapshot(ref, options?.source);
-
-        let data = snapshot.data({
-          serverTimestamps: options?.serverTimestamps,
-        });
-
-        if (data && options?.idField) {
-          data = {
-            ...data,
-            [options.idField]: snapshot.id,
-          };
+  const subscribeFn = useCallback(
+    (callback: NextOrObserver<T>) => {
+      return onSnapshot(
+        ref,
+        {
+          includeMetadataChanges: options?.includeMetadataChanges,
+        },
+        (snapshot: DocumentSnapshot<T>) => {
+          // Set the data each time state changes.
+          return callback(snapshot);
         }
-
-        return data as WithIdField<T, ID> | undefined;
-      }
-
-      let resolved = false;
-
-      return new Promise<WithIdField<T, ID> | undefined>((resolve, reject) => {
-        unsubscribe.current = onSnapshot(
-          ref,
-          {
-            includeMetadataChanges: options?.includeMetadataChanges,
-          },
-          (snapshot) => {
-            let data = snapshot.data({
-              serverTimestamps: options?.serverTimestamps,
-            });
-
-            if (data && options?.idField) {
-              data = {
-                ...data,
-                [options.idField]: snapshot.id,
-              };
-            }
-
-            if (!resolved) {
-              resolved = true;
-              return resolve(data as WithIdField<T, ID> | undefined);
-            } else {
-              client.setQueryData<WithIdField<T, ID> | undefined>(
-                key,
-                data as WithIdField<T, ID> | undefined
-              );
-            }
-          },
-          reject
-        );
-      });
+      );
     },
-  });
+    [ref]
+  );
+
+  return useSubscription<DocumentSnapshot<T>, FirestoreError, R>(
+    queryKey,
+    ["useFirestoreDocument", queryKey],
+    subscribeFn,
+    {
+      ...useQueryOptions,
+      onlyOnce: !isSubscription,
+      fetchFn: async () => getSnapshot(ref, options?.source),
+    }
+  );
 }

@@ -23,26 +23,95 @@ import {
   DocumentSnapshot,
   Firestore,
   setDoc,
+  updateDoc,
 } from "firebase/firestore";
 
 import { useFirestoreDocument, useFirestoreDocumentData } from "../src";
 import { genId, init } from "./helpers";
+import axios from "axios";
 
-describe("useFirestoreDocument", () => {
+describe("useFirestoreDocument and useFirestoreDocumentData", () => {
   let wrapper: React.FC<{ children: React.ReactNode }>;
   let firestore: Firestore;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     const config = init();
+    await axios.delete(
+      `http://localhost:8080/emulator/v1/projects/${config.projectId}/databases/(default)/documents`
+    );
     wrapper = config.wrapper;
     firestore = config.firestore;
   });
+  describe("useFirestoreDocumentData", () => {
+    test("it returns document data and not a snapshot", async () => {
+      const hookId = genId();
+      const id = genId();
+      const ref = doc(firestore, "tests", id);
 
-  describe("useFirestoreDocument", () => {
+      await act(() => setDoc(ref, { foo: "bar" }));
+
+      const { result, waitFor } = renderHook(
+        () => useFirestoreDocumentData(hookId, ref),
+        { wrapper }
+      );
+
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+
+      expect(result.current.data).toBeDefined();
+      expect(result.current.data).toEqual({ foo: "bar" });
+    });
+
+    test("it overrides the select option", async () => {
+      const hookId = genId();
+      const id = genId();
+      const ref = doc(firestore, "tests", id);
+
+      await setDoc(ref, { foo: "bar" });
+
+      const { result, waitFor } = renderHook(
+        () =>
+          useFirestoreDocumentData(hookId, ref, undefined, {
+            select() {
+              return {
+                baz: "ben",
+              };
+            },
+          }),
+        { wrapper }
+      );
+
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+
+      expect(result.current.data).toBeDefined();
+      expect(result.current.data).toEqual({ baz: "ben" });
+    });
+
+    test("it provides the id key", async () => {
+      const hookId = genId();
+      const id = genId();
+      const ref = doc(firestore, "tests", id);
+
+      await setDoc(ref, { foo: "bar" });
+
+      const { result, waitFor } = renderHook(
+        () =>
+          useFirestoreDocumentData<"id">(hookId, ref, {
+            idField: "id",
+          }),
+        { wrapper }
+      );
+
+      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+
+      expect(result.current.data).toBeDefined();
+      expect(result.current.data).toEqual({ foo: "bar", id });
+    });
+  });
+  describe("useFirestoreDocument hook", () => {
     test("it returns a DocumentSnapshot", async () => {
       const hookId = genId();
       const id = genId();
-      const ref = doc(firestore, genId(), id);
+      const ref = doc(firestore, "tests", id);
 
       const { result, waitFor } = renderHook(
         () => useFirestoreDocument(hookId, ref),
@@ -61,7 +130,7 @@ describe("useFirestoreDocument", () => {
     xtest("it returns a DocumentSnapshot using a data cache source", async () => {
       const hookId = genId();
       const id = genId();
-      const ref = doc(firestore, genId(), id);
+      const ref = doc(firestore, "tests", id);
 
       await setDoc(ref, { foo: "bar" });
 
@@ -82,7 +151,7 @@ describe("useFirestoreDocument", () => {
     test("it returns a DocumentSnapshot using a data server source", async () => {
       const hookId = genId();
       const id = genId();
-      const ref = doc(firestore, genId(), id);
+      const ref = doc(firestore, "tests", id);
 
       const { result, waitFor } = renderHook(
         () =>
@@ -107,7 +176,7 @@ describe("useFirestoreDocument", () => {
       };
 
       // Quick cast a reference.
-      const ref = doc(firestore, genId(), id) as DocumentReference<Foo>;
+      const ref = doc(firestore, "tests", id) as DocumentReference<Foo>;
 
       await setDoc(ref, { bar: 123 });
 
@@ -140,7 +209,7 @@ describe("useFirestoreDocument", () => {
       };
 
       // Quick cast a reference.
-      const ref = doc(firestore, genId(), id) as DocumentReference<Foo>;
+      const ref = doc(firestore, "tests", id) as DocumentReference<Foo>;
 
       await setDoc(ref, { bar: 123 });
 
@@ -169,7 +238,7 @@ describe("useFirestoreDocument", () => {
     test("it subscribes and unsubscribes to data events", async () => {
       const hookId = genId();
       const id = genId();
-      const ref = doc(firestore, genId(), id);
+      const ref = doc(firestore, "tests", id);
 
       const mock = jest.fn();
       const { result, waitFor, unmount } = renderHook(
@@ -213,14 +282,14 @@ describe("useFirestoreDocument", () => {
       expect(mock.mock.calls[1][0]).toEqual({ foo: "baz" });
     });
 
-    test("it re-subscribes when the key changes", async () => {
+    test("it re-subscribes when the ref changes", async () => {
       const hookId1 = genId();
       const hookId2 = genId();
       const id1 = `1-${genId()}`;
       const id2 = `2-${genId()}`;
 
-      const ref1 = doc(firestore, genId(), id1);
-      const ref2 = doc(firestore, genId(), id2);
+      const ref1 = doc(firestore, "tests", id1);
+      const ref2 = doc(firestore, "tests", id2);
 
       const mock = jest.fn();
       const { result, waitFor, unmount, rerender } = renderHook<
@@ -268,71 +337,121 @@ describe("useFirestoreDocument", () => {
 
       expect(mock).toHaveBeenCalledTimes(2);
     });
-  });
 
-  describe("useFirestoreDocumentData", () => {
-    test("it returns document data and not a snapshot", async () => {
-      const hookId = genId();
-      const id = genId();
-      const ref = doc(firestore, genId(), id);
+    test("two hooks instances, same ref and id", async () => {
+      const hookId1 = genId();
+      const id1 = `1-${genId()}`;
 
-      await setDoc(ref, { foo: "bar" });
+      const ref1 = doc(firestore, "tests", id1);
 
-      const { result, waitFor } = renderHook(
-        () => useFirestoreDocumentData(hookId, ref),
-        { wrapper }
-      );
+      await act(async () => {
+        await setDoc(ref1, { foo: "..." });
+      });
 
-      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+      const mock1 = jest.fn();
+      const mock2 = jest.fn();
 
-      expect(result.current.data).toBeDefined();
-      expect(result.current.data).toEqual({ foo: "bar" });
-    });
-
-    test("it overrides the select option", async () => {
-      const hookId = genId();
-      const id = genId();
-      const ref = doc(firestore, genId(), id);
-
-      await setDoc(ref, { foo: "bar" });
-
-      const { result, waitFor } = renderHook(
-        () =>
-          useFirestoreDocumentData(hookId, ref, undefined, {
-            select() {
-              return {
-                baz: "ben",
-              };
+      const hook1 = renderHook<
+        {
+          id: string;
+          reference: DocumentReference;
+        },
+        any
+      >(
+        ({ id, reference }) =>
+          useFirestoreDocument(
+            id,
+            reference,
+            {
+              subscribe: true,
             },
-          }),
-        { wrapper }
+            {
+              onSuccess(snapshot) {
+                mock1(snapshot);
+              },
+            }
+          ),
+        {
+          wrapper: (props) => wrapper({ children: props.children }),
+          initialProps: {
+            id: hookId1,
+            reference: ref1,
+          },
+        }
+      );
+      const hook2 = renderHook<
+        {
+          id: string;
+          reference: DocumentReference;
+        },
+        any
+      >(
+        ({ id, reference }) =>
+          useFirestoreDocument(
+            id,
+            reference,
+            {
+              subscribe: true,
+            },
+            {
+              onSuccess(snapshot) {
+                mock2(snapshot);
+              },
+            }
+          ),
+        {
+          wrapper: (props) => wrapper({ children: props.children }),
+          initialProps: {
+            id: hookId1,
+            reference: ref1,
+          },
+        }
       );
 
-      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+      await hook1.waitFor(() => hook1.result.current.isSuccess, {
+        timeout: 5000,
+      });
 
-      expect(result.current.data).toBeDefined();
-      expect(result.current.data).toEqual({ baz: "ben" });
+      hook1.unmount();
+
+      // act here to trigger doc event
+      await act(async () => {
+        await updateDoc(ref1, { foo: "baz" });
+      });
+
+      await hook2.waitFor(() => hook2.result.current.isSuccess);
+
+      // Subscription call
+      expect(mock2.mock.calls[0][0].id).toBe(id1);
+
+      hook2.unmount();
+
+      // act again
+      await act(async () => {
+        await updateDoc(ref1, { foo: "bar" });
+      });
+
+      // await hook2.waitFor(() => hook2.result.current.isSuccess);
+
+      expect(mock1.mock.calls.length).toBe(1);
+
+      expect(mock2.mock.calls.length).toBe(2);
     });
-
-    test("it provides the id key", async () => {
+    // runs fine individually when match statement is set up, fails when ran with other tests, not sure why.
+    test.skip("it should propagate the error when not subscribing", async () => {
       const hookId = genId();
       const id = genId();
-      const ref = doc(firestore, genId(), id);
-
-      await setDoc(ref, { foo: "bar" });
-
+      const doc1 = doc(firestore, "noread", id);
       const { result, waitFor } = renderHook(
         () =>
-          useFirestoreDocumentData<"id">(hookId, ref, {
-            idField: "id",
+          useFirestoreDocument(hookId, doc1, {
+            subscribe: false,
           }),
-        { wrapper }
+        {
+          wrapper,
+        }
       );
-
-      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
-
-      expect(result.current.data).toBeDefined();
-      expect(result.current.data).toEqual({ foo: "bar", id });
+      await waitFor(() => result.current.isError, { timeout: 5000 });
     });
   });
 });
