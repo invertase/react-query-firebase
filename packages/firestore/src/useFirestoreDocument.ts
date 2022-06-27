@@ -22,7 +22,11 @@ import {
   onSnapshot,
   FirestoreError,
 } from "firebase/firestore";
-import { getSnapshot, UseFirestoreHookOptions } from "./index";
+import {
+  getSnapshot,
+  GetSnapshotSource,
+  UseFirestoreHookOptions,
+} from "./index";
 import { useSubscription } from "../../utils/src/useSubscription";
 import { useCallback } from "react";
 
@@ -39,12 +43,22 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
 ): UseQueryResult<R, FirestoreError> {
   const isSubscription = !!options?.subscribe;
 
+  let source: GetSnapshotSource | undefined;
+  let includeMetadataChanges: boolean | undefined;
+
+  if (options?.subscribe === undefined) {
+    source = options?.source;
+  }
+  if (options?.subscribe) {
+    includeMetadataChanges = options.includeMetadataChanges;
+  }
+
   const subscribeFn = useCallback(
     (callback: NextOrObserver<T>) => {
       return onSnapshot(
         ref,
         {
-          includeMetadataChanges: options?.includeMetadataChanges,
+          includeMetadataChanges,
         },
         (snapshot: DocumentSnapshot<T>) => {
           // Set the data each time state changes.
@@ -62,7 +76,7 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
     {
       ...useQueryOptions,
       onlyOnce: !isSubscription,
-      fetchFn: async () => getSnapshot(ref, options?.source),
+      fetchFn: async () => getSnapshot(ref, source),
     }
   );
 }

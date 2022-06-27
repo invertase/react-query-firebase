@@ -25,6 +25,7 @@ import {
 } from "firebase/firestore";
 import {
   getQuerySnapshot,
+  GetSnapshotSource,
   QueryType,
   resolveQuery,
   UseFirestoreHookOptions,
@@ -44,6 +45,16 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
 ): UseQueryResult<R, FirestoreError> {
   const isSubscription = !!options?.subscribe;
 
+  let source: GetSnapshotSource | undefined;
+  let includeMetadataChanges: boolean | undefined;
+
+  if (options?.subscribe === undefined) {
+    source = options?.source;
+  }
+  if (options?.subscribe) {
+    includeMetadataChanges = options.includeMetadataChanges;
+  }
+
   const subscribeFn = useCallback(
     (callback: NextOrObserver<T>) => {
       let unsubscribe = () => {
@@ -53,7 +64,7 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
         unsubscribe = onSnapshot(
           res,
           {
-            includeMetadataChanges: options?.includeMetadataChanges,
+            includeMetadataChanges,
           },
           (snapshot: QuerySnapshot<T>) => {
             return callback(snapshot);
@@ -74,7 +85,7 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
       onlyOnce: !isSubscription,
       fetchFn: () =>
         resolveQuery(query).then((resolvedQuery) => {
-          return getQuerySnapshot(resolvedQuery, options?.source);
+          return getQuerySnapshot(resolvedQuery, source);
         }),
     }
   );

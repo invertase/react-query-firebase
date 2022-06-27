@@ -24,7 +24,12 @@ import {
   onSnapshot,
   SnapshotOptions,
 } from "firebase/firestore";
-import { UseFirestoreHookOptions, WithIdField, getSnapshot } from "./index";
+import {
+  UseFirestoreHookOptions,
+  WithIdField,
+  getSnapshot,
+  GetSnapshotSource,
+} from "./index";
 import { useSubscription } from "../../utils/src/useSubscription";
 
 type NextOrObserver<T, ID> = (
@@ -73,12 +78,22 @@ export function useFirestoreDocumentData<
 ): UseQueryResult<R, FirestoreError> {
   const isSubscription = !!options?.subscribe;
 
+  let source: GetSnapshotSource | undefined;
+  let includeMetadataChanges: boolean | undefined;
+
+  if (options?.subscribe === undefined) {
+    source = options?.source;
+  }
+  if (options?.subscribe) {
+    includeMetadataChanges = options.includeMetadataChanges;
+  }
+
   const subscribeFn = useCallback(
     (callback: NextOrObserver<T, ID>) => {
       const unsubscribe = onSnapshot(
         ref,
         {
-          includeMetadataChanges: options?.includeMetadataChanges,
+          includeMetadataChanges,
         },
         (snapshot: DocumentData) => {
           let data = snapshot.data({
@@ -104,7 +119,7 @@ export function useFirestoreDocumentData<
   );
 
   const fetchFn = async () => {
-    return getSnapshot(ref, options?.source).then((snapshot) => {
+    return getSnapshot(ref, source).then((snapshot) => {
       let data = snapshot.data({
         serverTimestamps: options?.serverTimestamps,
       });
