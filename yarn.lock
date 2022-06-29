@@ -4362,6 +4362,16 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha1-p3c2C1s5oaLlEG+OhY8v0tBgxXA=
 
+"@react-query-firebase/auth@*":
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/@react-query-firebase/auth/-/auth-0.3.4.tgz#89c30f2e63d984ad1821a684e4c4e3644b069ff9"
+  integrity sha512-t/NyKcGDtL5PkcMXdJPXjSzJ3ujBU5mDsxWORlZ8Cx7sSn/Os30gHmvVCh/SRYIET9kH0fSFefLY7TaL+qfaiQ==
+
+"@react-query-firebase/functions@^0.2.0":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@react-query-firebase/functions/-/functions-0.2.2.tgz#1fb8082e200c9967435bd35f0f0a44ad9ec6a781"
+  integrity sha512-iHXZF4FUT6whL78PBWLFgDblNpOggqS4YsO9xbzgo4BClSCy7yysvfXgjrQ1I8R59Q+SsBzjzy1grL0Jt3ddrQ==
+
 "@rollup/plugin-babel@^5.2.0":
   version "5.3.0"
   resolved "https://registry.yarnpkg.com/@rollup/plugin-babel/-/plugin-babel-5.3.0.tgz#9cb1c5146ddd6a4968ad96f209c50c62f92f9879"
