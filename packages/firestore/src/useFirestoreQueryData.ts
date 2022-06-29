@@ -92,36 +92,41 @@ export function useFirestoreQueryData<
       let unsubscribe = () => {
         // noop
       };
-      resolveQuery(query).then((res) => {
-        unsubscribe = onSnapshot(
-          res,
-          {
-            includeMetadataChanges,
-          },
-          (snapshot: QuerySnapshot<T>) => {
-            const docs = snapshot.docs.map((doc) => {
-              const data = doc.data({
-                serverTimestamps: options?.serverTimestamps,
-              });
-              if (options?.idField) {
-                const withIdData = {
-                  ...data,
-                  [options.idField as ID]: doc.id,
-                } as WithIdField<T, ID>;
-                return withIdData;
-              }
+      if (query) {
+        resolveQuery(query).then((res) => {
+          unsubscribe = onSnapshot(
+            res,
+            {
+              includeMetadataChanges,
+            },
+            (snapshot: QuerySnapshot<T>) => {
+              const docs = snapshot.docs.map((doc) => {
+                const data = doc.data({
+                  serverTimestamps: options?.serverTimestamps,
+                });
+                if (options?.idField) {
+                  const withIdData = {
+                    ...data,
+                    [options.idField as ID]: doc.id,
+                  } as WithIdField<T, ID>;
+                  return withIdData;
+                }
 
-              return data as WithIdField<T, ID>;
-            });
-            callback(docs);
-          }
-        );
-      });
+                return data as WithIdField<T, ID>;
+              });
+              callback(docs);
+            }
+          );
+        });
+      }
       return unsubscribe;
     },
     [query, queryKey]
   );
   const fetchFn = async () => {
+    if (!query) {
+      return null;
+    }
     const resolvedQuery = await resolveQuery(query);
 
     const snapshot = await getQuerySnapshot(resolvedQuery, source);

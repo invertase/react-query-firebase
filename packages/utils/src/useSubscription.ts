@@ -127,12 +127,14 @@ export function useSubscription<TData, TError, R = TData>(
     if (!options.fetchFn) {
       throw new Error("You must specify fetchFn if using onlyOnce mode.");
     } else {
-      options
-        .fetchFn()
-        .then(resolvePromise)
-        .catch((err) => {
-          rejectPromise(err);
-        });
+      if (options.enabled) {
+        options
+          .fetchFn()
+          .then(resolvePromise)
+          .catch((err) => {
+            rejectPromise(err);
+          });
+      }
     }
   }
 

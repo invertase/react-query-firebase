@@ -90,35 +90,44 @@ export function useFirestoreDocumentData<
 
   const subscribeFn = useCallback(
     (callback: NextOrObserver<T, ID>) => {
-      const unsubscribe = onSnapshot(
-        ref,
-        {
-          includeMetadataChanges,
-        },
-        (snapshot: DocumentData) => {
-          let data = snapshot.data({
-            serverTimestamps: options?.serverTimestamps,
-          });
+      let unsubscribe = () => {
+        // noop
+      };
+      if (ref) {
+        unsubscribe = onSnapshot(
+          ref,
+          {
+            includeMetadataChanges,
+          },
+          (snapshot: DocumentData) => {
+            let data = snapshot.data({
+              serverTimestamps: options?.serverTimestamps,
+            });
 
-          if (data && options?.idField) {
-            data = {
-              ...data,
-              [options.idField]: snapshot.id,
-            };
+            if (data && options?.idField) {
+              data = {
+                ...data,
+                [options.idField]: snapshot.id,
+              };
+            }
+
+            // Cannot figure out how to get this working without a cast!
+            const _dataWithIdField = data as WithIdField<T, ID> | undefined;
+
+            callback(_dataWithIdField);
           }
-
-          // Cannot figure out how to get this working without a cast!
-          const _dataWithIdField = data as WithIdField<T, ID> | undefined;
-
-          callback(_dataWithIdField);
-        }
-      );
+        );
+      }
       return unsubscribe;
     },
     [ref]
   );
 
   const fetchFn = async () => {
+    if (!ref) {
+      return null;
+    }
+
     return getSnapshot(ref, source).then((snapshot) => {
       let data = snapshot.data({
         serverTimestamps: options?.serverTimestamps,

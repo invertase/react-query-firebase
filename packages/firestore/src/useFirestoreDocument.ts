@@ -55,16 +55,22 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
 
   const subscribeFn = useCallback(
     (callback: NextOrObserver<T>) => {
-      return onSnapshot(
-        ref,
-        {
-          includeMetadataChanges,
-        },
-        (snapshot: DocumentSnapshot<T>) => {
-          // Set the data each time state changes.
-          return callback(snapshot);
-        }
-      );
+      let unsubscribe = () => {
+        // noop
+      };
+      if (ref) {
+        unsubscribe = onSnapshot(
+          ref,
+          {
+            includeMetadataChanges,
+          },
+          (snapshot: DocumentSnapshot<T>) => {
+            // Set the data each time state changes.
+            return callback(snapshot);
+          }
+        );
+      }
+      return unsubscribe;
     },
     [ref]
   );
@@ -76,7 +82,7 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
     {
       ...useQueryOptions,
       onlyOnce: !isSubscription,
-      fetchFn: async () => getSnapshot(ref, source),
+      fetchFn: async () => (ref ? getSnapshot(ref, source) : null),
     }
   );
 }
