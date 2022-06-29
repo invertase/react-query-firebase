@@ -40,7 +40,7 @@ type NextOrObserver<T, ID> = (
 
 export function useFirestoreQueryData<T = DocumentData, R = WithIdField<T>[]>(
   key: QueryKey,
-  query: QueryType<T>,
+  query?: QueryType<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions,
   useQueryOptions?: Omit<
     UseQueryOptions<WithIdField<T>[], FirestoreError, R>,
@@ -54,7 +54,7 @@ export function useFirestoreQueryData<
   R = WithIdField<T, ID>[]
 >(
   key: QueryKey,
-  query: QueryType<T>,
+  query?: QueryType<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions & { idField: ID },
   useQueryOptions?: Omit<
     UseQueryOptions<WithIdField<T, ID>[], FirestoreError, R>,
@@ -68,7 +68,7 @@ export function useFirestoreQueryData<
   R = WithIdField<T, ID>[]
 >(
   queryKey: QueryKey,
-  query: QueryType<T>,
+  query?: QueryType<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions & { idField?: ID },
   useQueryOptions?: Omit<
     UseQueryOptions<WithIdField<T, ID>[], FirestoreError, R>,

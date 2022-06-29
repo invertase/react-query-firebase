@@ -41,7 +41,7 @@ export function useFirestoreDocumentData<
   R = WithIdField<T> | undefined
 >(
   key: QueryKey,
-  ref: DocumentReference<T>,
+  ref?: DocumentReference<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions,
   useQueryOptions?: Omit<
     UseQueryOptions<WithIdField<T> | undefined, FirestoreError, R>,
@@ -55,7 +55,7 @@ export function useFirestoreDocumentData<
   R = WithIdField<T, ID> | undefined
 >(
   key: QueryKey,
-  ref: DocumentReference<T>,
+  ref?: DocumentReference<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions & { idField: ID },
   useQueryOptions?: Omit<
     UseQueryOptions<WithIdField<T, ID> | undefined, FirestoreError, R>,
@@ -69,7 +69,7 @@ export function useFirestoreDocumentData<
   R = WithIdField<T, ID> | undefined
 >(
   queryKey: QueryKey,
-  ref: DocumentReference<T>,
+  ref?: DocumentReference<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions & { idField?: ID },
   useQueryOptions?: Omit<
     UseQueryOptions<WithIdField<T, ID> | undefined, FirestoreError, R>,

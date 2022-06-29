@@ -34,7 +34,7 @@ type NextOrObserver<T> = (data: DocumentSnapshot<T> | null) => Promise<void>;
 
 export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
   queryKey: QueryKey,
-  ref: DocumentReference<T>,
+  ref?: DocumentReference<T>,
   options?: UseFirestoreHookOptions,
   useQueryOptions?: Omit<
     UseQueryOptions<DocumentSnapshot<T>, FirestoreError, R>,
