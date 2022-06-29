@@ -36,7 +36,7 @@ type NextOrObserver<T> = (data: QuerySnapshot<T> | null) => Promise<void>;
 
 export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
   queryKey: QueryKey,
-  query: QueryType<T>,
+  query?: QueryType<T>,
   options?: UseFirestoreHookOptions,
   useQueryOptions?: Omit<
     UseQueryOptions<QuerySnapshot<T>, FirestoreError, R>,
@@ -60,17 +60,19 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
       let unsubscribe = () => {
         // noop
       };
-      resolveQuery(query).then((res) => {
-        unsubscribe = onSnapshot(
-          res,
-          {
-            includeMetadataChanges,
-          },
-          (snapshot: QuerySnapshot<T>) => {
-            return callback(snapshot);
-          }
-        );
-      });
+      if (query) {
+        resolveQuery(query).then((res) => {
+          unsubscribe = onSnapshot(
+            res,
+            {
+              includeMetadataChanges,
+            },
+            (snapshot: QuerySnapshot<T>) => {
+              return callback(snapshot);
+            }
+          );
+        });
+      }
       return unsubscribe;
     },
     [query, queryKey]
@@ -84,9 +86,11 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
       ...useQueryOptions,
       onlyOnce: !isSubscription,
       fetchFn: () =>
-        resolveQuery(query).then((resolvedQuery) => {
-          return getQuerySnapshot(resolvedQuery, source);
-        }),
+        query
+          ? resolveQuery(query).then((resolvedQuery) => {
+            return getQuerySnapshot(resolvedQuery, source);
+          })
+          : new Promise((resolve) => resolve(null)),
     }
   );
 }

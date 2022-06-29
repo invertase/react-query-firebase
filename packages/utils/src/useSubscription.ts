@@ -44,7 +44,7 @@ type UseSubscriptionOptions<TData, TError, R> = UseQueryOptions<
   R
 > & {
   onlyOnce?: boolean;
-  fetchFn?: () => Promise<TData>;
+  fetchFn?: () => Promise<TData | null>;
 };
 
 /**
@@ -73,7 +73,9 @@ export function useSubscription<TData, TError, R = TData>(
   function cleanupSubscription(subscriptionHash: string) {
     if (observerCount[subscriptionHash] === 1) {
       const unsubscribe = unsubscribes[subscriptionHash];
-      unsubscribe();
+      if (unsubscribe && typeof unsubscribe === "function") {
+        unsubscribe();
+      }
       delete unsubscribes[subscriptionHash];
       delete eventCount[subscriptionHash];
     }

@@ -136,7 +136,7 @@ export function useFirestoreDocumentData<
 
   return useSubscription<WithIdField<T, ID> | undefined, FirestoreError, R>(
     queryKey,
-    ["useFirestoreDocument", ref.id],
+    ["useFirestoreDocument", queryKey],
     subscribeFn,
     {
       ...useQueryOptions,
