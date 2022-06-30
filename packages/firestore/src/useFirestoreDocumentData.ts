@@ -40,7 +40,7 @@ export function useFirestoreDocumentData<
   T = DocumentData,
   R = WithIdField<T> | undefined
 >(
-  key: QueryKey,
+  queryKey: QueryKey,
   ref?: DocumentReference<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions,
   useQueryOptions?: Omit<
@@ -54,7 +54,7 @@ export function useFirestoreDocumentData<
   T = DocumentData,
   R = WithIdField<T, ID> | undefined
 >(
-  key: QueryKey,
+  queryKey: QueryKey,
   ref?: DocumentReference<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions & { idField: ID },
   useQueryOptions?: Omit<
@@ -76,6 +76,15 @@ export function useFirestoreDocumentData<
     "queryFn"
   >
 ): UseQueryResult<R, FirestoreError> {
+  if (useQueryOptions?.enabled && !ref) {
+    throw new Error(
+      `useFirestoreDocumentData with key ${JSON.stringify(
+        queryKey
+      )}  expected to recieve a document reference, but got "undefined".
+      Did you forget to set the options "enabled" to false?`
+    );
+  }
+
   const isSubscription = !!options?.subscribe;
 
   let source: GetSnapshotSource | undefined;

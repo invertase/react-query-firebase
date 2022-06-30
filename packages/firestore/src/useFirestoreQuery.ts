@@ -55,6 +55,15 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
     includeMetadataChanges = options.includeMetadataChanges;
   }
 
+  if (useQueryOptions?.enabled && !query) {
+    throw new Error(
+      `useFirestoreQuery with key ${JSON.stringify(
+        queryKey
+      )}  expected to recieve a query or named query, but got "undefined".
+      Did you forget to set the options "enabled" to false?`
+    );
+  }
+
   const subscribeFn = useCallback(
     (callback: NextOrObserver<T>) => {
       let unsubscribe = () => {

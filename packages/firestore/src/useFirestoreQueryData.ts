@@ -75,6 +75,15 @@ export function useFirestoreQueryData<
     "queryFn"
   >
 ): UseQueryResult<R, FirestoreError> {
+  if (useQueryOptions?.enabled && !query) {
+    throw new Error(
+      `useFirestoreQueryData with key ${JSON.stringify(
+        queryKey
+      )}  expected to recieve a query or named query, but got "undefined".
+      Did you forget to set the options "enabled" to false?`
+    );
+  }
+
   const isSubscription = !!options?.subscribe;
 
   let source: GetSnapshotSource | undefined;

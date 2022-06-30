@@ -43,6 +43,15 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
 ): UseQueryResult<R, FirestoreError> {
   const isSubscription = !!options?.subscribe;
 
+  if (useQueryOptions?.enabled && !ref) {
+    throw new Error(
+      `useFirestoreDocument with key ${JSON.stringify(
+        queryKey
+      )}  expected to recieve a document reference, but got "undefined".
+      Did you forget to set the options "enabled" to false?`
+    );
+  }
+
   let source: GetSnapshotSource | undefined;
   let includeMetadataChanges: boolean | undefined;
 

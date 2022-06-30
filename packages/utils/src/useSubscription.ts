@@ -93,6 +93,7 @@ export function useSubscription<TData, TError, R = TData>(
 
   let resolvePromise: (data: TData | null) => void = () => null;
   let rejectPromise: (err: any) => void = () => null;
+
   const result: CancellablePromise<TData | null> = new Promise<TData | null>(
     (resolve, reject) => {
       resolvePromise = resolve;
@@ -127,7 +128,8 @@ export function useSubscription<TData, TError, R = TData>(
     if (!options.fetchFn) {
       throw new Error("You must specify fetchFn if using onlyOnce mode.");
     } else {
-      if (options.enabled) {
+      const enabled = options?.enabled ?? true;
+      if (enabled) {
         options
           .fetchFn()
           .then(resolvePromise)
