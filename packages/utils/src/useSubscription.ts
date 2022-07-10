@@ -93,7 +93,6 @@ export function useSubscription<TData, TError, R = TData>(
     queryClient.invalidateQueries(queryKey);
   };
 
-  let unsubscribe: Unsubscribe;
   if (options?.onlyOnce) {
     if (!options.fetchFn) {
       throw new Error("You must specify fetchFn if using onlyOnce mode.");
@@ -127,12 +126,13 @@ export function useSubscription<TData, TError, R = TData>(
           if (observersCount === 0) {
             firestoreUnsubscribe(subscriptionHash);
           } else {
-            if (firestoreUnsubscribes[subscriptionHash]) {
+            const isSubscribedToFirestore = !!firestoreUnsubscribes[subscriptionHash];
+            if (isSubscribedToFirestore) {
               const old = queryClient.getQueryData<TData | null>(queryKey);
 
               resolvePromise(old || null);
             } else {
-              unsubscribe = subscribeFn(async (data) => {
+              firestoreUnsubscribes[subscriptionHash] = subscribeFn(async (data) => {
                 eventCount[subscriptionHash] ??= 0;
                 eventCount[subscriptionHash]++;
                 if (eventCount[subscriptionHash] === 1) {
@@ -141,7 +141,6 @@ export function useSubscription<TData, TError, R = TData>(
                   queryClient.setQueryData(queryKey, data);
                 }
               });
-              firestoreUnsubscribes[subscriptionHash] = unsubscribe;
             }
           }
         }
