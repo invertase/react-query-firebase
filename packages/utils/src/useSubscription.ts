@@ -15,9 +15,8 @@
  *
  */
 import { Unsubscribe as AuthUnsubscribe } from "firebase/auth";
-import { Unsubscribe as FirestoreUnsubscribe } from "firebase/firestore";
 import { Unsubscribe as DatabaseUnsubscribe } from "firebase/database";
-import { useEffect } from "react";
+import { Unsubscribe as FirestoreUnsubscribe } from "firebase/firestore";
 import {
   hashQueryKey,
   QueryFunction,
@@ -30,22 +29,37 @@ import {
 
 type Unsubscribe = AuthUnsubscribe | FirestoreUnsubscribe | DatabaseUnsubscribe;
 
-const unsubscribes: Record<string, any> = {};
-const observerCount: Record<string, number> = {};
+const firestoreUnsubscribes: Record<string, any> = {};
+const queryCacheUnsubscribes: Record<string, () => void> = {};
 const eventCount: Record<string, number> = {};
 
 interface CancellablePromise<T = void> extends Promise<T> {
   cancel?: () => void;
 }
 
-type UseSubscriptionOptions<TData, TError, R> = UseQueryOptions<
-  TData,
+type UseSubscriptionOptions<TData, TError, R> = UseQueryOptions<TData,
   TError,
-  R
-> & {
+  R> & {
   onlyOnce?: boolean;
   fetchFn?: () => Promise<TData | null>;
 };
+
+function firestoreUnsubscribe(subscriptionHash: string) {
+  const firestoreUnsubscribe = firestoreUnsubscribes[subscriptionHash];
+  if (firestoreUnsubscribe && typeof firestoreUnsubscribe === "function") {
+    firestoreUnsubscribe();
+  }
+  delete firestoreUnsubscribes[subscriptionHash];
+  delete eventCount[subscriptionHash];
+}
+
+function queryCacheUnsubscribe(subscriptionHash: string) {
+  const queryCacheUnsubscribe = queryCacheUnsubscribes[subscriptionHash];
+  if (queryCacheUnsubscribe) {
+    queryCacheUnsubscribe();
+    delete queryCacheUnsubscribes[subscriptionHash];
+  }
+}
 
 /**
  * Utility hook to subscribe to events, given a function that returns an observer callback.
@@ -65,32 +79,6 @@ export function useSubscription<TData, TError, R = TData>(
   const subscriptionHash = hashFn(subscriptionKey);
   const queryClient = useQueryClient();
 
-  if (!options?.onlyOnce) {
-    // if it's a subscription, we have at least one observer now
-    observerCount[subscriptionHash] ??= 1;
-  }
-
-  function cleanupSubscription(subscriptionHash: string) {
-    if (observerCount[subscriptionHash] === 1) {
-      const unsubscribe = unsubscribes[subscriptionHash];
-      if (unsubscribe && typeof unsubscribe === "function") {
-        unsubscribe();
-      }
-      delete unsubscribes[subscriptionHash];
-      delete eventCount[subscriptionHash];
-    }
-  }
-
-  useEffect(() => {
-    if (!options?.onlyOnce) {
-      observerCount[subscriptionHash] += 1;
-      return () => {
-        observerCount[subscriptionHash] -= 1;
-        cleanupSubscription(subscriptionHash);
-      };
-    }
-  }, []);
-
   let resolvePromise: (data: TData | null) => void = () => null;
   let rejectPromise: (err: any) => void = () => null;
 
@@ -106,25 +94,7 @@ export function useSubscription<TData, TError, R = TData>(
   };
 
   let unsubscribe: Unsubscribe;
-  if (!options?.onlyOnce) {
-    if (unsubscribes[subscriptionHash]) {
-      unsubscribe = unsubscribes[subscriptionHash];
-      const old = queryClient.getQueryData<TData | null>(queryKey);
-
-      resolvePromise(old || null);
-    } else {
-      unsubscribe = subscribeFn(async (data) => {
-        eventCount[subscriptionHash] ??= 0;
-        eventCount[subscriptionHash]++;
-        if (eventCount[subscriptionHash] === 1) {
-          resolvePromise(data || null);
-        } else {
-          queryClient.setQueryData(queryKey, data);
-        }
-      });
-      unsubscribes[subscriptionHash] = unsubscribe;
-    }
-  } else {
+  if (options?.onlyOnce) {
     if (!options.fetchFn) {
       throw new Error("You must specify fetchFn if using onlyOnce mode.");
     } else {
@@ -138,9 +108,48 @@ export function useSubscription<TData, TError, R = TData>(
           });
       }
     }
+  } else {
+    const subscribedToQueryCache = !!queryCacheUnsubscribes[subscriptionHash];
+    if (!subscribedToQueryCache) {
+      const queryCache = queryClient.getQueryCache();
+      queryCacheUnsubscribes[subscriptionHash] = queryCache.subscribe((event) => {
+        if (!event) {
+          return;
+        }
+        const { query, type } = event;
+        const queryHash = hashFn(queryKey);
+        if (type === "queryRemoved" && query.queryHash === queryHash) {
+          queryCacheUnsubscribe(subscriptionHash);
+        }
+        const isObserverEvent = type === "observerAdded" || type === "observerRemoved";
+        if (isObserverEvent && query.queryHash === queryHash) {
+          const observersCount = query.getObserversCount();
+          if (observersCount === 0) {
+            firestoreUnsubscribe(subscriptionHash);
+          } else {
+            if (firestoreUnsubscribes[subscriptionHash]) {
+              const old = queryClient.getQueryData<TData | null>(queryKey);
+
+              resolvePromise(old || null);
+            } else {
+              unsubscribe = subscribeFn(async (data) => {
+                eventCount[subscriptionHash] ??= 0;
+                eventCount[subscriptionHash]++;
+                if (eventCount[subscriptionHash] === 1) {
+                  resolvePromise(data || null);
+                } else {
+                  queryClient.setQueryData(queryKey, data);
+                }
+              });
+              firestoreUnsubscribes[subscriptionHash] = unsubscribe;
+            }
+          }
+        }
+      });
+    }
   }
 
-  const queryFn: QueryFunction<TData, QueryKey> = () => {
+  const queryFn: QueryFunction<TData> = () => {
     return result as Promise<TData>;
   };
 
