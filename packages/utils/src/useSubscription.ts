@@ -112,16 +112,14 @@ export function useSubscription<TData, TError, R = TData>(
     if (!subscribedToQueryCache) {
       const queryCache = queryClient.getQueryCache();
       queryCacheUnsubscribes[subscriptionHash] = queryCache.subscribe((event) => {
-        if (!event) {
+        if (!event || event.query.queryHash !== hashFn(queryKey)) {
           return;
         }
         const { query, type } = event;
-        const queryHash = hashFn(queryKey);
-        if (type === "queryRemoved" && query.queryHash === queryHash) {
+        if (type === "queryRemoved") {
           queryCacheUnsubscribe(subscriptionHash);
         }
-        const isObserverEvent = type === "observerAdded" || type === "observerRemoved";
-        if (isObserverEvent && query.queryHash === queryHash) {
+        if (type === "observerAdded" || type === "observerRemoved") {
           const observersCount = query.getObserversCount();
           if (observersCount === 0) {
             firestoreUnsubscribe(subscriptionHash);
