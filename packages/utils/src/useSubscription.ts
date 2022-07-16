@@ -14,6 +14,7 @@
  * limitations under the License.
  *
  */
+import { DataSnapshot } from "@firebase/database";
 import { Unsubscribe as AuthUnsubscribe } from "firebase/auth";
 import { Unsubscribe as DatabaseUnsubscribe } from "firebase/database";
 import { Unsubscribe as FirestoreUnsubscribe } from "firebase/firestore";
@@ -69,7 +70,7 @@ function queryCacheUnsubscribe(subscriptionHash: string) {
  * @param options
  * @returns
  */
-export function useSubscription<TData, TError, R = TData>(
+export function useSubscription<TData extends DataSnapshot, TError, R = TData>(
   queryKey: QueryKey,
   subscriptionKey: QueryKey,
   subscribeFn: (cb: (data: TData | null) => Promise<void>) => Unsubscribe,
@@ -126,9 +127,11 @@ export function useSubscription<TData, TError, R = TData>(
           } else {
             const isSubscribedToFirestore = !!firestoreUnsubscribes[subscriptionHash];
             if (isSubscribedToFirestore) {
-              const old = queryClient.getQueryData<TData | null>(queryKey);
+              const cachedData = queryClient.getQueryData<TData | null>(queryKey);
 
-              resolvePromise(old || null);
+              if (cachedData) {
+                resolvePromise(cachedData);
+              }
             } else {
               firestoreUnsubscribes[subscriptionHash] = subscribeFn(async (data) => {
                 eventCount[subscriptionHash] ??= 0;
