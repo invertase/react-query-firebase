@@ -14,7 +14,6 @@
  * limitations under the License.
  *
  */
-import { DataSnapshot } from "@firebase/database";
 import { Unsubscribe as AuthUnsubscribe } from "firebase/auth";
 import { Unsubscribe as DatabaseUnsubscribe } from "firebase/database";
 import { Unsubscribe as FirestoreUnsubscribe } from "firebase/firestore";
@@ -70,7 +69,7 @@ function queryCacheUnsubscribe(subscriptionHash: string) {
  * @param options
  * @returns
  */
-export function useSubscription<TData extends DataSnapshot, TError, R = TData>(
+export function useSubscription<TData, TError, R = TData>(
   queryKey: QueryKey,
   subscriptionKey: QueryKey,
   subscribeFn: (cb: (data: TData | null) => Promise<void>) => Unsubscribe,
