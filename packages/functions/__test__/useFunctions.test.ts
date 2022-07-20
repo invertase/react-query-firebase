@@ -6,6 +6,8 @@ import { genId, init } from "./helpers";
 import { useFunctionsCall, useFunctionsQuery } from "../src";
 import { act } from "react-test-renderer";
 
+const waitForOptions = { timeout: 5000 };
+
 describe("Authentication", () => {
   let client: QueryClient;
   let wrapper: React.FC<{ children: React.ReactNode }>;
@@ -34,7 +36,7 @@ describe("Authentication", () => {
         }
       );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, waitForOptions);
 
       expect(result.current.data).toEqual({ response: null });
     });
@@ -53,7 +55,7 @@ describe("Authentication", () => {
         }
       );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, waitForOptions);
 
       expect(result.current.data).toEqual({ response: foo });
     });
@@ -68,7 +70,7 @@ describe("Authentication", () => {
         }
       );
 
-      await waitFor(() => result.current.isError);
+      await waitFor(() => result.current.isError, waitForOptions);
 
       expect(result.current.error).toBeDefined();
     });
@@ -94,13 +96,13 @@ describe("Authentication", () => {
         },
       });
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, waitForOptions);
 
       expect(result.current.data).toEqual({ response: data1 });
 
       rerender({ id: hookId2, data: data2 });
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, waitForOptions);
 
       expect(result.current.data).toEqual({ response: data2 });
     });
@@ -133,7 +135,7 @@ describe("Authentication", () => {
         }
       );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, waitForOptions);
 
       expect(result.current.data.response.foo).toEqual("bar");
       // @ts-expect-error
@@ -174,7 +176,7 @@ describe("Authentication", () => {
         }
       );
 
-      await waitFor(() => result.current.isSuccess);
+      await waitFor(() => result.current.isSuccess, waitForOptions);
 
       expect(result.current.data).toEqual("bar");
     });
@@ -198,7 +200,7 @@ describe("Authentication", () => {
         result.current.mutate(123);
       });
 
-      await waitFor(() => result.current.isSuccess, { timeout: 5000 });
+      await waitFor(() => result.current.isSuccess, waitForOptions);
 
       expect(mock.mock.calls[0][0]).toEqual({ response: 123 });
     });
@@ -213,7 +215,7 @@ describe("Authentication", () => {
         result.current.mutate(123);
       });
 
-      await waitFor(() => result.current.isError);
+      await waitFor(() => result.current.isError, waitForOptions);
 
       expect(result.current.error).toBeDefined();
     });

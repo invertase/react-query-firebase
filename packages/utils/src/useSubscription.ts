@@ -79,6 +79,7 @@ export function useSubscription<TData, TError, R = TData>(
   const subscriptionHash = hashFn(subscriptionKey);
   const queryClient = useQueryClient();
 
+
   let resolvePromise: (data: TData | null) => void = () => null;
   let rejectPromise: (err: any) => void = () => null;
 
@@ -117,7 +118,9 @@ export function useSubscription<TData, TError, R = TData>(
         }
         const { query, type } = event;
         if (type === "queryRemoved") {
+          delete eventCount[subscriptionHash];
           queryCacheUnsubscribe(subscriptionHash);
+          firestoreUnsubscribe(subscriptionHash);
         }
         if (type === "observerAdded" || type === "observerRemoved") {
           const observersCount = query.getObserversCount();
@@ -126,9 +129,12 @@ export function useSubscription<TData, TError, R = TData>(
           } else {
             const isSubscribedToFirestore = !!firestoreUnsubscribes[subscriptionHash];
             if (isSubscribedToFirestore) {
-              const old = queryClient.getQueryData<TData | null>(queryKey);
+              const cachedData = queryClient.getQueryData<TData | null>(queryKey);
+              const hasData = !!eventCount[subscriptionHash];
 
-              resolvePromise(old || null);
+              if (hasData) {
+                resolvePromise(cachedData ?? null);
+              }
             } else {
               firestoreUnsubscribes[subscriptionHash] = subscribeFn(async (data) => {
                 eventCount[subscriptionHash] ??= 0;
