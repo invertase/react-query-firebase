@@ -22,7 +22,11 @@ import {
   onSnapshot,
   FirestoreError,
 } from "firebase/firestore";
-import { getSnapshot, UseFirestoreHookOptions } from "./index";
+import {
+  getSnapshot,
+  GetSnapshotSource,
+  UseFirestoreHookOptions,
+} from "./index";
 import { useSubscription } from "../../utils/src/useSubscription";
 import { useCallback } from "react";
 
@@ -30,7 +34,7 @@ type NextOrObserver<T> = (data: DocumentSnapshot<T> | null) => Promise<void>;
 
 export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
   queryKey: QueryKey,
-  ref: DocumentReference<T>,
+  ref?: DocumentReference<T>,
   options?: UseFirestoreHookOptions,
   useQueryOptions?: Omit<
     UseQueryOptions<DocumentSnapshot<T>, FirestoreError, R>,
@@ -39,18 +43,43 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
 ): UseQueryResult<R, FirestoreError> {
   const isSubscription = !!options?.subscribe;
 
+  if (useQueryOptions?.enabled && !ref) {
+    throw new Error(
+      `useFirestoreDocument with key ${JSON.stringify(
+        queryKey
+      )}  expected to recieve a document reference, but got "undefined".
+      Did you forget to set the options "enabled" to false?`
+    );
+  }
+
+  let source: GetSnapshotSource | undefined;
+  let includeMetadataChanges: boolean | undefined;
+
+  if (options?.subscribe === undefined) {
+    source = options?.source;
+  }
+  if (options?.subscribe) {
+    includeMetadataChanges = options.includeMetadataChanges;
+  }
+
   const subscribeFn = useCallback(
     (callback: NextOrObserver<T>) => {
-      return onSnapshot(
-        ref,
-        {
-          includeMetadataChanges: options?.includeMetadataChanges,
-        },
-        (snapshot: DocumentSnapshot<T>) => {
-          // Set the data each time state changes.
-          return callback(snapshot);
-        }
-      );
+      let unsubscribe = () => {
+        // noop
+      };
+      if (ref) {
+        unsubscribe = onSnapshot(
+          ref,
+          {
+            includeMetadataChanges,
+          },
+          (snapshot: DocumentSnapshot<T>) => {
+            // Set the data each time state changes.
+            return callback(snapshot);
+          }
+        );
+      }
+      return unsubscribe;
     },
     [ref]
   );
@@ -62,7 +91,7 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
     {
       ...useQueryOptions,
       onlyOnce: !isSubscription,
-      fetchFn: async () => getSnapshot(ref, options?.source),
+      fetchFn: async () => (ref ? getSnapshot(ref, source) : null),
     }
   );
 }
