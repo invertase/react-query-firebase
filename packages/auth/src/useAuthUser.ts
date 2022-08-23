@@ -32,7 +32,7 @@ export function useAuthUser<R = User>(
 
   return useSubscription<User, AuthError, R>(
     queryKey,
-    "useAuthUser",
+    ["useAuthUser"],
     subscribeFn,
     options
   );
