@@ -43,7 +43,6 @@
     "prettier": "^2.3.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-query": "^3.23.2",
     "react-test-renderer": "^18.2.0",
     "rimraf": "^3.0.2",
     "rollup": "^2.63.0",
