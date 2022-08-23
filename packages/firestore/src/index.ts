@@ -36,13 +36,10 @@ export type GetSnapshotOptions = {
   source?: GetSnapshotSource;
 };
 
-export type UseFirestoreHookOptions =
-  | ({
-      subscribe: true;
-    } & SnapshotListenOptions)
-  | ({
-      subscribe?: false;
-    } & GetSnapshotOptions);
+export type UseFirestoreHookOptions = {
+  subscribe?: boolean;
+} & GetSnapshotOptions &
+  SnapshotListenOptions;
 
 export type WithIdField<D, F = void> = F extends string
   ? D & { [key in F]: string }
