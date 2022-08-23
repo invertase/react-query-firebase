@@ -1,5 +1,5 @@
 import React from "react";
-import { QueryClient, QueryClientProvider, setLogger } from "react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { initializeApp } from "firebase/app";
 import {
   getAuth,
@@ -8,13 +8,6 @@ import {
   UserCredential,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
-
-setLogger({
-  log: console.log,
-  warn: console.warn,
-  // ✅ no more errors on the console
-  error: () => null,
-});
 
 let emulatorsStarted = false;
 
@@ -46,6 +39,12 @@ export function init(): any {
         retry: false,
         cacheTime: 0,
       },
+    },
+    logger: {
+      log: console.log,
+      warn: console.warn,
+      // ✅ no more errors on the console
+      error: () => null,
     },
   });
 

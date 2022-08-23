@@ -1,5 +1,5 @@
 import React from "react";
-import { QueryClient } from "react-query";
+import { QueryClient } from "@tanstack/react-query";
 import { renderHook, act, cleanup } from "@testing-library/react-hooks";
 import { Auth, UserCredential } from "firebase/auth";
 import { genId, init, signIn } from "./helpers";

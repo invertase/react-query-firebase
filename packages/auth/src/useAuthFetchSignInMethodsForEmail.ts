@@ -19,7 +19,7 @@ import {
   useQuery,
   UseQueryOptions,
   UseQueryResult,
-} from "react-query";
+} from "@tanstack/react-query";
 import { Auth, fetchSignInMethodsForEmail, AuthError } from "firebase/auth";
 
 export function useAuthFetchSignInMethodsForEmail(

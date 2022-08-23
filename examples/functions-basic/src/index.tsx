@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "react-query/devtools";
 
 import {
@@ -8,7 +8,7 @@ import {
   useFunctionsCall,
 } from "@react-query-firebase/functions";
 import { functions } from "./firebase";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 const queryClient = new QueryClient();
 
