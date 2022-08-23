@@ -13,5 +13,5 @@ export default {
     },
   ],
   plugins: [typescript()],
-  external: ['firebase/firestore']
+  external: ['firebase/firestore', 'react', '@tanstack/react-query']
 };
