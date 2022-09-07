@@ -103,5 +103,6 @@ export function useFirestoreInfiniteQueryData<
     getNextPageParam(data) {
       return getNextQuery(data);
     },
+    ...useInfiniteQueryOptions,
   });
 }
