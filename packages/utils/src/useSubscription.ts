@@ -66,7 +66,6 @@ function queryCacheUnsubscribe(subscriptionHash: string) {
   }
 }
 
-let a = 1;
 /**
  * Utility hook to subscribe to events, given a function that returns an observer callback.
  * @param queryKey The react-query queryKey
@@ -90,13 +89,10 @@ export function useSubscription<TData, TError, R = TData>(
 
   let result: CancellablePromise<TData | null> = new Promise<TData | null>(
     (resolve, reject) => {
-      resolvePromise = (x) => {
-        resolve(x);
-      };
+      resolvePromise = resolve;
       rejectPromise = reject;
     }
   );
-  (result as any).a = a++;
   result.cancel = () => {
     queryClient.invalidateQueries(queryKey);
   };
