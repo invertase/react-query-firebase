@@ -30,16 +30,21 @@ import {
 type Unsubscribe = AuthUnsubscribe | FirestoreUnsubscribe | DatabaseUnsubscribe;
 
 const firestoreUnsubscribes: Record<string, any> = {};
-const queryCacheUnsubscribes: Record<string, () => void> = {};
+const queryCacheSubscribes: Record<
+  string,
+  { result: Promise<any>; unsubscribe: () => void }
+> = {};
 const eventCount: Record<string, number> = {};
 
 interface CancellablePromise<T = void> extends Promise<T> {
   cancel?: () => void;
 }
 
-type UseSubscriptionOptions<TData, TError, R> = UseQueryOptions<TData,
+type UseSubscriptionOptions<TData, TError, R> = UseQueryOptions<
+  TData,
   TError,
-  R> & {
+  R
+> & {
   onlyOnce?: boolean;
   fetchFn?: () => Promise<TData | null>;
 };
@@ -54,10 +59,10 @@ function firestoreUnsubscribe(subscriptionHash: string) {
 }
 
 function queryCacheUnsubscribe(subscriptionHash: string) {
-  const queryCacheUnsubscribe = queryCacheUnsubscribes[subscriptionHash];
+  const queryCacheUnsubscribe = queryCacheSubscribes[subscriptionHash];
   if (queryCacheUnsubscribe) {
-    queryCacheUnsubscribe();
-    delete queryCacheUnsubscribes[subscriptionHash];
+    queryCacheUnsubscribe.unsubscribe();
+    delete queryCacheSubscribes[subscriptionHash];
   }
 }
 
@@ -79,17 +84,15 @@ export function useSubscription<TData, TError, R = TData>(
   const subscriptionHash = hashFn(subscriptionKey);
   const queryClient = useQueryClient();
 
-
   let resolvePromise: (data: TData | null) => void = () => null;
   let rejectPromise: (err: any) => void = () => null;
 
-  const result: CancellablePromise<TData | null> = new Promise<TData | null>(
+  let result: CancellablePromise<TData | null> = new Promise<TData | null>(
     (resolve, reject) => {
       resolvePromise = resolve;
       rejectPromise = reject;
     }
   );
-
   result.cancel = () => {
     queryClient.invalidateQueries(queryKey);
   };
@@ -109,10 +112,10 @@ export function useSubscription<TData, TError, R = TData>(
       }
     }
   } else {
-    const subscribedToQueryCache = !!queryCacheUnsubscribes[subscriptionHash];
+    const subscribedToQueryCache = !!queryCacheSubscribes[subscriptionHash];
     if (!subscribedToQueryCache) {
       const queryCache = queryClient.getQueryCache();
-      queryCacheUnsubscribes[subscriptionHash] = queryCache.subscribe((event) => {
+      const unsubscribe = queryCache.subscribe((event) => {
         if (!event || event.query.queryHash !== hashFn(queryKey)) {
           return;
         }
@@ -127,28 +130,36 @@ export function useSubscription<TData, TError, R = TData>(
           if (observersCount === 0) {
             firestoreUnsubscribe(subscriptionHash);
           } else {
-            const isSubscribedToFirestore = !!firestoreUnsubscribes[subscriptionHash];
+            const isSubscribedToFirestore =
+              !!firestoreUnsubscribes[subscriptionHash];
             if (isSubscribedToFirestore) {
-              const cachedData = queryClient.getQueryData<TData | null>(queryKey);
+              const cachedData = queryClient.getQueryData<TData | null>(
+                queryKey
+              );
               const hasData = !!eventCount[subscriptionHash];
 
               if (hasData) {
                 resolvePromise(cachedData ?? null);
               }
             } else {
-              firestoreUnsubscribes[subscriptionHash] = subscribeFn(async (data) => {
-                eventCount[subscriptionHash] ??= 0;
-                eventCount[subscriptionHash]++;
-                if (eventCount[subscriptionHash] === 1) {
-                  resolvePromise(data || null);
-                } else {
-                  queryClient.setQueryData(queryKey, data);
+              firestoreUnsubscribes[subscriptionHash] = subscribeFn(
+                async (data) => {
+                  eventCount[subscriptionHash] ??= 0;
+                  eventCount[subscriptionHash]++;
+                  if (eventCount[subscriptionHash] === 1) {
+                    resolvePromise(data || null);
+                  } else {
+                    queryClient.setQueryData(queryKey, data);
+                  }
                 }
-              });
+              );
             }
           }
         }
       });
+      queryCacheSubscribes[subscriptionHash] = { result, unsubscribe };
+    } else {
+      result = queryCacheSubscribes[subscriptionHash].result;
     }
   }
 
