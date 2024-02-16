@@ -1,3 +1,6 @@
+> [!IMPORTANT]  
+> This project is not currently being maintained. If you are interested in maintaining, please reach out on [Discord](https://invertase.link/discord) to a member of the team.
+
 <h1 align="center">React Query Firebase</h1>
 <p align="center">
   <span>A set of <a href="https://react-query.tanstack.com">React Query</a> hooks integrating with <a href="https://firebase.google.com/">Firebase</a>.</span>
