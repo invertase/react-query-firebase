@@ -14,7 +14,11 @@
  * limitations under the License.
  *
  */
-import { QueryKey, UseQueryOptions, UseQueryResult } from "react-query";
+import {
+  QueryKey,
+  UseQueryOptions,
+  UseQueryResult,
+} from "@tanstack/react-query";
 import { DatabaseReference, onValue, DataSnapshot } from "firebase/database";
 import { useCallback } from "react";
 import { useSubscription } from "../../utils/src/useSubscription";

@@ -10,3 +10,4 @@ dist
 
 functions/lib/**/*.js
 functions/lib/**/*.js.map
+packages/**/*.tgz

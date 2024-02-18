@@ -21,7 +21,7 @@ import {
   QueryFunctionContext,
   UseInfiniteQueryOptions,
   UseInfiniteQueryResult,
-} from "react-query";
+} from "@tanstack/react-query";
 import {
   Query,
   QuerySnapshot,

@@ -34,7 +34,7 @@ import {
   useMutation,
   UseMutationOptions,
   UseMutationResult,
-} from "react-query";
+} from "@tanstack/react-query";
 
 export function useFirestoreCollectionMutation<T = DocumentData>(
   ref: CollectionReference<T>,

@@ -26,7 +26,7 @@ import {
   useQueryClient,
   UseQueryOptions,
   UseQueryResult,
-} from "react-query";
+} from "@tanstack/react-query";
 
 type Unsubscribe = AuthUnsubscribe | FirestoreUnsubscribe | DatabaseUnsubscribe;
 

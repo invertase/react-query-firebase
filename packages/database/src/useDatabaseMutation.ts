@@ -18,7 +18,7 @@ import {
   useMutation,
   UseMutationOptions,
   UseMutationResult,
-} from "react-query";
+} from "@tanstack/react-query";
 import {
   DatabaseReference,
   remove,

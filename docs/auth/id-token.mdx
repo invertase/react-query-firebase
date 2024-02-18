@@ -58,7 +58,7 @@ Imagine we've got a custom `useApiRequest` hook within our application, using th
 token before the request and attach it to the API request.
 
 ```js
-import { useQueryClient, useQuery } from "react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 
 function useApiRequest(url) {
   const client = useQueryClient();

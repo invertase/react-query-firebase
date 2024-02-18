@@ -30,7 +30,8 @@
     "build": "npm run clean && rollup -c",
     "prepublish": "npm run build",
     "clean": "rimraf dist",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "pack": "npm pack"
   },
   "author": {
     "name": "Invertase",
@@ -41,6 +42,6 @@
   "peerDependencies": {
     "firebase": "^9.0.1",
     "react": "^16.8.0 || ^17.0.0 || ^18.2.0",
-    "react-query": "^3.23.2"
+    "@tanstack/react-query": "^4.2.1"
   }
 }
