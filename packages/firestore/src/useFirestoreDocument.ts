@@ -1,3 +1,4 @@
+/* eslint-disable linebreak-style */
 /*
  * Copyright (c) 2016-present Invertase Limited & Contributors
  *
@@ -22,7 +23,7 @@ import {
   onSnapshot,
   FirestoreError,
 } from "firebase/firestore";
-import { getSnapshot, UseFirestoreHookOptions } from "./index";
+import { getSnapshot, GetSnapshotSource, UseFirestoreHookOptions } from "./index";
 import { useSubscription } from "../../utils/src/useSubscription";
 import { useCallback } from "react";
 
@@ -31,11 +32,11 @@ type NextOrObserver<T> = (data: DocumentSnapshot<T> | null) => Promise<void>;
 export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
   queryKey: QueryKey,
   ref: DocumentReference<T>,
-  options?: UseFirestoreHookOptions,
+  options?: UseFirestoreHookOptions & {includeMetadataChanges?: boolean, source?: GetSnapshotSource},
   useQueryOptions?: Omit<
     UseQueryOptions<DocumentSnapshot<T>, FirestoreError, R>,
     "queryFn"
-  >
+>
 ): UseQueryResult<R, FirestoreError> {
   const isSubscription = !!options?.subscribe;
 
