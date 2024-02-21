@@ -160,9 +160,9 @@ Deletes and signs out the user.
 - [Firebase documentation](https://firebase.google.com/docs/reference/js/auth.md#deleteuser)
 
 ```js
-const mutation = useAuthDeleteUser(auth);
+const mutation = useAuthDeleteUser();
 
-mutation.mutate();
+mutation.mutate(auth.currentUser);
 ```
 
 ### `useAuthLinkWithCredential`
