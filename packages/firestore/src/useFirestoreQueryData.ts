@@ -26,6 +26,7 @@ import {
 } from "firebase/firestore";
 import {
   getQuerySnapshot,
+  GetSnapshotSource,
   QueryType,
   resolveQuery,
   UseFirestoreHookOptions,
@@ -39,7 +40,7 @@ type NextOrObserver<T, ID> = (
 
 export function useFirestoreQueryData<T = DocumentData, R = WithIdField<T>[]>(
   key: QueryKey,
-  query: QueryType<T>,
+  query?: QueryType<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions,
   useQueryOptions?: Omit<
     UseQueryOptions<WithIdField<T>[], FirestoreError, R>,
@@ -53,7 +54,7 @@ export function useFirestoreQueryData<
   R = WithIdField<T, ID>[]
 >(
   key: QueryKey,
-  query: QueryType<T>,
+  query?: QueryType<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions & { idField: ID },
   useQueryOptions?: Omit<
     UseQueryOptions<WithIdField<T, ID>[], FirestoreError, R>,
@@ -67,53 +68,77 @@ export function useFirestoreQueryData<
   R = WithIdField<T, ID>[]
 >(
   queryKey: QueryKey,
-  query: QueryType<T>,
+  query?: QueryType<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions & { idField?: ID },
   useQueryOptions?: Omit<
     UseQueryOptions<WithIdField<T, ID>[], FirestoreError, R>,
     "queryFn"
   >
 ): UseQueryResult<R, FirestoreError> {
+  if (useQueryOptions?.enabled && !query) {
+    throw new Error(
+      `useFirestoreQueryData with key ${JSON.stringify(
+        queryKey
+      )}  expected to recieve a query or named query, but got "undefined".
+      Did you forget to set the options "enabled" to false?`
+    );
+  }
+
   const isSubscription = !!options?.subscribe;
+
+  let source: GetSnapshotSource | undefined;
+  let includeMetadataChanges: boolean | undefined;
+
+  if (options?.subscribe === undefined) {
+    source = options?.source;
+  }
+  if (options?.subscribe) {
+    includeMetadataChanges = options.includeMetadataChanges;
+  }
 
   const subscribeFn = useCallback(
     (callback: NextOrObserver<T, ID>) => {
       let unsubscribe = () => {
         // noop
       };
-      resolveQuery(query).then((res) => {
-        unsubscribe = onSnapshot(
-          res,
-          {
-            includeMetadataChanges: options?.includeMetadataChanges,
-          },
-          (snapshot: QuerySnapshot<T>) => {
-            const docs = snapshot.docs.map((doc) => {
-              const data = doc.data({
-                serverTimestamps: options?.serverTimestamps,
-              });
-              if (options?.idField) {
-                const withIdData = {
-                  ...data,
-                  [options.idField as ID]: doc.id,
-                } as WithIdField<T, ID>;
-                return withIdData;
-              }
+      if (query) {
+        resolveQuery(query).then((res) => {
+          unsubscribe = onSnapshot(
+            res,
+            {
+              includeMetadataChanges,
+            },
+            (snapshot: QuerySnapshot<T>) => {
+              const docs = snapshot.docs.map((doc) => {
+                const data = doc.data({
+                  serverTimestamps: options?.serverTimestamps,
+                });
+                if (options?.idField) {
+                  const withIdData = {
+                    ...data,
+                    [options.idField as ID]: doc.id,
+                  } as WithIdField<T, ID>;
+                  return withIdData;
+                }
 
-              return data as WithIdField<T, ID>;
-            });
-            callback(docs);
-          }
-        );
-      });
+                return data as WithIdField<T, ID>;
+              });
+              callback(docs);
+            }
+          );
+        });
+      }
       return unsubscribe;
     },
     [query, queryKey]
   );
   const fetchFn = async () => {
+    if (!query) {
+      return null;
+    }
     const resolvedQuery = await resolveQuery(query);
 
-    const snapshot = await getQuerySnapshot(resolvedQuery, options?.source);
+    const snapshot = await getQuerySnapshot(resolvedQuery, source);
 
     return snapshot.docs.map((doc) => {
       let data = doc.data({

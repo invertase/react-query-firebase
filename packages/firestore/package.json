@@ -1,10 +1,10 @@
 {
   "name": "@react-query-firebase/firestore",
-  "version": "0.4.2",
+  "version": "1.0.0-dev.7",
   "description": "React Query hooks for Firebase Cloud Firestore",
   "main": "dist/bundle.cjs.js",
   "module": "dist/bundle.es.js",
-  "types": "dist/index.d.ts",
+  "types": "dist/firestore/src/index.d.ts",
   "files": [
     "dist",
     "LICENSE",
