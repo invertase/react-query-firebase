@@ -15,9 +15,9 @@ Firestore is a [`QuerySnapshot`](https://firebase.google.com/docs/reference/js/f
 [`DocumentData`](https://firebase.google.com/docs/reference/js/firestore_.documentdata).
 
 For a type safe application, this is dangerous. There are 2 ways to ensure your data
-is returned type safe, either explicilty or inferred:
+is returned type safe, either explicitly or inferred:
 
-### Explcit types
+### Explicit types
 
 Provide the type declaration to the hooks directly:
 
@@ -36,7 +36,7 @@ useFirestoreDocumentData<Product>(); // Product | null
 
 ### Inferred types
 
-The hooks will inferr any types from the provided reference, for example you could
+The hooks will infer any types from the provided reference, for example you could
 define [Firestore converters](https://firebase.google.com/docs/reference/js/firestore_.firestoredataconverter):
 
 ```ts
