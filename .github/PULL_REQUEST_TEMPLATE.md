@@ -15,7 +15,6 @@ This will ensure a smooth and quick review process.
 - [ ] My PR includes unit or integration tests for *all* changed/updated/fixed behaviors (See [Contributor Guide]).
 - [ ] All existing and new tests are passing.
 - [ ] I updated/added relevant documentation.
-- [ ] I signed the [CLA].
 - [ ] I am willing to follow-up on review comments in a timely manner.
 
 ## Breaking Change
@@ -28,4 +27,3 @@ Does your PR require plugin users to manually update their apps to accommodate y
 <!-- Links -->
 [issue database]: https://github.com/invertase/react-query-firebase/issues
 [Contributor Guide]: https://github.com/invertase/react-query-firebase/blob/main/CONTRIBUTING.md
-[CLA]: https://cla.developers.google.com
