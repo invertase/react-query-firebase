@@ -78,16 +78,18 @@ function Example() {
   const [show, setShow] = useState(false);
 
   return (
-    <div className="space-y-8 flex flex-col">
+    <div>
       <h1>React Query Firebase Example!</h1>
       <p>
         React Query hooks for managing asynchronous operations with Firebase.
       </p>
       <strong>
         ✨ Supports Authentication, Analytics, Firestore & Realtime Database.
-      </strong>{" "}
-      <button onClick={() => setShow((prev) => !prev)}>Toggle</button>
-      {show && <Foo />}
+      </strong>
+      <div>
+        <button onClick={() => setShow((prev) => !prev)}>Toggle</button>
+        <div>{show && <Foo />}</div>
+      </div>
     </div>
   );
 }
