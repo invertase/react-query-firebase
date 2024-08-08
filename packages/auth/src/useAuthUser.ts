@@ -14,22 +14,42 @@
  * limitations under the License.
  *
  */
-import { QueryKey, UseQueryOptions, UseQueryResult } from "react-query";
-import { Auth, AuthError, NextOrObserver, User } from "firebase/auth";
+import {
+  QueryKey,
+  UseQueryOptions,
+  UseQueryResult,
+} from "@tanstack/react-query";
+import { Auth, AuthError, User } from "firebase/auth";
 import { useSubscription } from "../../utils/src/useSubscription";
 
+interface UseSubscriptionOptions<TData, TError, R>
+  extends UseQueryOptions<TData, TError, R> {
+  onlyOnce?: boolean;
+  fetchFn?: () => Promise<TData>;
+}
+
 export function useAuthUser<R = User>(
-  queryKey: QueryKey,
+  queryKey: string,
   auth: Auth,
-  options: Omit<UseQueryOptions<User, AuthError, R>, "queryFn"> = {}
+  options: Omit<
+    UseSubscriptionOptions<User, AuthError, R>,
+    "queryKey" | "queryFn"
+  > = {}
 ): UseQueryResult<R, AuthError> {
-  const subscribeFn = (cb: NextOrObserver<User | null>) =>
+  const subscribeFn = (cb: (user: User | null) => Promise<void>) =>
     auth.onAuthStateChanged(cb);
 
+  const subscriptionKey: QueryKey = ["useAuthUser"];
+
+  const finalOptions: UseSubscriptionOptions<User, AuthError, R> = {
+    ...options,
+    queryKey: [queryKey],
+  };
+
   return useSubscription<User, AuthError, R>(
-    queryKey,
-    "useAuthUser",
+    finalOptions.queryKey,
+    subscriptionKey,
     subscribeFn,
-    options
+    finalOptions
   );
 }
