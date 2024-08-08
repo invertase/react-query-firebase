@@ -45,7 +45,7 @@ describe("Authentication", () => {
         () => useAuthUser(hookId, auth),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess);
@@ -62,7 +62,7 @@ describe("Authentication", () => {
         () => useAuthUser(hookId, auth),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess);
@@ -93,7 +93,7 @@ describe("Authentication", () => {
         },
         {
           wrapper,
-        }
+        },
       );
 
       await waitForNextUpdate();
@@ -117,7 +117,7 @@ describe("Authentication", () => {
           }),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess);
@@ -159,7 +159,7 @@ describe("Authentication", () => {
             initialProps: {
               id: hookId1,
             },
-          }
+          },
         );
 
       await waitFor(() => result.current.isSuccess);
@@ -200,7 +200,7 @@ describe("Authentication", () => {
           initialProps: {
             id,
           },
-        }
+        },
       );
       // should reuse sub of 1
       const hook2 = renderHook<
@@ -221,7 +221,7 @@ describe("Authentication", () => {
           initialProps: {
             id,
           },
-        }
+        },
       );
       await hook1.waitFor(() => hook1.result.current.isSuccess);
 
@@ -259,7 +259,7 @@ describe("Authentication", () => {
         () => useAuthIdToken(hookId, auth),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess);
@@ -275,7 +275,7 @@ describe("Authentication", () => {
         () => useAuthIdToken(hookId, auth),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess);
@@ -291,7 +291,7 @@ describe("Authentication", () => {
         () => useAuthIdToken(hookId, auth),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess);
@@ -324,7 +324,7 @@ describe("Authentication", () => {
           }),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess);
@@ -364,7 +364,7 @@ describe("Authentication", () => {
           initialProps: {
             id: hookId1,
           },
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess);
@@ -404,7 +404,7 @@ describe("Authentication", () => {
           initialProps: {
             id,
           },
-        }
+        },
       );
       // should reuse sub of 1
       const hook2 = renderHook<
@@ -425,7 +425,7 @@ describe("Authentication", () => {
           initialProps: {
             id,
           },
-        }
+        },
       );
       await hook1.waitFor(() => hook1.result.current.isSuccess);
 

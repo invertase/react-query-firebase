@@ -16,7 +16,7 @@ import {
 export function useFunctionsQuery<
   RequestData = any,
   ResponseData = unknown,
-  ModifiedData = ResponseData
+  ModifiedData = ResponseData,
 >(
   key: QueryKey,
   functions: Functions,
@@ -26,7 +26,7 @@ export function useFunctionsQuery<
   useQueryOptions?: Omit<
     UseQueryOptions<ResponseData, Error, ModifiedData>,
     "queryFn"
-  >
+  >,
 ): UseQueryResult<ModifiedData, Error> {
   return useQuery<ResponseData, Error, ModifiedData>({
     ...useQueryOptions,
@@ -35,7 +35,7 @@ export function useFunctionsQuery<
       const response = await httpsCallable<RequestData, ResponseData>(
         functions,
         trigger,
-        options
+        options,
       )(data);
 
       return response.data;
@@ -47,13 +47,13 @@ export function useFunctionsCall<RequestData = any, ResponseData = unknown>(
   functions: Functions,
   trigger: string,
   options?: HttpsCallableOptions,
-  useMutationOptions?: UseMutationOptions<ResponseData, Error, RequestData>
+  useMutationOptions?: UseMutationOptions<ResponseData, Error, RequestData>,
 ): UseMutationResult<ResponseData, Error, RequestData> {
   return useMutation<ResponseData, Error, RequestData>(async (data) => {
     const response = await httpsCallable<RequestData, ResponseData>(
       functions,
       trigger,
-      options
+      options,
     )(data);
 
     return response.data;

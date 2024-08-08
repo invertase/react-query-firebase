@@ -28,12 +28,12 @@ import { UseFirestoreHookOptions, WithIdField, getSnapshot } from "./index";
 import { useSubscription } from "../../utils/src/useSubscription";
 
 type NextOrObserver<T, ID> = (
-  data: WithIdField<T, ID> | undefined
+  data: WithIdField<T, ID> | undefined,
 ) => Promise<void>;
 
 export function useFirestoreDocumentData<
   T = DocumentData,
-  R = WithIdField<T> | undefined
+  R = WithIdField<T> | undefined,
 >(
   key: QueryKey,
   ref: DocumentReference<T>,
@@ -41,13 +41,13 @@ export function useFirestoreDocumentData<
   useQueryOptions?: Omit<
     UseQueryOptions<WithIdField<T> | undefined, FirestoreError, R>,
     "queryFn"
-  >
+  >,
 ): UseQueryResult<R, FirestoreError>;
 
 export function useFirestoreDocumentData<
   ID extends string,
   T = DocumentData,
-  R = WithIdField<T, ID> | undefined
+  R = WithIdField<T, ID> | undefined,
 >(
   key: QueryKey,
   ref: DocumentReference<T>,
@@ -55,13 +55,13 @@ export function useFirestoreDocumentData<
   useQueryOptions?: Omit<
     UseQueryOptions<WithIdField<T, ID> | undefined, FirestoreError, R>,
     "queryFn"
-  >
+  >,
 ): UseQueryResult<R | undefined, FirestoreError>;
 
 export function useFirestoreDocumentData<
   ID extends string,
   T = DocumentData,
-  R = WithIdField<T, ID> | undefined
+  R = WithIdField<T, ID> | undefined,
 >(
   queryKey: QueryKey,
   ref: DocumentReference<T>,
@@ -69,7 +69,7 @@ export function useFirestoreDocumentData<
   useQueryOptions?: Omit<
     UseQueryOptions<WithIdField<T, ID> | undefined, FirestoreError, R>,
     "queryFn"
-  >
+  >,
 ): UseQueryResult<R, FirestoreError> {
   const isSubscription = !!options?.subscribe;
 
@@ -96,11 +96,11 @@ export function useFirestoreDocumentData<
           const _dataWithIdField = data as WithIdField<T, ID> | undefined;
 
           callback(_dataWithIdField);
-        }
+        },
       );
       return unsubscribe;
     },
-    [ref]
+    [ref],
   );
 
   const fetchFn = async () => {
@@ -127,6 +127,6 @@ export function useFirestoreDocumentData<
       ...useQueryOptions,
       onlyOnce: !isSubscription,
       fetchFn,
-    }
+    },
   );
 }

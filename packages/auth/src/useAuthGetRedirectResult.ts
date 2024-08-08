@@ -35,7 +35,7 @@ export function useAuthGetRedirectResult(
   useQueryOptions?: Omit<
     UseQueryOptions<UserCredential | null, AuthError>,
     "queryFn"
-  >
+  >,
 ): UseQueryResult<UserCredential | null, AuthError> {
   return useQuery<UserCredential | null, AuthError>({
     ...useQueryOptions,

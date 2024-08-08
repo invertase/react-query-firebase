@@ -39,7 +39,7 @@ describe("Database", () => {
         () => useDatabaseSnapshot(hookId, dbRef),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess);
@@ -58,7 +58,7 @@ describe("Database", () => {
         () => useDatabaseSnapshot(hookId, dbRef),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess);
@@ -85,11 +85,11 @@ describe("Database", () => {
               onSuccess(snapshot) {
                 mock(snapshot);
               },
-            }
+            },
           ),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess);
@@ -132,11 +132,11 @@ describe("Database", () => {
               onSuccess(snapshot) {
                 mock1(snapshot);
               },
-            }
+            },
           ),
         {
           wrapper,
-        }
+        },
       );
       const hook2 = renderHook(
         () =>
@@ -148,11 +148,11 @@ describe("Database", () => {
               onSuccess(snapshot) {
                 mock2(snapshot);
               },
-            }
+            },
           ),
         {
           wrapper,
-        }
+        },
       );
 
       await hook1.waitFor(() => hook1.result.current.isSuccess);
@@ -182,7 +182,7 @@ describe("Database", () => {
         () => useDatabaseValue(hookId, dbRef),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess);
@@ -200,7 +200,7 @@ describe("Database", () => {
         () => useDatabaseValue<number>(hookId, dbRef),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess);
@@ -223,7 +223,7 @@ describe("Database", () => {
           }),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess);
@@ -244,7 +244,7 @@ describe("Database", () => {
         () => useDatabaseValue(hookId, dbRef, { toArray: true }),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess);
@@ -267,7 +267,7 @@ describe("Database", () => {
         () => useDatabaseValue(hookId, dbRef, { toArray: true }),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess);
@@ -286,7 +286,7 @@ describe("Database", () => {
         () => useDatabaseValue(hookId, dbRef, undefined),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess);
@@ -314,11 +314,11 @@ describe("Database", () => {
               onSuccess(snapshot) {
                 mock(snapshot);
               },
-            }
+            },
           ),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess);
@@ -360,11 +360,11 @@ describe("Database", () => {
               onSuccess(data) {
                 mock1(data);
               },
-            }
+            },
           ),
         {
           wrapper,
-        }
+        },
       );
       const hook2 = renderHook(
         () =>
@@ -376,11 +376,11 @@ describe("Database", () => {
               onSuccess(data) {
                 mock2(data);
               },
-            }
+            },
           ),
         {
           wrapper,
-        }
+        },
       );
 
       await hook1.waitFor(() => hook1.result.current.isSuccess);

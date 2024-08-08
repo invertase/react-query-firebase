@@ -59,7 +59,7 @@ export function useSubscription<TData, TError, R = TData>(
   queryKey: QueryKey,
   subscriptionKey: QueryKey,
   subscribeFn: (cb: (data: TData | null) => Promise<void>) => Unsubscribe,
-  options?: UseSubscriptionOptions<TData, TError, R>
+  options?: UseSubscriptionOptions<TData, TError, R>,
 ): UseQueryResult<R, TError> {
   const hashFn = options?.queryKeyHashFn || hashKey;
   const subscriptionHash = hashFn(subscriptionKey);
@@ -84,7 +84,7 @@ export function useSubscription<TData, TError, R = TData>(
       observerCount[subscriptionHash] += 1;
       return () => {
         observerCount[subscriptionHash] -= 1;
-          cleanupSubscription(subscriptionHash);
+        cleanupSubscription(subscriptionHash);
       };
     }
   }, []);
@@ -95,7 +95,7 @@ export function useSubscription<TData, TError, R = TData>(
     (resolve, reject) => {
       resolvePromise = resolve;
       rejectPromise = reject;
-    }
+    },
   );
 
   result.cancel = () => {

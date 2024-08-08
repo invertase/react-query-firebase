@@ -25,7 +25,7 @@ const namedQueryCache: { [key: string]: Query } = {};
 
 export function namedQuery<T>(
   firestore: Firestore,
-  name: string
+  name: string,
 ): NamedQuery<T> {
   const key = `${firestore.app.name}:${name}`;
 

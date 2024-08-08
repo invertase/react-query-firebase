@@ -22,7 +22,7 @@ import {
 
 export function useAnalyticsIsSupported(
   key: QueryKey,
-  useQueryOptions?: UseQueryOptions<boolean, Error>
+  useQueryOptions?: UseQueryOptions<boolean, Error>,
 ): UseQueryResult<boolean, Error> {
   return useQuery({
     ...useQueryOptions,
@@ -35,7 +35,7 @@ export function useAnalyticsIsSupported(
 
 export function useAnalyticsSetCollectionEnabled(
   analytics: Analytics,
-  useMutationOptions?: UseMutationOptions<void, Error, boolean>
+  useMutationOptions?: UseMutationOptions<void, Error, boolean>,
 ): UseMutationResult<void, Error, boolean> {
   return useMutation(async (enabled) => {
     return setAnalyticsCollectionEnabled(analytics, enabled);
@@ -48,7 +48,7 @@ export function useAnalyticsSetCurrentScreen(
     void,
     Error,
     { screenName: string; options?: AnalyticsCallOptions }
-  >
+  >,
 ): UseMutationResult<
   void,
   Error,
@@ -65,7 +65,7 @@ export function useAnalyticsSetUserId(
     void,
     Error,
     { id: string; options?: AnalyticsCallOptions }
-  >
+  >,
 ): UseMutationResult<
   void,
   Error,
@@ -82,7 +82,7 @@ export function useAnalyticsSetUserProperties(
     void,
     Error,
     { properties: CustomParams; options?: AnalyticsCallOptions }
-  >
+  >,
 ): UseMutationResult<
   void,
   Error,
@@ -105,14 +105,14 @@ export function useAnalyticsLogEvent(
     void,
     Error,
     void | LogEventArgs<typeof eventName>
-  >
+  >,
 ): UseMutationResult<void, Error, void | LogEventArgs<typeof eventName>> {
   return useMutation(async (args) => {
     return logEvent(
       analytics,
       eventName as string,
       args?.params,
-      args?.options
+      args?.options,
     );
   }, useMutationOptions);
 }
@@ -127,7 +127,7 @@ type CustomLogArgs = {
 export function useAnalyticsCustomLogEvent(
   analytics: Analytics,
   eventName: string,
-  useMutationOptions?: UseMutationOptions<void, Error, void | CustomLogArgs>
+  useMutationOptions?: UseMutationOptions<void, Error, void | CustomLogArgs>,
 ): UseMutationResult<void, Error, void | CustomLogArgs> {
   return useMutation(async (args) => {
     return logEvent(analytics, eventName, args?.params, args?.options);

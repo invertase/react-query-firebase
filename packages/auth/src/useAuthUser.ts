@@ -34,7 +34,7 @@ export function useAuthUser<R = User>(
   options: Omit<
     UseSubscriptionOptions<User, AuthError, R>,
     "queryKey" | "queryFn"
-  > = {}
+  > = {},
 ): UseQueryResult<R, AuthError> {
   const subscribeFn = (cb: (user: User | null) => Promise<void>) =>
     auth.onAuthStateChanged(cb);
@@ -50,6 +50,6 @@ export function useAuthUser<R = User>(
     finalOptions.queryKey,
     subscriptionKey,
     subscribeFn,
-    finalOptions
+    finalOptions,
   );
 }

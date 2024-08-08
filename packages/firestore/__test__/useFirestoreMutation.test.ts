@@ -45,7 +45,7 @@ describe("useFirestoreMutation", () => {
   beforeEach(async () => {
     const config = init();
     await axios.delete(
-      `http://localhost:8080/emulator/v1/projects/${config.projectId}/databases/(default)/documents`
+      `http://localhost:8080/emulator/v1/projects/${config.projectId}/databases/(default)/documents`,
     );
     wrapper = config.wrapper;
     firestore = config.firestore;
@@ -59,7 +59,7 @@ describe("useFirestoreMutation", () => {
         () => useFirestoreCollectionMutation(ref),
         {
           wrapper,
-        }
+        },
       );
 
       act(() => {
@@ -85,7 +85,7 @@ describe("useFirestoreMutation", () => {
         () => useFirestoreDocumentMutation(ref),
         {
           wrapper,
-        }
+        },
       );
 
       act(() => {
@@ -107,7 +107,7 @@ describe("useFirestoreMutation", () => {
         () => useFirestoreDocumentMutation(ref, { merge: true }),
         {
           wrapper,
-        }
+        },
       );
 
       act(() => {
@@ -132,7 +132,7 @@ describe("useFirestoreMutation", () => {
         () => useFirestoreDocumentDeletion(ref),
         {
           wrapper,
-        }
+        },
       );
 
       act(() => {
@@ -171,11 +171,11 @@ describe("useFirestoreMutation", () => {
               onSuccess(value) {
                 mock(value);
               },
-            }
+            },
           ),
         {
           wrapper,
-        }
+        },
       );
 
       act(() => {
@@ -214,7 +214,7 @@ describe("useFirestoreMutation", () => {
         () => useFirestoreWriteBatch(batch),
         {
           wrapper,
-        }
+        },
       );
 
       act(() => {

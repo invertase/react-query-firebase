@@ -31,7 +31,7 @@ const query = useFunctionsQuery<RequestData, ResponseData>(
   // RequestData
   {
     id,
-  }
+  },
 );
 
 if (query.isSuccess) {
@@ -68,7 +68,7 @@ const query = useFunctionsQuery<RequestData, ResponseData, string>(
     select(response: ResponseData): string {
       return response.data.name;
     },
-  }
+  },
 );
 
 if (query.isSuccess) {
@@ -95,7 +95,7 @@ type ResponseData = {
 
 const mutation = useFunctionsCall<RequestData, ResponseData>(
   functions,
-  "updateProduct"
+  "updateProduct",
 );
 
 // mutate call is now typed to RequestData

@@ -35,7 +35,7 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
   useQueryOptions?: Omit<
     UseQueryOptions<DocumentSnapshot<T>, FirestoreError, R>,
     "queryFn"
-  >
+  >,
 ): UseQueryResult<R, FirestoreError> {
   const isSubscription = !!options?.subscribe;
 
@@ -49,10 +49,10 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
         (snapshot: DocumentSnapshot<T>) => {
           // Set the data each time state changes.
           return callback(snapshot);
-        }
+        },
       );
     },
-    [ref]
+    [ref],
   );
 
   return useSubscription<DocumentSnapshot<T>, FirestoreError, R>(
@@ -63,6 +63,6 @@ export function useFirestoreDocument<T = DocumentData, R = DocumentSnapshot<T>>(
       ...useQueryOptions,
       onlyOnce: !isSubscription,
       fetchFn: async () => getSnapshot(ref, options?.source),
-    }
+    },
   );
 }

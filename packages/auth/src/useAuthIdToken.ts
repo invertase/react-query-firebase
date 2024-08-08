@@ -24,10 +24,10 @@ export function useAuthIdToken<R = { token: IdTokenResult }>(
   options: Omit<
     UseQueryOptions<{ token: IdTokenResult }, AuthError, R>,
     "queryFn"
-  > = {}
+  > = {},
 ): UseQueryResult<R, AuthError> {
   const subscribeFn = (
-    callback: (data: { token: IdTokenResult } | null) => Promise<void>
+    callback: (data: { token: IdTokenResult } | null) => Promise<void>,
   ) =>
     auth.onIdTokenChanged(async (data) => {
       const token = await data?.getIdTokenResult();
@@ -39,6 +39,6 @@ export function useAuthIdToken<R = { token: IdTokenResult }>(
     queryKey,
     "useAuthIdToken",
     subscribeFn,
-    options
+    options,
   );
 }

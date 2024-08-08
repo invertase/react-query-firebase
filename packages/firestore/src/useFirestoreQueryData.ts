@@ -34,7 +34,7 @@ import {
 import { useSubscription } from "../../utils/src/useSubscription";
 
 type NextOrObserver<T, ID> = (
-  data: WithIdField<T, ID>[] | null
+  data: WithIdField<T, ID>[] | null,
 ) => Promise<void>;
 
 export function useFirestoreQueryData<T = DocumentData, R = WithIdField<T>[]>(
@@ -44,13 +44,13 @@ export function useFirestoreQueryData<T = DocumentData, R = WithIdField<T>[]>(
   useQueryOptions?: Omit<
     UseQueryOptions<WithIdField<T>[], FirestoreError, R>,
     "queryFn"
-  >
+  >,
 ): UseQueryResult<R, FirestoreError>;
 
 export function useFirestoreQueryData<
   ID extends string,
   T = DocumentData,
-  R = WithIdField<T, ID>[]
+  R = WithIdField<T, ID>[],
 >(
   key: QueryKey,
   query: QueryType<T>,
@@ -58,13 +58,13 @@ export function useFirestoreQueryData<
   useQueryOptions?: Omit<
     UseQueryOptions<WithIdField<T, ID>[], FirestoreError, R>,
     "queryFn"
-  >
+  >,
 ): UseQueryResult<R, FirestoreError>;
 
 export function useFirestoreQueryData<
   ID extends string,
   T = DocumentData,
-  R = WithIdField<T, ID>[]
+  R = WithIdField<T, ID>[],
 >(
   queryKey: QueryKey,
   query: QueryType<T>,
@@ -72,7 +72,7 @@ export function useFirestoreQueryData<
   useQueryOptions?: Omit<
     UseQueryOptions<WithIdField<T, ID>[], FirestoreError, R>,
     "queryFn"
-  >
+  >,
 ): UseQueryResult<R, FirestoreError> {
   const isSubscription = !!options?.subscribe;
 
@@ -103,12 +103,12 @@ export function useFirestoreQueryData<
               return data as WithIdField<T, ID>;
             });
             callback(docs);
-          }
+          },
         );
       });
       return unsubscribe;
     },
-    [query, queryKey]
+    [query, queryKey],
   );
   const fetchFn = async () => {
     const resolvedQuery = await resolveQuery(query);
@@ -134,6 +134,6 @@ export function useFirestoreQueryData<
     queryKey,
     ["useFirestoreDocument", queryKey],
     subscribeFn,
-    { ...useQueryOptions, onlyOnce: !isSubscription, fetchFn }
+    { ...useQueryOptions, onlyOnce: !isSubscription, fetchFn },
   );
 }

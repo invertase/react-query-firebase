@@ -72,6 +72,6 @@ export async function wipe(): Promise<void> {
     "http://localhost:8080/emulator/v1/projects/test-project/databases/(default)/documents",
     {
       method: "DELETE",
-    }
+    },
   );
 }

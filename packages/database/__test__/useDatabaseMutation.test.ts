@@ -36,7 +36,7 @@ describe("Database", () => {
         () => useDatabaseSetMutation<number>(dbRef),
         {
           wrapper,
-        }
+        },
       );
 
       act(() => {
@@ -56,7 +56,7 @@ describe("Database", () => {
         () => useDatabaseSetMutation<number>(dbRef, { priority: 10 }),
         {
           wrapper,
-        }
+        },
       );
 
       act(() => {
@@ -107,7 +107,7 @@ describe("Database", () => {
         () => useDatabaseRemoveMutation(dbRef),
         {
           wrapper,
-        }
+        },
       );
 
       act(() => {
@@ -143,7 +143,7 @@ describe("Database", () => {
           }),
         {
           wrapper,
-        }
+        },
       );
 
       await act(async () => {

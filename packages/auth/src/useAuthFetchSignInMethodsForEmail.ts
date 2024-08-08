@@ -26,7 +26,7 @@ export function useAuthFetchSignInMethodsForEmail(
   key: QueryKey,
   auth: Auth,
   email: string,
-  useQueryOptions?: Omit<UseQueryOptions<string[], AuthError>, "queryFn">
+  useQueryOptions?: Omit<UseQueryOptions<string[], AuthError>, "queryFn">,
 ): UseQueryResult<string[], AuthError> {
   return useQuery<string[], AuthError>({
     ...useQueryOptions,

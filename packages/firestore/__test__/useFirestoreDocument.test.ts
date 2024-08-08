@@ -37,7 +37,7 @@ describe("useFirestoreDocument and useFirestoreDocumentData", () => {
   beforeEach(async () => {
     const config = init();
     await axios.delete(
-      `http://localhost:8080/emulator/v1/projects/${config.projectId}/databases/(default)/documents`
+      `http://localhost:8080/emulator/v1/projects/${config.projectId}/databases/(default)/documents`,
     );
     wrapper = config.wrapper;
     firestore = config.firestore;
@@ -52,7 +52,7 @@ describe("useFirestoreDocument and useFirestoreDocumentData", () => {
 
       const { result, waitFor } = renderHook(
         () => useFirestoreDocumentData(hookId, ref),
-        { wrapper }
+        { wrapper },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -77,7 +77,7 @@ describe("useFirestoreDocument and useFirestoreDocumentData", () => {
               };
             },
           }),
-        { wrapper }
+        { wrapper },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -98,7 +98,7 @@ describe("useFirestoreDocument and useFirestoreDocumentData", () => {
           useFirestoreDocumentData<"id">(hookId, ref, {
             idField: "id",
           }),
-        { wrapper }
+        { wrapper },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -115,7 +115,7 @@ describe("useFirestoreDocument and useFirestoreDocumentData", () => {
 
       const { result, waitFor } = renderHook(
         () => useFirestoreDocument(hookId, ref),
-        { wrapper }
+        { wrapper },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -139,7 +139,7 @@ describe("useFirestoreDocument and useFirestoreDocumentData", () => {
           useFirestoreDocument(hookId, ref, {
             source: "cache",
           }),
-        { wrapper }
+        { wrapper },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -158,7 +158,7 @@ describe("useFirestoreDocument and useFirestoreDocumentData", () => {
           useFirestoreDocument(hookId, ref, {
             source: "server",
           }),
-        { wrapper }
+        { wrapper },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -184,7 +184,7 @@ describe("useFirestoreDocument and useFirestoreDocumentData", () => {
         () => useFirestoreDocument(hookId, ref),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -224,7 +224,7 @@ describe("useFirestoreDocument and useFirestoreDocumentData", () => {
           }),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -255,11 +255,11 @@ describe("useFirestoreDocument and useFirestoreDocumentData", () => {
                   mock(snapshot.data());
                 }
               },
-            }
+            },
           ),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -310,7 +310,7 @@ describe("useFirestoreDocument and useFirestoreDocumentData", () => {
               onSuccess(snapshot) {
                 mock(snapshot);
               },
-            }
+            },
           ),
         {
           wrapper: (props) => wrapper({ children: props.children }),
@@ -318,7 +318,7 @@ describe("useFirestoreDocument and useFirestoreDocumentData", () => {
             id: hookId1,
             reference: ref1,
           },
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -369,7 +369,7 @@ describe("useFirestoreDocument and useFirestoreDocumentData", () => {
               onSuccess(snapshot) {
                 mock1(snapshot);
               },
-            }
+            },
           ),
         {
           wrapper: (props) => wrapper({ children: props.children }),
@@ -377,7 +377,7 @@ describe("useFirestoreDocument and useFirestoreDocumentData", () => {
             id: hookId1,
             reference: ref1,
           },
-        }
+        },
       );
       const hook2 = renderHook<
         {
@@ -397,7 +397,7 @@ describe("useFirestoreDocument and useFirestoreDocumentData", () => {
               onSuccess(snapshot) {
                 mock2(snapshot);
               },
-            }
+            },
           ),
         {
           wrapper: (props) => wrapper({ children: props.children }),
@@ -405,7 +405,7 @@ describe("useFirestoreDocument and useFirestoreDocumentData", () => {
             id: hookId1,
             reference: ref1,
           },
-        }
+        },
       );
 
       await hook1.waitFor(() => hook1.result.current.isSuccess, {
@@ -449,7 +449,7 @@ describe("useFirestoreDocument and useFirestoreDocumentData", () => {
           }),
         {
           wrapper,
-        }
+        },
       );
       await waitFor(() => result.current.isError, { timeout: 5000 });
     });
