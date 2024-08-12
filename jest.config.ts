@@ -3,7 +3,6 @@ import type { Config } from "@jest/types";
 const config: Config.InitialOptions = {
   preset: "ts-jest",
   testEnvironment: "node",
-  verbose: true,
   // Indicates whether the coverage information should be collected while executing the test
   collectCoverage: true,
   // The directory where Jest should output its coverage files
@@ -13,6 +12,7 @@ const config: Config.InitialOptions = {
 
   // setupFilesAfterEnv: ["./config/setup-tests.ts"],
   forceExit: true,
+  verbose: false,
 };
 
 export default config;
