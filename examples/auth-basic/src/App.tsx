@@ -18,7 +18,7 @@ function App() {
 }
 
 function Foo() {
-  const { data: user, isLoading, isError, error } = useAuthUser("user", auth);
+  const { data: user, isLoading, isError, error } = useAuthUser(["user"], auth);
 
   const handleSignIn = async () => {
     try {
@@ -57,7 +57,7 @@ function User() {
     isError,
     error,
     isPending,
-  } = useAuthUser("user", auth);
+  } = useAuthUser(["user"], auth);
 
   if (isPending) {
     return <div>Loading...</div>;

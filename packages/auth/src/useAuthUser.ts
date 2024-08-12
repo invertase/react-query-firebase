@@ -29,12 +29,12 @@ interface UseSubscriptionOptions<TData, TError, R>
 }
 
 export function useAuthUser<R = User>(
-  queryKey: string,
+  queryKey: QueryKey,
   auth: Auth,
   options: Omit<
     UseSubscriptionOptions<User, AuthError, R>,
     "queryKey" | "queryFn"
-  > = {},
+  > = {}
 ): UseQueryResult<R, AuthError> {
   const subscribeFn = (cb: (user: User | null) => Promise<void>) =>
     auth.onAuthStateChanged(cb);
@@ -43,13 +43,13 @@ export function useAuthUser<R = User>(
 
   const finalOptions: UseSubscriptionOptions<User, AuthError, R> = {
     ...options,
-    queryKey: [queryKey],
+    queryKey,
   };
 
   return useSubscription<User, AuthError, R>(
     finalOptions.queryKey,
     subscriptionKey,
     subscribeFn,
-    finalOptions,
+    finalOptions
   );
 }
