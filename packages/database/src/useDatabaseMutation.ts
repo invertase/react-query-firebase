@@ -18,7 +18,7 @@ import {
   useMutation,
   UseMutationOptions,
   UseMutationResult,
-} from "react-query";
+} from "@tanstack/react-query";
 import {
   DatabaseReference,
   remove,
@@ -37,15 +37,17 @@ export type UseDatabaseSetMutationOptions = {
 export function useDatabaseSetMutation<T = unknown>(
   ref: DatabaseReference,
   options?: UseDatabaseSetMutationOptions,
-  useMutationOptions?: UseMutationOptions<void, Error, T>,
+  useMutationOptions?: UseMutationOptions<void, Error, T>
 ): UseMutationResult<void, Error, T> {
-  return useMutation<void, Error, T>((value) => {
-    if (options?.priority !== undefined) {
-      return setWithPriority(ref, value, options.priority);
-    }
-
-    return set(ref, value);
-  }, useMutationOptions);
+  return useMutation<void, Error, T>({
+    mutationFn: (value: T) => {
+      if (options?.priority !== undefined) {
+        return setWithPriority(ref, value, options.priority);
+      }
+      return set(ref, value);
+    },
+    ...useMutationOptions,
+  });
 }
 
 type UpdateValues = Record<string, unknown>;
@@ -54,29 +56,38 @@ export function useDatabaseUpdateMutation<
   T extends UpdateValues = UpdateValues,
 >(
   ref: DatabaseReference,
-  useMutationOptions?: UseMutationOptions<void, Error, T>,
+  useMutationOptions?: UseMutationOptions<void, Error, T>
 ): UseMutationResult<void, Error, T> {
-  return useMutation<void, Error, T>((values) => {
-    return update(ref, values);
-  }, useMutationOptions);
+  return useMutation<void, Error, T>({
+    mutationFn: (values: T) => {
+      return update(ref, values);
+    },
+    ...useMutationOptions,
+  });
 }
 
 export function useDatabaseRemoveMutation(
   ref: DatabaseReference,
-  useMutationOptions?: UseMutationOptions<void, Error, void>,
+  useMutationOptions?: UseMutationOptions<void, Error, void>
 ): UseMutationResult<void, Error, void> {
-  return useMutation<void, Error, void>(() => {
-    return remove(ref);
-  }, useMutationOptions);
+  return useMutation<void, Error, void>({
+    mutationFn: () => {
+      return remove(ref);
+    },
+    ...useMutationOptions,
+  });
 }
 
 export function useDatabaseTransaction<T = any>(
   ref: DatabaseReference,
   transactionUpdate: (currentData: T | null) => unknown,
   options?: TransactionOptions,
-  useMutationOptions?: UseMutationOptions<TransactionResult, Error, void>,
+  useMutationOptions?: UseMutationOptions<TransactionResult, Error, void>
 ): UseMutationResult<TransactionResult, Error, void> {
-  return useMutation<TransactionResult, Error, void>(() => {
-    return runTransaction(ref, transactionUpdate, options);
-  }, useMutationOptions);
+  return useMutation<TransactionResult, Error, void>({
+    mutationFn: () => {
+      return runTransaction(ref, transactionUpdate, options);
+    },
+    ...useMutationOptions,
+  });
 }
