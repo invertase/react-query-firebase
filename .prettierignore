@@ -1,7 +1,0 @@
-**/lib/**
-node_modules
-*.js
-*.json
-*.md
-*.yaml
-coverage
