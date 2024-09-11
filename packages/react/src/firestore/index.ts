@@ -1,0 +1,1 @@
+export { useFirestoreDocument } from "./useFirestoreDocument";

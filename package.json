@@ -1,14 +1,19 @@
 {
   "name": "@tanstack-query-firebase/root",
   "private": true,
-  "description": "TanStack Query hooks for Firebase.",
-  "keywords": [
-    "react",
-    "react-query",
-    "firebase",
-    "hooks"
-  ],
-  "devDependencies": {},
-  "scripts": {},
-  "dependencies": {}
+  "scripts": {
+    "test": "vitest --dom --coverage",
+    "serve:coverage": "npx serve coverage",
+    "emulator": "firebase emulators:start --project test-project --only firestore"
+  },
+  "devDependencies": {
+    "@tanstack/react-query": "^5.55.4",
+    "firebase": "^10.13.1",
+    "react": "^18.3.1",
+    "tsup": "^8.2.4",
+    "typescript": "^5.6.2",
+    "vitest": "^2.0.5",
+    "happy-dom": "^15.7.3",
+    "@vitest/coverage-istanbul": "^2.0.5"
+  }
 }
