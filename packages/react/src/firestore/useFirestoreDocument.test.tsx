@@ -97,7 +97,7 @@ describe("useFirestoreDocument", () => {
     expect(result.current.error).toBeDefined();
   });
 
-  test("returns pending state initally", async () => {
+  test("returns pending state initially", async () => {
     const ref = doc(firestore, "tests", "pendingState");
 
     setDoc(ref, { foo: "pending" });
