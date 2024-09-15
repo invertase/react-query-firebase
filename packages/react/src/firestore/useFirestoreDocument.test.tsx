@@ -122,4 +122,27 @@ describe("useFirestoreDocument", () => {
     expect(snapshot?.exists()).toBe(true);
     expect(snapshot?.data()?.foo).toBe("pending");
   });
+
+  test("returns correct data type", async () => {
+    const ref = doc(firestore, "tests", "typedDoc");
+
+    setDoc(ref, { foo: "bar", num: 23 } as { foo: string; num: number });
+
+    const { result } = renderHook(
+      () =>
+        useFirestoreDocument(ref, {
+          queryKey: ["typed", "doc"],
+        }),
+      { wrapper }
+    );
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    const snapshot = result.current.data;
+    expect(snapshot?.exists()).toBe(true);
+    expect(snapshot?.data()?.foo).toBe("bar");
+    expect(snapshot?.data()?.num).toBe(23);
+  });
 });
