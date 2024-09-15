@@ -96,4 +96,30 @@ describe("useFirestoreDocument", () => {
 
     expect(result.current.error).toBeDefined();
   });
+
+  test("returns pending state initally", async () => {
+    const ref = doc(firestore, "tests", "pendingState");
+
+    setDoc(ref, { foo: "pending" });
+
+    const { result } = renderHook(
+      () =>
+        useFirestoreDocument(ref, {
+          queryKey: ["pending", "state"],
+        }),
+      { wrapper }
+    );
+
+    // initially isPending should be true
+    expect(result.current.isPending).toBe(true);
+
+    // wait for the query to finish, and should have isSuccess true
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    const snapshot = result.current.data;
+    expect(snapshot?.exists()).toBe(true);
+    expect(snapshot?.data()?.foo).toBe("pending");
+  });
 });
