@@ -51,4 +51,31 @@ describe("useFirestoreDocument", () => {
     expect(snapshot.exists()).toBe(true);
     expect(snapshot.data()?.foo).toBe("bar");
   });
+
+  test("fetches document from server source", async () => {
+    const ref = doc(firestore, "tests", "serverSource");
+
+    // set data
+    await setDoc(ref, { foo: "fromServer" });
+
+    //test the hook
+    const { result } = renderHook(
+      () =>
+        useFirestoreDocument(ref, {
+          queryKey: ["server", "doc"],
+          firestore: { source: "server" },
+        }),
+      { wrapper }
+    );
+
+    // await the query
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    // snapshot should exist, data should be fetched from the server and should contain the correct data
+    const snapshot = result.current.data;
+    expect(snapshot?.exists()).toBe(true);
+    expect(snapshot?.data()?.foo).toBe("fromServer");
+  });
 });
