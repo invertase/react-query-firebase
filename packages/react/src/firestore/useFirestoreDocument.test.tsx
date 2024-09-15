@@ -78,4 +78,22 @@ describe("useFirestoreDocument", () => {
     expect(snapshot?.exists()).toBe(true);
     expect(snapshot?.data()?.foo).toBe("fromServer");
   });
+
+  test("handles fetch errors", async () => {
+    const ref = doc(firestore, "nonExistentCollection", "nonExistentDoc");
+
+    const { result } = renderHook(
+      () =>
+        useFirestoreDocument(ref, {
+          queryKey: ["error", "doc"],
+        }),
+      { wrapper }
+    );
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+    });
+
+    expect(result.current.error).toBeDefined();
+  });
 });
