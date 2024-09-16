@@ -15,8 +15,8 @@
   ],
   "sidebar": [
     {
-      "tab": "root",
       "group": "Getting Started",
+      "tab": "root",
       "pages": [{ "title": "Overview", "href": "/" }]
     },
     {
