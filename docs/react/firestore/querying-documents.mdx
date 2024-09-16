@@ -1,0 +1,151 @@
+---
+title: Querying Documents | Firestore
+description: Query Firestore documents using TanStack Query Firebase.
+---
+
+# Querying Documents
+
+This page covers how to query Firestore documents, and various techniques
+to get the best results from the library.
+
+## Providing a reference
+
+To start querying a document, you need to provide the hooks with a
+[`DocumentReference`](https://firebase.google.com/docs/reference/js/firestore_.documentreference)
+created directly from the `firebase/firestore` library.
+
+For example, to create a reference to a document in the `products` collection:
+
+```js
+import { collection, doc } from "firebase/firestore";
+import { firestore } from "./firebase";
+
+const collectionRef = collection(firestore, "products");
+const ref = doc(collectionRef, "123");
+```
+
+## Basic example
+
+With your reference in hand, you can get started.
+
+The library provides 2 main hooks for querying collections; `useFirestoreDocument` and `useFirestoreDocumentData`.
+Each hook is similar however returns slightly different results (see the next section for more detail).
+Within a component, import and provide a hook a Query Key and the reference:
+
+```jsx
+import React from "react";
+import { useFirestoreDocument } from "@tanstack-query-firebase/react";
+import { doc } from "firebase/firestore";
+import { firestore } from "../firebase";
+
+function Product({ id }) {
+  const ref = doc(firestore, "products", id);
+
+  // Use the useFirestoreDocument hook
+  const product = useFirestoreDocument(ref, {
+    queryKey: ["products", id], // Query Key
+  });
+
+  // Show loading state while fetching data
+  if (product.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  // Access the document snapshot
+  const snapshot = product.data; // DocumentSnapshot
+
+  // Render the document data
+  return <div>{snapshot.data().name}</div>;
+}
+
+export default Product;
+
+```
+
+The hook returns an instance of [`useQuery`](https://tanstack.com/query/latest/docs/framework/react/reference/useQuery)
+containing a [`DocumentSnapshot`](https://firebase.google.com/docs/reference/js/firestore_.documentsnapshot).
+By using the `useQuery` hook you're able to reactivly handle events such as loading, errors, success, refetching and lots more.
+
+> If this doesn't make much sense to you, please check out the TanStack Query documentation before proceeding!
+
+
+## Query Keys & References
+
+A core concept of this library is the principle of Query Keys in TanStack Query. TanStack Query will refetch your data based 
+on its configuration and when the Query Key changes. Properly managing Query Keys ensures that your application state remains 
+predictable and up-to-date.
+
+## Why Query Keys Matter
+
+When using Firebase references (e.g., Firestore documents), it's crucial to ensure that your Query Key accurately reflects 
+the data source. If your Firebase reference changes (e.g., when a prop like id changes), the Query Key must also change. 
+This allows TanStack Query to correctly track and refetch the data for the new reference.
+
+## Common Pitfall: Static Query Keys
+
+For example, the following **will not work**:
+
+```jsx
+// This does not work!!!!!11
+function Product({ id }) {
+  const collectionRef = collection(firestore, "products");
+  const ref = doc(collectionRef, id);
+
+  const product = useFirestoreDocument(ref, {
+    queryKey: ["product"]
+  });
+
+  return ...
+}
+```
+
+### Explanation:
+- If the `id` prop changes, the document reference (`ref`) changes.
+- However, the Query Key (`["product"]`) remains the same, so TanStack Query does not recognize this change.
+- The data will only be refetched when TanStack Query decides to refetch based on other criteria, making your application state unpredictable.
+
+To predicitably update your data, ensure your Query Key reflects your reference:
+
+## Correct Usage: Dynamic Query Keys
+To ensure that your data is predictably updated when the reference changes, the Query Key should include identifiers 
+that reflect the reference:
+
+```jsx
+// This works!!
+function Product({ id }) {
+  const collectionRef = collection(firestore, "products");
+  const ref = doc(collectionRef, id);
+
+  // The Query Key now reflects the reference id.
+  const product = useFirestoreDocument(ref, {
+    queryKey: ["product", id]
+  });
+
+  return ...
+}
+```
+
+### Explanation
+- The Query Key is now `["product", id]`, which changes whenever the `id` prop changes.
+- This signals TanStack Query to refetch the data when the reference (`ref`) changes, ensuring the component displays the correct data for the current `id`.
+
+## Benefits of Correct Query Key Usage
+- Predictable State: Your application will consistently display the correct data, reflecting changes in Firebase references.
+- Optimized Caching: By using dynamic Query Keys, each unique reference (id) is treated as an individual query, benefiting from TanStack Query's caching mechanisms. 
+To learn more, read about [Query Keys](https://tanstack.com/query/latest/docs/framework/react/guides/query-keys).
+
+## Cached / Server Data
+
+When querying a collection, you
+can specify a `source` parameter to indiciate whether the
+cached or server documents should be queried:
+
+```js
+useFirestoreDocument(ref,{
+    queryKey: ["products", id],
+    firestore: { source : "cache"}
+});
+```
+
+If no value is provided, a combination of cache and server will be used (as default by Firestore).
+
