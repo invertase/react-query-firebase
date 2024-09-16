@@ -14,12 +14,21 @@
     }
   ],
   "sidebar": [
-    ["Getting Started", "/"],
-    [
-      "Firestore",
-      [
-        ["Getting Started", "/react/firestore"]
+    {
+      "tab": "root",
+      "group": "Getting Started",
+      "pages": [{ "title": "Overview", "href": "/" }]
+    },
+    {
+      "tab": "root",
+      "group": "Firestore",
+      "pages": [
+        { "title": "Overview", "href": "/react/firestore" },
+        {
+          "title": "Querying Documents",
+          "href": "/react/firestore/querying-documents"
+        }
       ]
-    ]
+    }
   ]
 }
