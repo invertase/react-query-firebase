@@ -1,65 +1,24 @@
 {
-  "name": "React Query Firebase",
+  "name": "TanStack Query Firebase",
   "twitter": "invertaseio",
   "theme": "#FF4154",
   "docsearch": {
     "apiKey": "8838b79166d4839463db6aeafbbaa383",
-    "indexName": "react-query-firebase"
+    "indexName": "tanstack-query-firebase"
   },
+  "tabs": [
+    {
+      "id": "root",
+      "title": "React",
+      "href": "/"
+    }
+  ],
   "sidebar": [
     ["Getting Started", "/"],
     [
-      "Analytics",
-      [
-        ["Getting Started", "/analytics"],
-        ["Logging Events", "/analytics/logging-events"],
-        ["Actions", "/analytics/actions"],
-        ["TypeScript", "/analytics/typescript"]
-      ]
-    ],
-    [
-      "Authentication",
-      [
-        ["Getting Started", "/auth"],
-        ["Authentication State", "/auth/auth-state"],
-        ["ID Token", "/auth/id-token"],
-        ["Auth Actions", "/auth/actions"]
-      ]
-    ],
-    [
-      "Database",
-      [
-        ["Getting Started", "/database"],
-        ["Querying Data", "/database/querying"],
-        ["Data Mutation", "/database/data-mutation"],
-        ["TypeScript", "/database/typescript"]
-      ]
-    ],
-    [
       "Firestore",
       [
-        ["Getting Started", "/firestore"],
-        ["Querying Collections", "/firestore/querying-collections"],
-        ["Querying Documents", "/firestore/querying-documents"],
-        ["Data Mutation", "/firestore/data-mutation"],
-        ["Prefetching", "/firestore/prefetching"],
-        ["TypeScript", "/firestore/typescript"]
-      ]
-    ],
-    [
-      "Functions",
-      [
-        ["Getting Started", "/functions"],
-        ["Querying Functions", "/functions/querying"],
-        ["Calling Functions", "/functions/calling"],
-        ["TypeScript", "/functions/typescript"]
-      ]
-    ],
-    [
-      "Examples",
-      [
-        ["Auth: Basic Sign-in/out", "/examples/auth-basic"],
-        ["Functions: Query & Mutate", "/examples/functions-basic"]
+        ["Getting Started", "/react/firestore"]
       ]
     ]
   ]
