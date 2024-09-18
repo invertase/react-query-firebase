@@ -4,7 +4,7 @@
   "theme": "#FF4154",
   "docsearch": {
     "apiKey": "8838b79166d4839463db6aeafbbaa383",
-    "indexName": "tanstack-query-firebase"
+    "indexName": "react-query-firebase"
   },
   "tabs": [
     {
