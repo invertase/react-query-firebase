@@ -5,7 +5,11 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { doc, setDoc } from "firebase/firestore";
 
-import { firestore, wipeFirestore } from "~/testing-utils";
+import {
+  expectFirestoreError,
+  firestore,
+  wipeFirestore,
+} from "~/testing-utils";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -79,13 +83,13 @@ describe("useFirestoreDocument", () => {
     expect(snapshot?.data()?.foo).toBe("fromServer");
   });
 
-  test("handles fetch errors", async () => {
-    const ref = doc(firestore, "nonExistentCollection", "nonExistentDoc");
+  test("handles restricted collections appropriately", async () => {
+    const ref = doc(firestore, "restrictedCollection", "someDoc");
 
     const { result } = renderHook(
       () =>
         useFirestoreDocument(ref, {
-          queryKey: ["error", "doc"],
+          queryKey: ["restricted", "doc"],
         }),
       { wrapper }
     );
@@ -94,7 +98,7 @@ describe("useFirestoreDocument", () => {
       expect(result.current.isError).toBe(true);
     });
 
-    expect(result.current.error).toBeDefined();
+    expectFirestoreError(result.current.error, "permission-denied");
   });
 
   test("returns pending state initially", async () => {
