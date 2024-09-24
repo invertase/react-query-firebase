@@ -1,1 +1,1 @@
-export { useFirestoreDocument } from "./useFirestoreDocument";
+export { useDocumentQuery } from "./useDocumentQuery";

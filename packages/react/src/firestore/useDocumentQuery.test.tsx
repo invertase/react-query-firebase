@@ -1,6 +1,6 @@
 import React, { type ReactNode } from "react";
 import { describe, expect, test, beforeEach } from "vitest";
-import { useFirestoreDocument } from "./useFirestoreDocument";
+import { useDocumentQuery } from "./useDocumentQuery";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { doc, setDoc } from "firebase/firestore";
@@ -23,13 +23,13 @@ const wrapper = ({ children }: { children: ReactNode }) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
-describe("useFirestoreDocument", () => {
+describe("useDocumentQuery", () => {
   beforeEach(async () => {
     await wipeFirestore();
   });
 
   test("it works", async () => {
-    const ref = doc(firestore, "tests", "useFirestoreDocument");
+    const ref = doc(firestore, "tests", "useDocumentQuery");
 
     // Set some data
     await setDoc(ref, { foo: "bar" });
@@ -37,7 +37,7 @@ describe("useFirestoreDocument", () => {
     // Test the hook
     const { result } = renderHook(
       () =>
-        useFirestoreDocument(ref, {
+        useDocumentQuery(ref, {
           queryKey: ["some", "doc"],
         }),
       { wrapper }
@@ -65,7 +65,7 @@ describe("useFirestoreDocument", () => {
     //test the hook
     const { result } = renderHook(
       () =>
-        useFirestoreDocument(ref, {
+        useDocumentQuery(ref, {
           queryKey: ["server", "doc"],
           firestore: { source: "server" },
         }),
@@ -88,7 +88,7 @@ describe("useFirestoreDocument", () => {
 
     const { result } = renderHook(
       () =>
-        useFirestoreDocument(ref, {
+        useDocumentQuery(ref, {
           queryKey: ["restricted", "doc"],
         }),
       { wrapper }
@@ -108,7 +108,7 @@ describe("useFirestoreDocument", () => {
 
     const { result } = renderHook(
       () =>
-        useFirestoreDocument(ref, {
+        useDocumentQuery(ref, {
           queryKey: ["pending", "state"],
         }),
       { wrapper }
@@ -134,7 +134,7 @@ describe("useFirestoreDocument", () => {
 
     const { result } = renderHook(
       () =>
-        useFirestoreDocument(ref, {
+        useDocumentQuery(ref, {
           queryKey: ["typed", "doc"],
         }),
       { wrapper }
