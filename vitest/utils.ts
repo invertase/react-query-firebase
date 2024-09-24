@@ -1,9 +1,10 @@
-import { type FirebaseApp, initializeApp } from "firebase/app";
+import { type FirebaseApp, FirebaseError, initializeApp } from "firebase/app";
 import {
   getFirestore,
   connectFirestoreEmulator,
   type Firestore,
 } from "firebase/firestore";
+import { expect } from "vitest";
 
 const firebaseTestingOptions = {
   projectId: "test-project",
@@ -32,4 +33,16 @@ async function wipeFirestore() {
   }
 }
 
-export { firestore, wipeFirestore };
+function expectFirestoreError(error: unknown, expectedCode: string) {
+  if (error instanceof FirebaseError) {
+    expect(error).toBeDefined();
+    expect(error.code).toBeDefined();
+    expect(error.code).toBe(expectedCode);
+  } else {
+    throw new Error(
+      "Expected a Firestore error, but received a different type."
+    );
+  }
+}
+
+export { firestore, wipeFirestore, expectFirestoreError };

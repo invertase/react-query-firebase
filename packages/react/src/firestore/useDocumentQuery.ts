@@ -18,7 +18,7 @@ type FirestoreUseQueryOptions<TData = unknown, TError = Error> = Omit<
   };
 };
 
-export function useFirestoreDocument<
+export function useDocumentQuery<
   FromFirestore extends DocumentData = DocumentData,
   ToFirestore extends DocumentData = DocumentData
 >(
@@ -29,7 +29,7 @@ export function useFirestoreDocument<
   >
 ) {
   const { firestore, ...queryOptions } = options;
-  
+
   return useQuery<DocumentSnapshot<FromFirestore, ToFirestore>, FirestoreError>(
     {
       ...queryOptions,
