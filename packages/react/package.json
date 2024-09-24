@@ -1,21 +1,29 @@
 {
   "name": "@tanstack-query-firebase/react",
   "version": "1.0.0",
-  "description": "",
+  "description": "TanStack Query bindings for Firebase and React",
   "type": "module",
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts"
+    "build": "tsup"
   },
   "exports": {
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./auth": {
+      "import": "./dist/auth.js",
+      "types": "./dist/auth.d.ts"
+    },
+    "./firestore": {
+      "import": "./dist/firestore.js",
+      "types": "./dist/firestore.d.ts"
     }
   },
   "author": {
     "name": "Invertase",
     "email": "oss@invertase.io",
-    "url": "https://github.com/invertase/"
+    "url": "https://github.com/invertase/tanstack-query-firebase"
   },
   "license": "Apache-2.0",
   "devDependencies": {
