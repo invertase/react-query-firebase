@@ -108,7 +108,7 @@ When Firestore returns data from a query, it does not provide the raw document d
 we are provided a [`QuerySnapshot`](https://firebase.google.com/docs/reference/js/firestore_.querysnapshot)
 containing an array of [`DocumentSnapshot`](https://firebase.google.com/docs/reference/js/firestore_.documentsnapshot) instances.
 Although these classes provide useful functionality, we sometimes just want the data from the database
-for convinience.
+for convenience.
 
 As shown above the `useFirestoreQuery` hook returns a `QuerySnapshot`, which requires
 developers to iterate over `DocumentSnapshot` instances and extract the data:
