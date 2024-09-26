@@ -55,7 +55,7 @@ jobs:
       # Run tests for the React package if it has changed
       - name: Run React Tests
         if: steps.changes.outputs.react == 'true'
-        run: vitest --dom 'packages/react'
+        run: pnpm vitest --dom 'packages/react'
 
       # Run tests for the Vue package if it has changed
       # - name: Run Vue Tests
