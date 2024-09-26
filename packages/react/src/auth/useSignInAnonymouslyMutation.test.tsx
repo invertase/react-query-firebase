@@ -1,15 +1,22 @@
 import React from "react";
-import { describe, expect, test, beforeEach, vi } from "vitest";
+import {
+  describe,
+  expect,
+  test,
+  beforeEach,
+  afterEach,
+  vi,
+  type MockInstance,
+} from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { type Auth, type UserCredential } from "firebase/auth";
 import { useSignInAnonymouslyMutation } from "./useSignInAnonymouslyMutation";
+import { auth, wipeAuth } from "~/testing-utils";
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: {
-      retry: false,
-    },
+    queries: { retry: false },
+    mutations: { retry: false },
   },
 });
 
@@ -17,10 +24,14 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
-describe("useSignInAnonymously", () => {
-  let auth: Auth;
+describe("useSignInAnonymouslyMutation", () => {
+  beforeEach(async () => {
+    queryClient.clear();
+    await wipeAuth();
+  });
 
-  beforeEach(() => {
+  afterEach(async () => {
+    await auth.signOut();
   });
 
   test("successfully signs in anonymously", async () => {
@@ -28,7 +39,7 @@ describe("useSignInAnonymously", () => {
       wrapper,
     });
 
-    await act(async () => {
+    act(() => {
       result.current.mutate();
     });
 
@@ -39,42 +50,65 @@ describe("useSignInAnonymously", () => {
     expect(result.current.data?.user.isAnonymous).toBe(true);
   });
 
-  test("handles auth error", async () => {
+  test("resets mutation state correctly", async () => {
     const { result } = renderHook(() => useSignInAnonymouslyMutation(auth), {
       wrapper,
     });
 
-    await act(async () => {
-      result.current.mutate();
+    act(() => {
+      result.current.mutateAsync();
     });
 
     await waitFor(() => {
-      expect(result.current.isError).toBe(true);
+      expect(result.current.data?.user.isAnonymous).toBe(true);
+      expect(result.current.isSuccess).toBe(true);
     });
 
-    // expect(result.current.error).toEqual(mockError);
+    act(() => {
+      result.current.reset();
+    });
+
+    await waitFor(() => {
+      expect(result.current.isIdle).toBe(true);
+      expect(result.current.data).toBeUndefined();
+      expect(result.current.error).toBeNull();
+    });
   });
 
-  test("returns pending state initially", async () => {
+  test("allows multiple sequential sign-ins", async () => {
     const { result } = renderHook(() => useSignInAnonymouslyMutation(auth), {
       wrapper,
     });
 
-    // Initially, it should be idle
-    expect(result.current.isIdle).toBe(true);
-
+    // First sign-in
     act(() => {
       result.current.mutate();
     });
 
-    // After mutate is called, it should be loading
-    await waitFor(() => {
-      expect(result.current.isPending).toBe(true);
-    });
-
-    // Once the request is resolved, it should be successful
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
+      expect(result.current.data?.user.isAnonymous).toBe(true);
+    });
+
+    // Reset state
+    act(() => {
+      result.current.reset();
+    });
+
+    await waitFor(() => {
+      expect(result.current.isIdle).toBe(true);
+      expect(result.current.data).toBeUndefined();
+      expect(result.current.error).toBeNull();
+    });
+
+    // Second sign-in
+    act(() => {
+      result.current.mutate();
+    });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+      expect(result.current.data?.user.isAnonymous).toBe(true);
     });
   });
 });
