@@ -7,6 +7,6 @@
 // useWriteBatchCommitMutation (WriteBatch)
 export { useDocumentQuery } from "./useDocumentQuery";
 // useDocumentsQuery <-- Name? useQuery? Bit generic.
-// useGetCountFromServerQuery
+export { useGetCountFromServerQuery } from "./useGetCountFromServerQuery";
 // useGetAggregateFromServerQuery
 // useNamedQuery
