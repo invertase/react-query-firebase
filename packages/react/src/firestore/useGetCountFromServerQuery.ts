@@ -18,7 +18,7 @@ export function useGetCountFromServerQuery(
     ...options,
     queryFn: async () => {
       const snapshot = await getCountFromServer(query);
-      return snapshot?.data().count;
+      return snapshot.data().count;
     },
   });
 }
