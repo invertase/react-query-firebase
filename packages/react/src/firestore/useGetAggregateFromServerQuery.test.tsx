@@ -12,6 +12,7 @@ import {
   average,
   count,
 } from "firebase/firestore";
+
 import {
   expectFirestoreError,
   firestore,
@@ -38,11 +39,10 @@ describe("useGetAggregateFromServerQuery", () => {
 
     const { result } = renderHook(
       () =>
-        useGetAggregateFromServerQuery(
-          collectionRef,
-          { count: count() },
-          { queryKey: ["aggregate", "empty"] }
-        ),
+        useGetAggregateFromServerQuery(collectionRef, {
+          queryKey: ["aggregate", "empty"],
+          firestore: { aggregateSpec: { count: count() } },
+        }),
       { wrapper }
     );
 
@@ -60,23 +60,24 @@ describe("useGetAggregateFromServerQuery", () => {
 
     const { result } = renderHook(
       () =>
-        useGetAggregateFromServerQuery(
-          collectionRef,
-          {
-            count: count(),
-            avg: average("value"),
-            sum: sum("value"),
+        useGetAggregateFromServerQuery(collectionRef, {
+          queryKey: ["aggregate", "non-empty"],
+          firestore: {
+            aggregateSpec: {
+              count: count(),
+              sum: sum("value"),
+              avg: average("value"),
+            },
           },
-          { queryKey: ["aggregate", "non-empty"] }
-        ),
+        }),
       { wrapper }
     );
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(result.current.data?.avg).toBe(20);
-    expect(result.current.data?.sum).toBe(60);
     expect(result.current.data?.count).toBe(3);
+    expect(result.current.data?.sum).toBe(60);
+    expect(result.current.data?.avg).toBe(20);
   });
 
   test("handles complex queries", async () => {
@@ -91,37 +92,38 @@ describe("useGetAggregateFromServerQuery", () => {
 
     const { result } = renderHook(
       () =>
-        useGetAggregateFromServerQuery(
-          complexQuery,
-          {
-            count: count(),
-            avg: average("value"),
-            sum: sum("value"),
+        useGetAggregateFromServerQuery(complexQuery, {
+          queryKey: ["aggregate", "complex"],
+          firestore: {
+            aggregateSpec: {
+              count: count(),
+              sum: sum("value"),
+              avg: average("value"),
+            },
           },
-          { queryKey: ["aggregate", "complex"] }
-        ),
-      {
-        wrapper,
-      }
+        }),
+      { wrapper }
     );
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(result.current.data?.avg).toBe(20);
-    expect(result.current.data?.sum).toBe(40);
     expect(result.current.data?.count).toBe(2);
+    expect(result.current.data?.sum).toBe(40);
+    expect(result.current.data?.avg).toBe(20);
   });
 
-  test("handles restricted collection appropriately", async () => {
-    const collectionRef = collection(firestore, "restrictedCollection");
+  test("handles restricted collections appropriately", async () => {
+    const restrictedCollectionRef = collection(
+      firestore,
+      "restrictedCollection"
+    );
 
     const { result } = renderHook(
       () =>
-        useGetAggregateFromServerQuery(
-          collectionRef,
-          { count: count() },
-          { queryKey: ["aggregate", "restricted"] }
-        ),
+        useGetAggregateFromServerQuery(restrictedCollectionRef, {
+          queryKey: ["aggregate", "restricted"],
+          firestore: { aggregateSpec: { count: count() } },
+        }),
       { wrapper }
     );
 
@@ -137,14 +139,14 @@ describe("useGetAggregateFromServerQuery", () => {
 
     const { result } = renderHook(
       () =>
-        useGetAggregateFromServerQuery(
-          collectionRef,
-          { count: count() },
-          { queryKey: ["aggregate", "pending"] }
-        ),
+        useGetAggregateFromServerQuery(collectionRef, {
+          queryKey: ["aggregate", "pending"],
+          firestore: { aggregateSpec: { count: count() } },
+        }),
       { wrapper }
     );
 
+    // Initially isPending should be true
     expect(result.current.isPending).toBe(true);
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));

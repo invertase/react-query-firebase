@@ -10,9 +10,12 @@ import {
 type FirestoreUseQueryOptions<TData = unknown, TError = Error> = Omit<
   UseQueryOptions<TData, TError>,
   "queryFn"
->;
+> & {
+  firestore: {
+    aggregateSpec: AggregateSpec;
+  };
+};
 
-// map the AggregateSpec to its result type, thus resolving the AggregateField to its actual value type
 type AggregateResult<T extends AggregateSpec> = {
   [K in keyof T]: AggregateField<T[K]> extends AggregateField<infer R>
     ? R
@@ -21,13 +24,17 @@ type AggregateResult<T extends AggregateSpec> = {
 
 export function useGetAggregateFromServerQuery<T extends AggregateSpec>(
   query: Query,
-  aggregateSpec: T,
   options: FirestoreUseQueryOptions<AggregateResult<T>, FirestoreError>
 ) {
+  const { firestore, ...queryOptions } = options;
+
   return useQuery<AggregateResult<T>, FirestoreError>({
-    ...options,
+    ...queryOptions,
     queryFn: async () => {
-      const snapshot = await getAggregateFromServer(query, aggregateSpec);
+      const snapshot = await getAggregateFromServer(
+        query,
+        firestore.aggregateSpec
+      );
       return snapshot.data() as AggregateResult<T>;
     },
   });
