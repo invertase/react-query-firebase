@@ -26,7 +26,7 @@ export function useDatabaseSnapshot<R = DataSnapshot>(
   queryKey: QueryKey,
   ref: DatabaseReference,
   options: { subscribe?: boolean } = {},
-  useQueryOptions?: Omit<UseQueryOptions<DataSnapshot, Error, R>, "queryFn">
+  useQueryOptions?: Omit<UseQueryOptions<DataSnapshot, Error, R>, "queryFn">,
 ): UseQueryResult<R, Error> {
   const isSubscription = !!options.subscribe;
 
@@ -36,7 +36,7 @@ export function useDatabaseSnapshot<R = DataSnapshot>(
         return callback(snapshot);
       });
     },
-    [ref]
+    [ref],
   );
 
   return useSubscription<DataSnapshot, Error, R>(
@@ -47,7 +47,7 @@ export function useDatabaseSnapshot<R = DataSnapshot>(
       ...useQueryOptions,
       onlyOnce: !isSubscription,
       fetchFn: async () => get(ref),
-    }
+    },
   );
 }
 
@@ -76,7 +76,7 @@ export function useDatabaseValue<T = unknown | null, R = T>(
   queryKey: QueryKey,
   ref: DatabaseReference,
   options: UseDatabaseValueOptions = {},
-  useQueryOptions?: Omit<UseQueryOptions<T, Error, R>, "queryFn">
+  useQueryOptions?: Omit<UseQueryOptions<T, Error, R>, "queryFn">,
 ): UseQueryResult<R, Error> {
   const isSubscription = !!options?.subscribe;
 
@@ -87,7 +87,7 @@ export function useDatabaseValue<T = unknown | null, R = T>(
         return callback(data);
       });
     },
-    [ref]
+    [ref],
   );
 
   return useSubscription<T, Error, R>(
@@ -99,6 +99,6 @@ export function useDatabaseValue<T = unknown | null, R = T>(
       onlyOnce: !isSubscription,
       fetchFn: async () =>
         parseDataSnapshot(await get(ref), !!options?.toArray),
-    }
+    },
   );
 }

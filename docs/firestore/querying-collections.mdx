@@ -35,7 +35,7 @@ import { firestore } from "./firebase";
 const ref = query(
   collection(firestore, "products"),
   limit(10),
-  where("state", "==", "active")
+  where("state", "==", "active"),
 );
 ```
 
@@ -226,7 +226,7 @@ function Products() {
   const query = useFirestoreQuery(
     ["products"],
     firestore,
-    namedQuery(firestore, "products")
+    namedQuery(firestore, "products"),
   );
 }
 ```
@@ -303,7 +303,7 @@ const query = useFirestoreQuery(
     select(snapshot) {
       return snapshot.docs.map((docSnapshot) => docSnapshot.id);
     },
-  }
+  },
 );
 
 const data = query.data; // ['id1', 'id2', ...]
@@ -317,7 +317,7 @@ const findActiveSubscription = query(
   collection(firestore, "subscriptions"),
   where("uid", "==", "123"),
   where("status", "==", "active"),
-  limit(1)
+  limit(1),
 );
 
 // Override the return type generic:
@@ -335,7 +335,7 @@ const query = useFirestoreQuery(
 
       return snapshot.docs[0];
     },
-  }
+  },
 );
 
 // Data will contain a single document or null.
@@ -390,7 +390,7 @@ const query = useFirestoreQuery(
     onError(error) {
       toast.error("Woops, something went wrong!");
     },
-  }
+  },
 );
 
 if (query.isError) {

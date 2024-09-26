@@ -50,7 +50,7 @@ export type WithIdField<D, F = void> = F extends string
 
 export async function getSnapshot<T>(
   ref: DocumentReference<T>,
-  source?: GetSnapshotSource
+  source?: GetSnapshotSource,
 ): Promise<DocumentSnapshot<T>> {
   let snapshot: DocumentSnapshot<T>;
 
@@ -73,7 +73,7 @@ export type QueryType<T> = Query<T> | NamedQuery<T>;
 
 export async function getQuerySnapshot<T>(
   query: Query<T>,
-  source?: GetSnapshotSource
+  source?: GetSnapshotSource,
 ): Promise<QuerySnapshot<T>> {
   let snapshot: QuerySnapshot<T>;
 

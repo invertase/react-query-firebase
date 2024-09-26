@@ -49,7 +49,7 @@ describe("useFirestoreQuery", () => {
   beforeEach(async () => {
     const config = init();
     await axios.delete(
-      `http://localhost:8080/emulator/v1/projects/${config.projectId}/databases/(default)/documents`
+      `http://localhost:8080/emulator/v1/projects/${config.projectId}/databases/(default)/documents`,
     );
     wrapper = config.wrapper;
     firestore = config.firestore;
@@ -63,7 +63,7 @@ describe("useFirestoreQuery", () => {
 
       const { result, waitFor } = renderHook(
         () => useFirestoreQuery(hookId, ref),
-        { wrapper }
+        { wrapper },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -88,7 +88,7 @@ describe("useFirestoreQuery", () => {
           useFirestoreQuery(hookId, ref, {
             source: "cache",
           }),
-        { wrapper }
+        { wrapper },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -111,7 +111,7 @@ describe("useFirestoreQuery", () => {
           useFirestoreQuery(hookId, ref, {
             source: "server",
           }),
-        { wrapper }
+        { wrapper },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -133,7 +133,7 @@ describe("useFirestoreQuery", () => {
         firestore,
         "tests",
         genId(),
-        genId()
+        genId(),
       ) as CollectionReference<Foo>;
 
       await act(async () => {
@@ -144,7 +144,7 @@ describe("useFirestoreQuery", () => {
         () => useFirestoreQuery(hookId, ref),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -172,7 +172,7 @@ describe("useFirestoreQuery", () => {
         firestore,
         "tests",
         id,
-        id
+        id,
       ) as CollectionReference<Foo>;
 
       await act(async () => {
@@ -190,7 +190,7 @@ describe("useFirestoreQuery", () => {
           }),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -222,11 +222,11 @@ describe("useFirestoreQuery", () => {
                   mock(snapshot);
                 }
               },
-            }
+            },
           ),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -292,7 +292,7 @@ describe("useFirestoreQuery", () => {
               onSuccess(snapshot) {
                 mock(snapshot);
               },
-            }
+            },
           ),
         {
           wrapper: (props) => wrapper({ children: props.children }),
@@ -300,7 +300,7 @@ describe("useFirestoreQuery", () => {
             id: hookId1,
             reference: ref1,
           },
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -351,7 +351,7 @@ describe("useFirestoreQuery", () => {
               onSuccess(snapshot) {
                 mock1(snapshot);
               },
-            }
+            },
           ),
         {
           wrapper: (props) => wrapper({ children: props.children }),
@@ -359,7 +359,7 @@ describe("useFirestoreQuery", () => {
             id: hookId1,
             reference: col,
           },
-        }
+        },
       );
       const hook2 = renderHook<
         {
@@ -379,7 +379,7 @@ describe("useFirestoreQuery", () => {
               onSuccess(snapshot) {
                 mock2(snapshot);
               },
-            }
+            },
           ),
         {
           wrapper: (props) => wrapper({ children: props.children }),
@@ -387,7 +387,7 @@ describe("useFirestoreQuery", () => {
             id: hookId1,
             reference: col,
           },
-        }
+        },
       );
 
       await hook1.waitFor(() => hook1.result.current.isSuccess, {
@@ -422,13 +422,13 @@ describe("useFirestoreQuery", () => {
 
       const { result, waitFor } = renderHook(
         () => useFirestoreQueryData(hookId, ref),
-        { wrapper }
+        { wrapper },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       expect(result.current.data).toEqual(
-        expect.arrayContaining([{ foo: "bar" }])
+        expect.arrayContaining([{ foo: "bar" }]),
       );
     });
 
@@ -452,13 +452,13 @@ describe("useFirestoreQuery", () => {
               ];
             },
           }),
-        { wrapper }
+        { wrapper },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
 
       expect(result.current.data).toEqual(
-        expect.arrayContaining([{ baz: "ben" }])
+        expect.arrayContaining([{ baz: "ben" }]),
       );
     });
 
@@ -476,7 +476,7 @@ describe("useFirestoreQuery", () => {
           useFirestoreQueryData<"id">(hookId, ref, {
             idField: "id",
           }),
-        { wrapper }
+        { wrapper },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -497,7 +497,7 @@ describe("useFirestoreQuery", () => {
 
       const { result, waitFor } = renderHook(
         () => useFirestoreQueryData(hookId, namedQuery(firestore, bundle)),
-        { wrapper }
+        { wrapper },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -509,7 +509,7 @@ describe("useFirestoreQuery", () => {
     beforeEach(async () => {
       const config = init();
       await axios.delete(
-        `http://localhost:8080/emulator/v1/projects/${config.projectId}/databases/(default)/documents`
+        `http://localhost:8080/emulator/v1/projects/${config.projectId}/databases/(default)/documents`,
       );
     });
     test("it returns a snapshot", async () => {
@@ -536,7 +536,7 @@ describe("useFirestoreQuery", () => {
             mock(snapshot);
             return undefined;
           }),
-        { wrapper }
+        { wrapper },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -578,7 +578,7 @@ describe("useFirestoreQuery", () => {
           useFirestoreInfiniteQuery(hookId, q, (snapshot) => {
             return query(q, startAfter(snapshot.docs[1]));
           }),
-        { wrapper }
+        { wrapper },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -623,7 +623,7 @@ describe("useFirestoreQuery", () => {
             mock(data);
             return undefined;
           }),
-        { wrapper }
+        { wrapper },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -665,7 +665,7 @@ describe("useFirestoreQuery", () => {
           useFirestoreInfiniteQueryData(hookId, q, () => {
             return query(q, startAfter(2));
           }),
-        { wrapper }
+        { wrapper },
       );
 
       await waitFor(() => result.current.isSuccess, { timeout: 5000 });
@@ -710,9 +710,9 @@ describe("useFirestoreQuery", () => {
               },
               {
                 idField: "id",
-              }
+              },
             ),
-          { wrapper }
+          { wrapper },
         );
 
         await waitFor(() => result.current.isSuccess, { timeout: 5000 });

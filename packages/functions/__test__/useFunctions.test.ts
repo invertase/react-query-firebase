@@ -31,7 +31,7 @@ describe("Authentication", () => {
         () => useFunctionsQuery(hookId, functions, "test"),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess);
@@ -50,7 +50,7 @@ describe("Authentication", () => {
         () => useFunctionsQuery(hookId, functions, "test", foo),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess);
@@ -65,7 +65,7 @@ describe("Authentication", () => {
         () => useFunctionsQuery(hookId, functions, "foo"),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isError);
@@ -126,11 +126,11 @@ describe("Authentication", () => {
             hookId,
             functions,
             "test",
-            foo
+            foo,
           ),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess);
@@ -167,11 +167,11 @@ describe("Authentication", () => {
               select(data) {
                 return data.response.foo;
               },
-            }
+            },
           ),
         {
           wrapper,
-        }
+        },
       );
 
       await waitFor(() => result.current.isSuccess);
@@ -191,7 +191,7 @@ describe("Authentication", () => {
               mock(data);
             },
           }),
-        { wrapper }
+        { wrapper },
       );
 
       act(() => {
@@ -206,7 +206,7 @@ describe("Authentication", () => {
     test("it throws when calling a bad function", async () => {
       const { result, waitFor } = renderHook(
         () => useFunctionsCall(functions, "foo"),
-        { wrapper }
+        { wrapper },
       );
 
       act(() => {

@@ -32,7 +32,7 @@ import { getQuerySnapshot, GetSnapshotSource, WithIdField } from "./index";
 
 export function useFirestoreInfiniteQueryData<
   T = DocumentData,
-  R = WithIdField<T>[]
+  R = WithIdField<T>[],
 >(
   key: QueryKey,
   initialQuery: Query<T>,
@@ -43,13 +43,13 @@ export function useFirestoreInfiniteQueryData<
   useInfiniteQueryOptions?: Omit<
     UseInfiniteQueryOptions<WithIdField<T>[], FirestoreError, R>,
     "queryFn" | "getNextPageParam"
-  >
+  >,
 ): UseInfiniteQueryResult<R, FirestoreError>;
 
 export function useFirestoreInfiniteQueryData<
   ID extends string,
   T = DocumentData,
-  R = WithIdField<T, ID>[]
+  R = WithIdField<T, ID>[],
 >(
   key: QueryKey,
   initialQuery: Query<T>,
@@ -60,13 +60,13 @@ export function useFirestoreInfiniteQueryData<
   useInfiniteQueryOptions?: Omit<
     UseInfiniteQueryOptions<WithIdField<T, ID>[], FirestoreError, R>,
     "queryFn" | "getNextPageParam"
-  >
+  >,
 ): UseInfiniteQueryResult<R, FirestoreError>;
 
 export function useFirestoreInfiniteQueryData<
   ID extends string,
   T = DocumentData,
-  R = WithIdField<T, ID>[]
+  R = WithIdField<T, ID>[],
 >(
   key: QueryKey,
   initialQuery: Query<T>,
@@ -77,12 +77,12 @@ export function useFirestoreInfiniteQueryData<
   useInfiniteQueryOptions?: Omit<
     UseInfiniteQueryOptions<WithIdField<T, ID>[], FirestoreError, R>,
     "queryFn" | "getNextPageParam"
-  >
+  >,
 ): UseInfiniteQueryResult<R, FirestoreError> {
   return useInfiniteQuery<WithIdField<T, ID>[], FirestoreError, R>({
     queryKey: useInfiniteQueryOptions?.queryKey ?? key,
     async queryFn(
-      ctx: QueryFunctionContext<QueryKey, Query<T>>
+      ctx: QueryFunctionContext<QueryKey, Query<T>>,
     ): Promise<WithIdField<T, ID>[]> {
       const query: Query<T> = ctx.pageParam ?? initialQuery;
       const snapshot = await getQuerySnapshot(query, options?.source);

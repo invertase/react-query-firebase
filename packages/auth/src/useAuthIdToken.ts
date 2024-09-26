@@ -14,30 +14,35 @@
  * limitations under the License.
  *
  */
-import { QueryKey, UseQueryOptions, UseQueryResult } from "react-query";
+import {
+  QueryKey,
+  UseQueryOptions,
+  UseQueryResult,
+} from "@tanstack/react-query";
 import { Auth, AuthError, IdTokenResult } from "firebase/auth";
 import { useSubscription } from "../../utils/src/useSubscription";
 
 export function useAuthIdToken<R = { token: IdTokenResult }>(
-  queryKey: QueryKey,
   auth: Auth,
   options: Omit<
     UseQueryOptions<{ token: IdTokenResult }, AuthError, R>,
     "queryFn"
-  > = {}
+  > & { queryKey: QueryKey }
 ): UseQueryResult<R, AuthError> {
+  const { queryKey } = options;
+
   const subscribeFn = (
     callback: (data: { token: IdTokenResult } | null) => Promise<void>
-  ) =>
-    auth.onIdTokenChanged(async (data) => {
-      const token = await data?.getIdTokenResult();
-
+  ) => {
+    return auth.onIdTokenChanged(async (user) => {
+      const token = await user?.getIdTokenResult();
       return callback(token ? { token } : null);
     });
+  };
 
   return useSubscription<{ token: IdTokenResult }, AuthError, R>(
     queryKey,
-    "useAuthIdToken",
+    ["useAuthIdToken"],
     subscribeFn,
     options
   );

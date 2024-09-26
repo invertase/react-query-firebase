@@ -32,7 +32,7 @@ import { getQuerySnapshot, GetSnapshotSource } from "./index";
 
 export function useFirestoreInfiniteQuery<
   T = DocumentData,
-  R = QuerySnapshot<T>
+  R = QuerySnapshot<T>,
 >(
   key: QueryKey,
   initialQuery: Query<T>,
@@ -43,7 +43,7 @@ export function useFirestoreInfiniteQuery<
   useInfiniteQueryOptions?: Omit<
     UseInfiniteQueryOptions,
     "queryFn" | "getNextPageParam"
-  >
+  >,
 ): UseInfiniteQueryResult<R, FirestoreError> {
   return useInfiniteQuery<QuerySnapshot<T>, FirestoreError, R>({
     queryKey: useInfiniteQueryOptions?.queryKey ?? key,

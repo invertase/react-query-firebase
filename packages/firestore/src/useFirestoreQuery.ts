@@ -40,7 +40,7 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
   useQueryOptions?: Omit<
     UseQueryOptions<QuerySnapshot<T>, FirestoreError, R>,
     "queryFn"
-  >
+  >,
 ): UseQueryResult<R, FirestoreError> {
   const isSubscription = !!options?.subscribe;
 
@@ -57,12 +57,12 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
           },
           (snapshot: QuerySnapshot<T>) => {
             return callback(snapshot);
-          }
+          },
         );
       });
       return unsubscribe;
     },
-    [query, queryKey]
+    [query, queryKey],
   );
 
   return useSubscription<QuerySnapshot<T>, FirestoreError, R>(
@@ -76,6 +76,6 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
         resolveQuery(query).then((resolvedQuery) => {
           return getQuerySnapshot(resolvedQuery, options?.source);
         }),
-    }
+    },
   );
 }
