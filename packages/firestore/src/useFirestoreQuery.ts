@@ -25,6 +25,7 @@ import {
 } from "firebase/firestore";
 import {
   getQuerySnapshot,
+  GetSnapshotSource,
   QueryType,
   resolveQuery,
   UseFirestoreHookOptions,
@@ -35,7 +36,7 @@ type NextOrObserver<T> = (data: QuerySnapshot<T> | null) => Promise<void>;
 
 export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
   queryKey: QueryKey,
-  query: QueryType<T>,
+  query?: QueryType<T>,
   options?: UseFirestoreHookOptions,
   useQueryOptions?: Omit<
     UseQueryOptions<QuerySnapshot<T>, FirestoreError, R>,
@@ -44,22 +45,43 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
 ): UseQueryResult<R, FirestoreError> {
   const isSubscription = !!options?.subscribe;
 
+  let source: GetSnapshotSource | undefined;
+  let includeMetadataChanges: boolean | undefined;
+
+  if (options?.subscribe === undefined) {
+    source = options?.source;
+  }
+  if (options?.subscribe) {
+    includeMetadataChanges = options.includeMetadataChanges;
+  }
+
+  if (useQueryOptions?.enabled && !query) {
+    throw new Error(
+      `useFirestoreQuery with key ${JSON.stringify(
+        queryKey
+      )}  expected to recieve a query or named query, but got "undefined".
+      Did you forget to set the options "enabled" to false?`
+    );
+  }
+
   const subscribeFn = useCallback(
     (callback: NextOrObserver<T>) => {
       let unsubscribe = () => {
         // noop
       };
-      resolveQuery(query).then((res) => {
-        unsubscribe = onSnapshot(
-          res,
-          {
-            includeMetadataChanges: options?.includeMetadataChanges,
-          },
-          (snapshot: QuerySnapshot<T>) => {
-            return callback(snapshot);
-          }
-        );
-      });
+      if (query) {
+        resolveQuery(query).then((res) => {
+          unsubscribe = onSnapshot(
+            res,
+            {
+              includeMetadataChanges,
+            },
+            (snapshot: QuerySnapshot<T>) => {
+              return callback(snapshot);
+            }
+          );
+        });
+      }
       return unsubscribe;
     },
     [query, queryKey]
@@ -73,9 +95,11 @@ export function useFirestoreQuery<T = DocumentData, R = QuerySnapshot<T>>(
       ...useQueryOptions,
       onlyOnce: !isSubscription,
       fetchFn: () =>
-        resolveQuery(query).then((resolvedQuery) => {
-          return getQuerySnapshot(resolvedQuery, options?.source);
-        }),
+        query
+          ? resolveQuery(query).then((resolvedQuery) => {
+            return getQuerySnapshot(resolvedQuery, source);
+          })
+          : new Promise((resolve) => resolve(null)),
     }
   );
 }

@@ -37,7 +37,7 @@ export function useAuthIdToken<R = { token: IdTokenResult }>(
 
   return useSubscription<{ token: IdTokenResult }, AuthError, R>(
     queryKey,
-    "useAuthIdToken",
+    ["useAuthIdToken", queryKey],
     subscribeFn,
     options
   );

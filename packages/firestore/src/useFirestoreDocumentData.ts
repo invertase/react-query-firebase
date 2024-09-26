@@ -24,7 +24,12 @@ import {
   onSnapshot,
   SnapshotOptions,
 } from "firebase/firestore";
-import { UseFirestoreHookOptions, WithIdField, getSnapshot } from "./index";
+import {
+  UseFirestoreHookOptions,
+  WithIdField,
+  getSnapshot,
+  GetSnapshotSource,
+} from "./index";
 import { useSubscription } from "../../utils/src/useSubscription";
 
 type NextOrObserver<T, ID> = (
@@ -35,8 +40,8 @@ export function useFirestoreDocumentData<
   T = DocumentData,
   R = WithIdField<T> | undefined
 >(
-  key: QueryKey,
-  ref: DocumentReference<T>,
+  queryKey: QueryKey,
+  ref?: DocumentReference<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions,
   useQueryOptions?: Omit<
     UseQueryOptions<WithIdField<T> | undefined, FirestoreError, R>,
@@ -49,8 +54,8 @@ export function useFirestoreDocumentData<
   T = DocumentData,
   R = WithIdField<T, ID> | undefined
 >(
-  key: QueryKey,
-  ref: DocumentReference<T>,
+  queryKey: QueryKey,
+  ref?: DocumentReference<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions & { idField: ID },
   useQueryOptions?: Omit<
     UseQueryOptions<WithIdField<T, ID> | undefined, FirestoreError, R>,
@@ -64,47 +69,75 @@ export function useFirestoreDocumentData<
   R = WithIdField<T, ID> | undefined
 >(
   queryKey: QueryKey,
-  ref: DocumentReference<T>,
+  ref?: DocumentReference<T>,
   options?: UseFirestoreHookOptions & SnapshotOptions & { idField?: ID },
   useQueryOptions?: Omit<
     UseQueryOptions<WithIdField<T, ID> | undefined, FirestoreError, R>,
     "queryFn"
   >
 ): UseQueryResult<R, FirestoreError> {
+  if (useQueryOptions?.enabled && !ref) {
+    throw new Error(
+      `useFirestoreDocumentData with key ${JSON.stringify(
+        queryKey
+      )}  expected to recieve a document reference, but got "undefined".
+      Did you forget to set the options "enabled" to false?`
+    );
+  }
+
   const isSubscription = !!options?.subscribe;
+
+  let source: GetSnapshotSource | undefined;
+  let includeMetadataChanges: boolean | undefined;
+
+  if (options?.subscribe === undefined) {
+    source = options?.source;
+  }
+  if (options?.subscribe) {
+    includeMetadataChanges = options.includeMetadataChanges;
+  }
 
   const subscribeFn = useCallback(
     (callback: NextOrObserver<T, ID>) => {
-      const unsubscribe = onSnapshot(
-        ref,
-        {
-          includeMetadataChanges: options?.includeMetadataChanges,
-        },
-        (snapshot: DocumentData) => {
-          let data = snapshot.data({
-            serverTimestamps: options?.serverTimestamps,
-          });
+      let unsubscribe = () => {
+        // noop
+      };
+      if (ref) {
+        unsubscribe = onSnapshot(
+          ref,
+          {
+            includeMetadataChanges,
+          },
+          (snapshot: DocumentData) => {
+            let data = snapshot.data({
+              serverTimestamps: options?.serverTimestamps,
+            });
 
-          if (data && options?.idField) {
-            data = {
-              ...data,
-              [options.idField]: snapshot.id,
-            };
+            if (data && options?.idField) {
+              data = {
+                ...data,
+                [options.idField]: snapshot.id,
+              };
+            }
+
+            // Cannot figure out how to get this working without a cast!
+            const _dataWithIdField = data as WithIdField<T, ID> | undefined;
+
+            callback(_dataWithIdField);
           }
-
-          // Cannot figure out how to get this working without a cast!
-          const _dataWithIdField = data as WithIdField<T, ID> | undefined;
-
-          callback(_dataWithIdField);
-        }
-      );
+        );
+      }
       return unsubscribe;
     },
     [ref]
   );
 
   const fetchFn = async () => {
-    return getSnapshot(ref, options?.source).then((snapshot) => {
+    if (!ref) {
+      return null;
+    }
+
+    return getSnapshot(ref, source).then((snapshot) => {
       let data = snapshot.data({
         serverTimestamps: options?.serverTimestamps,
       });
@@ -121,7 +154,7 @@ export function useFirestoreDocumentData<
 
   return useSubscription<WithIdField<T, ID> | undefined, FirestoreError, R>(
     queryKey,
-    ["useFirestoreDocument", ref.id],
+    ["useFirestoreDocument", queryKey],
     subscribeFn,
     {
       ...useQueryOptions,
