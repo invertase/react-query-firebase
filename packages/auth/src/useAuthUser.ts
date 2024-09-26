@@ -14,7 +14,11 @@
  * limitations under the License.
  *
  */
-import { QueryKey, UseQueryOptions, UseQueryResult } from "react-query";
+import {
+  QueryKey,
+  UseQueryOptions,
+  UseQueryResult,
+} from "@tanstack/react-query";
 import { Auth, AuthError, NextOrObserver, User } from "firebase/auth";
 import { useSubscription } from "../../utils/src/useSubscription";
 
@@ -28,7 +32,7 @@ export function useAuthUser<R = User>(
 
   return useSubscription<User, AuthError, R>(
     queryKey,
-    "useAuthUser",
+    ["useAuthUser"],
     subscribeFn,
     options
   );

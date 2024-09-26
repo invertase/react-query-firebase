@@ -66,7 +66,7 @@ import {
   useMutation,
   UseMutationOptions,
   UseMutationResult,
-} from "react-query";
+} from "@tanstack/react-query";
 
 export function useAuthApplyActionCode(
   auth: Auth,
