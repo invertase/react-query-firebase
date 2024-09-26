@@ -17,7 +17,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v1
         with:
-          node-version: 16
+          node-version: 20
       - name: Yarn install
         run: yarn
       - name: ESLint
@@ -31,7 +31,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v1
         with:
-          node-version: 16
+          node-version: 20
       - name: Yarn install
         run: yarn
       - name: Yarn install (functions)
