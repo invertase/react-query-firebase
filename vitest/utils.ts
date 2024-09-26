@@ -1,4 +1,5 @@
 import { type FirebaseApp, FirebaseError, initializeApp } from "firebase/app";
+import { getAuth, connectAuthEmulator, type Auth } from "firebase/auth";
 import {
   getFirestore,
   connectFirestoreEmulator,
@@ -8,16 +9,20 @@ import { expect } from "vitest";
 
 const firebaseTestingOptions = {
   projectId: "test-project",
+  apiKey: "test-api-key",
 };
 
 let app: FirebaseApp | undefined;
 let firestore: Firestore;
+let auth: Auth;
 
 if (!app) {
   app = initializeApp(firebaseTestingOptions);
   firestore = getFirestore(app);
+  auth = getAuth(app);
 
   connectFirestoreEmulator(firestore, "localhost", 8080);
+  connectAuthEmulator(auth, "http://localhost:9099");
 }
 
 async function wipeFirestore() {
@@ -33,6 +38,19 @@ async function wipeFirestore() {
   }
 }
 
+async function wipeAuth() {
+  const response = await fetch(
+    "http://localhost:9099/emulator/v1/projects/test-project/accounts",
+    {
+      method: "DELETE",
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to wipe auth");
+  }
+}
+
 function expectFirestoreError(error: unknown, expectedCode: string) {
   if (error instanceof FirebaseError) {
     expect(error).toBeDefined();
@@ -45,4 +63,11 @@ function expectFirestoreError(error: unknown, expectedCode: string) {
   }
 }
 
-export { firestore, wipeFirestore, expectFirestoreError };
+export {
+  firestore,
+  wipeFirestore,
+  expectFirestoreError,
+  firebaseTestingOptions,
+  auth,
+  wipeAuth,
+};
