@@ -8,5 +8,5 @@
 export { useDocumentQuery } from "./useDocumentQuery";
 // useDocumentsQuery <-- Name? useQuery? Bit generic.
 // useGetCountFromServerQuery
-// useGetAggregateFromServerQuery
+export { useGetAggregateFromServerQuery } from "./useGetAggregateFromServerQuery";
 // useNamedQuery
