@@ -74,4 +74,41 @@ describe("useSignInAnonymouslyMutation", () => {
       expect(result.current.error).toBeNull();
     });
   });
+
+  test("allows multiple sequential sign-ins", async () => {
+    const { result } = renderHook(() => useSignInAnonymouslyMutation(auth), {
+      wrapper,
+    });
+
+    // First sign-in
+    act(() => {
+      result.current.mutate();
+    });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+      expect(result.current.data?.user.isAnonymous).toBe(true);
+    });
+
+    // Reset state
+    act(() => {
+      result.current.reset();
+    });
+
+    await waitFor(() => {
+      expect(result.current.isIdle).toBe(true);
+      expect(result.current.data).toBeUndefined();
+      expect(result.current.error).toBeNull();
+    });
+
+    // Second sign-in
+    act(() => {
+      result.current.mutate();
+    });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+      expect(result.current.data?.user.isAnonymous).toBe(true);
+    });
+  });
 });
