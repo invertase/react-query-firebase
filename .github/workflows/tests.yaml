@@ -12,21 +12,23 @@ jobs:
     steps:
       # Checkout the repository
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # Set up Node.js environment and install pnpm
-      - name: Setup Node.js and pnpm
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20.11.1'
-          cache: 'pnpm'
-    
-      # Install pnpm
       - name: Install pnpm
-        run: npm install -g pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false # We'll do this later
+
+      # Setup Node.js with pnpm
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
 
       # Install all dependencies at the root
-      - name: Install dependencies
+      - name: Install dependencies (pnpm)
         run: pnpm install
 
       # Install Firebase CLI
