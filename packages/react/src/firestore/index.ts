@@ -6,7 +6,7 @@
 // useWaitForPendingWritesQuery
 // useWriteBatchCommitMutation (WriteBatch)
 export { useDocumentQuery } from "./useDocumentQuery";
-// useDocumentsQuery <-- Name? useQuery? Bit generic.
+export { useCollectionQuery } from "./useCollectionQuery";
 export { useGetCountFromServerQuery } from "./useGetCountFromServerQuery";
 // useGetAggregateFromServerQuery
 // useNamedQuery

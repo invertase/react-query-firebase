@@ -4,7 +4,8 @@
   "scripts": {
     "test": "vitest --dom --coverage",
     "serve:coverage": "npx serve coverage",
-    "emulator": "firebase emulators:start --project test-project --only firestore"
+    "emulator": "firebase emulators:start --project test-project",
+    "emulator:kill": "lsof -t -i:4001 -i:8080 -i:9000 -i:9099 -i:9199 -i:8085 | xargs kill -9"
   },
   "devDependencies": {
     "@tanstack/react-query": "^5.55.4",
