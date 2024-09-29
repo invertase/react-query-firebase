@@ -1,8 +1,11 @@
 import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import {
+  type AggregateField,
+  type AggregateQuerySnapshot,
   getCountFromServer,
   type FirestoreError,
   type Query,
+  type DocumentData,
 } from "firebase/firestore";
 
 type FirestoreUseQueryOptions<TData = unknown, TError = Error> = Omit<
@@ -10,15 +13,32 @@ type FirestoreUseQueryOptions<TData = unknown, TError = Error> = Omit<
   "queryFn"
 >;
 
-export function useGetCountFromServerQuery(
-  query: Query,
-  options: FirestoreUseQueryOptions<number, FirestoreError>
+export function useGetCountFromServerQuery<
+  AppModelType = DocumentData,
+  DbModelType extends DocumentData = DocumentData
+>(
+  query: Query<AppModelType, DbModelType>,
+  options: FirestoreUseQueryOptions<
+    AggregateQuerySnapshot<
+      { count: AggregateField<number> },
+      AppModelType,
+      DbModelType
+    >,
+    FirestoreError
+  >
 ) {
-  return useQuery<number, FirestoreError>({
+  return useQuery<
+    AggregateQuerySnapshot<
+      { count: AggregateField<number> },
+      AppModelType,
+      DbModelType
+    >,
+    FirestoreError
+  >({
     ...options,
     queryFn: async () => {
-      const snapshot = await getCountFromServer(query);
-      return snapshot.data().count;
+      const aggregateQuerySnapshot = await getCountFromServer(query);
+      return aggregateQuerySnapshot;
     },
   });
 }
