@@ -4,8 +4,8 @@ import {
   type FirestoreError,
   getAggregateFromServer,
   type AggregateSpec,
-  DocumentData,
-  AggregateSpecData,
+  type DocumentData,
+  type AggregateQuerySnapshot,
 } from "firebase/firestore";
 
 type FirestoreUseQueryOptions<TData = unknown, TError = Error> = Omit<
@@ -15,18 +15,24 @@ type FirestoreUseQueryOptions<TData = unknown, TError = Error> = Omit<
 
 export function useGetAggregateFromServerQuery<
   T extends AggregateSpec,
-  AppModelType extends DocumentData = DocumentData,
+  AppModelType = DocumentData,
   DbModelType extends DocumentData = DocumentData
 >(
   query: Query<AppModelType, DbModelType>,
   aggregateSpec: T,
-  options: FirestoreUseQueryOptions<AggregateSpecData<T>, FirestoreError>
+  options: FirestoreUseQueryOptions<
+    AggregateQuerySnapshot<T, AppModelType, DbModelType>,
+    FirestoreError
+  >
 ) {
-  return useQuery<AggregateSpecData<T>, FirestoreError>({
+  return useQuery<
+    AggregateQuerySnapshot<T, AppModelType, DbModelType>,
+    FirestoreError
+  >({
     ...options,
     queryFn: async () => {
       const snapshot = await getAggregateFromServer(query, aggregateSpec);
-      return snapshot.data();
+      return snapshot;
     },
   });
 }

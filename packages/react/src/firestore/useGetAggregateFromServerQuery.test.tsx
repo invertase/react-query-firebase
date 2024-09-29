@@ -40,7 +40,7 @@ describe("useGetAggregateFromServerQuery", () => {
       () =>
         useGetAggregateFromServerQuery(
           collectionRef,
-          { count: count() },
+          { countOfDocs: count() },
           { queryKey: ["aggregate", "empty"] }
         ),
       { wrapper }
@@ -48,7 +48,7 @@ describe("useGetAggregateFromServerQuery", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(result.current.data?.count).toBe(0);
+    expect(result.current.data?.data().countOfDocs).toBe(0);
   });
 
   test("returns correct aggregate values for non-empty collection", async () => {
@@ -63,9 +63,9 @@ describe("useGetAggregateFromServerQuery", () => {
         useGetAggregateFromServerQuery(
           collectionRef,
           {
-            count: count(),
-            avg: average("value"),
-            sum: sum("value"),
+            countOfDocs: count(),
+            averageValue: average("value"),
+            totalValue: sum("value"),
           },
           { queryKey: ["aggregate", "non-empty"] }
         ),
@@ -74,18 +74,18 @@ describe("useGetAggregateFromServerQuery", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(result.current.data?.avg).toBe(20);
-    expect(result.current.data?.sum).toBe(60);
-    expect(result.current.data?.count).toBe(3);
+    expect(result.current.data?.data().averageValue).toBe(20);
+    expect(result.current.data?.data().totalValue).toBe(60);
+    expect(result.current.data?.data().countOfDocs).toBe(3);
   });
 
   test("handles complex queries", async () => {
     const collectionRef = collection(firestore, "tests");
 
-    await addDoc(collectionRef, { category: "A", value: 10 });
-    await addDoc(collectionRef, { category: "B", value: 20 });
-    await addDoc(collectionRef, { category: "A", value: 30 });
-    await addDoc(collectionRef, { category: "C", value: 40 });
+    await addDoc(collectionRef, { category: "A", books: 10 });
+    await addDoc(collectionRef, { category: "B", books: 20 });
+    await addDoc(collectionRef, { category: "A", books: 30 });
+    await addDoc(collectionRef, { category: "C", books: 40 });
 
     const complexQuery = query(collectionRef, where("category", "==", "A"));
 
@@ -94,9 +94,9 @@ describe("useGetAggregateFromServerQuery", () => {
         useGetAggregateFromServerQuery(
           complexQuery,
           {
-            count: count(),
-            avg: average("value"),
-            sum: sum("value"),
+            countOfDocs: count(),
+            averageNumberOfBooks: average("books"),
+            totalNumberOfBooks: sum("books"),
           },
           { queryKey: ["aggregate", "complex"] }
         ),
@@ -107,9 +107,9 @@ describe("useGetAggregateFromServerQuery", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(result.current.data?.avg).toBe(20);
-    expect(result.current.data?.sum).toBe(40);
-    expect(result.current.data?.count).toBe(2);
+    expect(result.current.data?.data().averageNumberOfBooks).toBe(20);
+    expect(result.current.data?.data().totalNumberOfBooks).toBe(40);
+    expect(result.current.data?.data().countOfDocs).toBe(2);
   });
 
   test("handles restricted collection appropriately", async () => {
@@ -149,6 +149,6 @@ describe("useGetAggregateFromServerQuery", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(result.current.data?.count).toBe(1);
+    expect(result.current.data?.data().count).toBe(1);
   });
 });
