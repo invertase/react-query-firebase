@@ -58,7 +58,7 @@ describe("useGetCountFromServerQuery", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(result.current.data?.data()?.count).toBe(3);
+    expect(result.current.data?.data().count).toBe(3);
   });
 
   test("handles complex queries", async () => {
@@ -80,7 +80,7 @@ describe("useGetCountFromServerQuery", () => {
     );
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result?.current?.data?.data()?.count).toBe(2);
+    expect(result.current.data?.data().count).toBe(2);
   });
 
   test("handles restricted collections appropriately", async () => {
@@ -119,6 +119,6 @@ describe("useGetCountFromServerQuery", () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(result.current.data?.data()?.count).toBe(1);
+    expect(result.current.data?.data().count).toBe(1);
   });
 });
