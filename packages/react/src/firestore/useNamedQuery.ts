@@ -1,35 +1,31 @@
 import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import {
   type FirestoreError,
-  getDocs,
   type Query,
-  type QuerySnapshot,
   type DocumentData,
+  namedQuery,
+  type Firestore,
 } from "firebase/firestore";
 
 type FirestoreUseQueryOptions<TData = unknown, TError = Error> = Omit<
   UseQueryOptions<TData, TError>,
   "queryFn"
-> & {
-  firestore?: {
-    transform?: (snapshot: QuerySnapshot<DocumentData>) => TData;
-  };
-};
+>;
 
-export function useNamedQuery<TData = QuerySnapshot<DocumentData>>(
-  query: Query,
-  options: FirestoreUseQueryOptions<TData, FirestoreError>
+export function useNamedQuery<
+  AppModelType = DocumentData,
+  DbModelType extends DocumentData = DocumentData
+>(
+  firestore: Firestore,
+  name: string,
+  options: FirestoreUseQueryOptions<Query | null, FirestoreError>
 ) {
-  const { firestore, ...queryOptions } = options;
-
-  return useQuery<TData, FirestoreError>({
-    ...queryOptions,
+  return useQuery<Query | null, FirestoreError>({
+    ...options,
     queryFn: async () => {
-      const snapshot = await getDocs(query);
-      if (firestore?.transform) {
-        return firestore.transform(snapshot);
-      }
-      return snapshot as TData;
+      const snapshot = await namedQuery(firestore, name);
+
+      return snapshot;
     },
   });
 }
