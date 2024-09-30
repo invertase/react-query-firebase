@@ -1,6 +1,6 @@
 // useClearIndexedDbPersistenceMutation
 // useEnableIndexedDbPersistenceMutation
-// useDisableNetworkMutation
+export { useDisableNetworkMutation } from "./useDisableNetworkMutation";
 // useEnableNetworkMutation
 // useRunTransactionMutation
 // useWaitForPendingWritesQuery
