@@ -22,10 +22,6 @@ export function useNamedQuery<
 ) {
   return useQuery<Query | null, FirestoreError>({
     ...options,
-    queryFn: async () => {
-      const snapshot = await namedQuery(firestore, name);
-
-      return snapshot;
-    },
+    queryFn: () => namedQuery(firestore, name),
   });
 }
