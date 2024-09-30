@@ -2,7 +2,7 @@
 // useEnableIndexedDbPersistenceMutation
 // useDisableNetworkMutation
 // useEnableNetworkMutation
-// useRunTransactionMutation
+export { useRunTransactionMutation } from "./useRunTransactionMutation";
 // useWaitForPendingWritesQuery
 // useWriteBatchCommitMutation (WriteBatch)
 export { useDocumentQuery } from "./useDocumentQuery";
