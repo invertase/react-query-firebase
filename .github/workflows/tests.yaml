@@ -1,0 +1,63 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - next
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false # We'll do this later
+
+      # Setup Node.js with pnpm
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      # Install all dependencies at the root
+      - name: Install dependencies (pnpm)
+        run: pnpm install
+
+      # Install Firebase CLI
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      # Determine which packages have changed
+      - name: Determine changed packages
+        id: changes
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            react:
+              - 'packages/react/**'
+   
+      # Start the Firebase emulator in the background
+      - name: Start Firebase Emulator
+        run: firebase emulators:start --project test-project &
+      
+      # Wait for the Firebase emulator to be ready (Firestore up on port 8080)
+      - name: Wait for Firebase Emulator
+        run: npx wait-on tcp:8080
+
+      # Run tests for the React package if it has changed
+      - name: Run React Tests
+        if: steps.changes.outputs.react == 'true'
+        run: pnpm vitest --dom 'packages/react'
+
+      # Run tests for the Vue package if it has changed
+      # - name: Run Vue Tests
+      #   if: steps.changes.outputs.vue == 'true'
+      #   run: pnpm --filter vue test
