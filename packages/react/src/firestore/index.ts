@@ -4,7 +4,7 @@
 // useEnableNetworkMutation
 // useRunTransactionMutation
 // useWaitForPendingWritesQuery
-// useWriteBatchCommitMutation (WriteBatch)
+export { useWriteBatchCommitMutation } from "./useWriteBatchCommitMutation";
 export { useDocumentQuery } from "./useDocumentQuery";
 export { useCollectionQuery } from "./useCollectionQuery";
 // useGetCountFromServerQuery
