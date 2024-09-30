@@ -36,9 +36,6 @@ export function useGetCountFromServerQuery<
     FirestoreError
   >({
     ...options,
-    queryFn: async () => {
-      const aggregateQuerySnapshot = await getCountFromServer(query);
-      return aggregateQuerySnapshot;
-    },
+    queryFn: () => getCountFromServer(query),
   });
 }
