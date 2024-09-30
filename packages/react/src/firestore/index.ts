@@ -1,4 +1,4 @@
-// useClearIndexedDbPersistenceMutation
+export { useClearIndexedDbPersistenceMutation } from "./useClearIndexedDbPersistenceMutation";
 // useEnableIndexedDbPersistenceMutation
 // useDisableNetworkMutation
 // useEnableNetworkMutation
