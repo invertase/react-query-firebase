@@ -1,22 +1,18 @@
 import { useMutation, type UseMutationOptions } from "@tanstack/react-query";
-import {
-  type Firestore,
-  type FirestoreError,
-  type WriteBatch,
-  writeBatch,
-} from "firebase/firestore";
+import { type FirestoreError, type WriteBatch } from "firebase/firestore";
 
-type FirestoreUseMutationOptions<TData = unknown, TError = Error> = Omit<
-  UseMutationOptions<TData, TError>,
+type FirestoreUseMutationOptions<TError = Error> = Omit<
+  UseMutationOptions<void, TError, WriteBatch>,
   "mutationFn"
 >;
 
 export function useWriteBatchCommitMutation(
-  firestore: Firestore,
-  options?: FirestoreUseMutationOptions<WriteBatch, FirestoreError>
+  options?: FirestoreUseMutationOptions<FirestoreError>
 ) {
-  return useMutation<WriteBatch, FirestoreError, void>({
+  return useMutation<void, FirestoreError, WriteBatch>({
     ...options,
-    mutationFn: async () => await writeBatch(firestore),
+    mutationFn: async (batch: WriteBatch) => {
+      await batch.commit();
+    },
   });
 }
