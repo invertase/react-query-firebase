@@ -30,9 +30,6 @@ export function useGetAggregateFromServerQuery<
     FirestoreError
   >({
     ...options,
-    queryFn: async () => {
-      const snapshot = await getAggregateFromServer(query, aggregateSpec);
-      return snapshot;
-    },
+    queryFn: () => getAggregateFromServer(query, aggregateSpec),
   });
 }
