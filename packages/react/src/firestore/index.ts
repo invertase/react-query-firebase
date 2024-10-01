@@ -1,12 +1,12 @@
-// useClearIndexedDbPersistenceMutation
+export { useClearIndexedDbPersistenceMutation } from "./useClearIndexedDbPersistenceMutation";
 // useEnableIndexedDbPersistenceMutation
 // useDisableNetworkMutation
 // useEnableNetworkMutation
-// useRunTransactionMutation
 export { useWaitForPendingWritesQuery } from "./useWaitForPendingWritesQuery";
+export { useRunTransactionMutation } from "./useRunTransactionMutation";
 // useWriteBatchCommitMutation (WriteBatch)
 export { useDocumentQuery } from "./useDocumentQuery";
 export { useCollectionQuery } from "./useCollectionQuery";
-// useGetCountFromServerQuery
-// useGetAggregateFromServerQuery
+export { useGetAggregateFromServerQuery } from "./useGetAggregateFromServerQuery";
+export { useGetCountFromServerQuery } from "./useGetCountFromServerQuery";
 // useNamedQuery

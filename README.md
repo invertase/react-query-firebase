@@ -1,5 +1,5 @@
 > [!IMPORTANT]  
-> This project is not currently being maintained. If you are interested in maintaining, please reach out on [Discord](https://invertase.link/discord) to a member of the team.
+> This project is currently undergoing a overhaul, to support TanStack v5 - this includes a package restructuring, and enables support for other web frameworks!
 
 <h1 align="center">React Query Firebase</h1>
 <p align="center">
