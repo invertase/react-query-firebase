@@ -1,21 +1,21 @@
-import { useMutation, UseMutationOptions } from "@tanstack/react-query";
+import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import {
-  Firestore,
-  FirestoreError,
+  type Firestore,
+  type FirestoreError,
   waitForPendingWrites,
 } from "firebase/firestore";
 
-type FirestoreUseMutationOptions<TData = unknown, TError = Error> = Omit<
-  UseMutationOptions<TData, TError, void>,
-  "mutationFn"
+type FirestoreUseQueryOptions<TData = unknown, TError = Error> = Omit<
+  UseQueryOptions<TData, TError, void>,
+  "queryFn"
 >;
 
 export function useWaitForPendingWritesQuery(
   firestore: Firestore,
-  options?: FirestoreUseMutationOptions<void, FirestoreError>
+  options: FirestoreUseQueryOptions<void, FirestoreError>
 ) {
-  return useMutation<void, FirestoreError, void>({
+  return useQuery<void, FirestoreError, void>({
     ...options,
-    mutationFn: () => waitForPendingWrites(firestore),
+    queryFn: () => waitForPendingWrites(firestore),
   });
 }
