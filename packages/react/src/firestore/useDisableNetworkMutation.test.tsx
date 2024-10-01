@@ -8,7 +8,11 @@ import {
   wipeFirestore,
 } from "~/testing-utils";
 import { useDisableNetworkMutation } from "./useDisableNetworkMutation";
-import { doc, getDoc, enableNetwork, disableNetwork } from "firebase/firestore";
+import {
+  doc,
+  enableNetwork,
+  getDocFromServer,
+} from "firebase/firestore";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,8 +43,9 @@ describe("useDisableNetworkMutation", () => {
 
     // Verify that network operations fail
     const docRef = doc(firestore, "tests", "someDoc");
+
     try {
-      await getDoc(docRef);
+      await getDocFromServer(docRef);
       throw new Error(
         "Expected the network to be disabled, but Firestore operation succeeded."
       );
