@@ -11,8 +11,6 @@ export function useWriteBatchCommitMutation(
 ) {
   return useMutation<void, FirestoreError, WriteBatch>({
     ...options,
-    mutationFn: async (batch: WriteBatch) => {
-      await batch.commit();
-    },
+    mutationFn: (batch: WriteBatch) => batch.commit(),
   });
 }
