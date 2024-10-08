@@ -70,7 +70,7 @@ function expectFirebaseError(error: unknown, expectedCode: string) {
     expect(error.code).toBe(expectedCode);
   } else {
     throw new Error(
-      "Expected a Firestore error, but received a different type."
+      "Expected a Firebase error, but received a different type."
     );
   }
 }
