@@ -1,47 +1,27 @@
 ---
-title: React Query Firebase
-description: A set of React Query hooks integrating with Firebase.
+title: TanStack Query Firebase
+description: TanStack Query Firebase provides a set of hooks for handling asynchronous tasks with Firebase in your applications.
 ---
 
-# React Query Firebase
+When managing Firebase's asynchronous API calls within your application, state synchronization can become cumbersome in most applications. You will commonly find yourself handling loading states, error states, and data synchronization manually. 
 
-React Query Firebase provides a set of easy to use hooks for common Firebase usecases. Each hook wraps around React Query, allowing to easily integrate the hooks into a new or existing project, whilst enjoying the powerful benefits React Query offers.
+This library provides a hands-off approach to these problems, by leveraging the popular [TanStack Query](https://tanstack.com/query/latest) project. Out of the box, you get:
 
-The exported hooks do not manage Query Keys or Firebase instances, giving you full control over integration.
+- **Automatic Caching**: Avoid redundant Firebase calls with built-in caching.
+- **Out-of-the-box Synchronization**: TanStack Query keeps your UI in sync with the Firebase backend effortlessly.
+- **Background Updates**: Fetch and sync data seamlessly in the background without interrupting the user experience.
+- **Error Handling & Retries**: Get automatic retries on failed Firebase calls, with robust error handling baked in.
+- **Dev Tools for Debugging**: Leverage the React Query Devtools to gain insights into your data-fetching logic and Firebase interactions.
 
-## Installation
+By combining Firebase with TanStack Query, you can make your app more resilient, performant, and scalable, all while writing less code.
 
-If you haven't done so already, install `react`, `react-query` & `firebase` (v9):
+> Looking for React Query Firebase? Check out the [old branch](https://github.com/invertase/tanstack-query-firebase/tree/react-query-firebase).
 
-```bash
-npm i --save react react-query firebase
-```
+## Framework Installation
 
-> **Note**: The library only supports Firebase JS SDK v9 - [learn more about it here](https://firebase.googleblog.com/2021/08/the-new-firebase-js-sdk-now-ga.html)!
+This project aims to support hooks for all major frameworks which TanStack supports; React, Vue, Solid, Angular, and Svelte. Development is still in progress, with an initial focus on React.
 
-Before using this library, ensure React Query is setup on your project by following the [Installation](https://react-query.tanstack.com/quick-start) guide.
+To get started with your framework of choice, view the following documentation:
 
-Next install one of the React Query Firebase packages, e.g:
+- [React Documentation](/react)
 
-```bash
-npm i --save @react-query-firebase/firestore
-```
-
-## Core Concepts
-
-Each package behaves with the same core concepts which are important to understand:
-
-- Query based hooks are fetched according to your [React Query Defaults](https://react-query.tanstack.com/guides/important-defaults) or per-hook configuration (as expected!).
-- Query based hooks will refetch on [Query Key](https://react-query.tanstack.com/guides/query-keys) changes, not on Firebase argument changes. For example, if you change a Firestore Query argument you should also update the Query Key to ensure the hook is re-fetched.
-
-## Packages
-
-- [`@react-query-firebase/analytics`](/analytics)
-- [`@react-query-firebase/auth`](/auth)
-- [`@react-query-firebase/database`](/database)
-- [`@react-query-firebase/firestore`](/firestore)
-- [`@react-query-firebase/functions`](/functions)
-
-## Miscellaneous
-
-- [Comparing React Query Firebase to other solutions](/comparison)
