@@ -19,7 +19,7 @@
 // useSendPasswordResetEmailMutation
 // useSendSignInLinkToEmailMutation
 export { useSignInAnonymouslyMutation } from "./useSignInAnonymouslyMutation";
-// useSignInWithCredentialMutation
+export { useSignInWithCredentialMutation } from "./useSignInWithCredentialMutation";
 // useSignInWithCustomTokenMutation
 // useSignInWithEmailAndPasswordMutation
 // useSignInWithEmailLinkMutation
@@ -46,4 +46,3 @@ export { useSignInAnonymouslyMutation } from "./useSignInAnonymouslyMutation";
 // useUpdatePasswordMutation
 // useUpdateProfileMutation
 // useVerifyBeforeUpdateEmailMutation
-
