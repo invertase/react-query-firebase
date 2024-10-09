@@ -10,6 +10,7 @@ import { expect } from "vitest";
 const firebaseTestingOptions = {
   projectId: "test-project",
   apiKey: "test-api-key",
+  authDomain: "test-auth-domain",
 };
 
 let app: FirebaseApp | undefined;

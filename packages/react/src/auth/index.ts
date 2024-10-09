@@ -17,7 +17,7 @@
 // useGetRedirectResultQuery
 // useRevokeAccessTokenMutation
 // useSendPasswordResetEmailMutation
-// useSendSignInLinkToEmailMutation
+export { useSendSignInLinkToEmailMutation } from "./useSendSignInLinkToEmailMutation";
 export { useSignInAnonymouslyMutation } from "./useSignInAnonymouslyMutation";
 // useSignInWithCredentialMutation
 // useSignInWithCustomTokenMutation
@@ -46,4 +46,3 @@ export { useSignInAnonymouslyMutation } from "./useSignInAnonymouslyMutation";
 // useUpdatePasswordMutation
 // useUpdateProfileMutation
 // useVerifyBeforeUpdateEmailMutation
-
