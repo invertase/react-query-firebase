@@ -1,5 +1,5 @@
 import React from "react";
-import { describe, expect, test, beforeEach, afterEach } from "vitest";
+import { describe, expect, test, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useSendSignInLinkToEmailMutation } from "./useSendSignInLinkToEmailMutation";
@@ -38,12 +38,12 @@ describe("useSendSignInLinkToEmailMutation", () => {
 
   test("resets mutation state correctly", async () => {
     const { result } = renderHook(
-      () => useSendSignInLinkToEmailMutation(auth, email, actionCodeSettings),
+      () => useSendSignInLinkToEmailMutation(auth),
       { wrapper }
     );
 
     act(() => {
-      result.current.mutate();
+      result.current.mutate({ email, actionCodeSettings });
     });
 
     await waitFor(() => {
@@ -63,12 +63,12 @@ describe("useSendSignInLinkToEmailMutation", () => {
 
   test("successfully sends sign-in link to email", async () => {
     const { result } = renderHook(
-      () => useSendSignInLinkToEmailMutation(auth, email, actionCodeSettings),
+      () => useSendSignInLinkToEmailMutation(auth),
       { wrapper }
     );
 
     act(() => {
-      result.current.mutate();
+      result.current.mutate({ email, actionCodeSettings });
     });
 
     await waitFor(() => {
@@ -81,13 +81,13 @@ describe("useSendSignInLinkToEmailMutation", () => {
 
   test("allows multiple sequential send attempts", async () => {
     const { result } = renderHook(
-      () => useSendSignInLinkToEmailMutation(auth, email, actionCodeSettings),
+      () => useSendSignInLinkToEmailMutation(auth),
       { wrapper }
     );
 
     // First attempt
     act(() => {
-      result.current.mutate();
+      result.current.mutate({ email, actionCodeSettings });
     });
 
     await waitFor(() => {
@@ -107,7 +107,7 @@ describe("useSendSignInLinkToEmailMutation", () => {
 
     // Second attempt
     act(() => {
-      result.current.mutate();
+      result.current.mutate({ email, actionCodeSettings });
     });
 
     await waitFor(() => {

@@ -6,19 +6,24 @@ import {
   sendSignInLinkToEmail,
 } from "firebase/auth";
 
-type AuthUseMutationOptions<TData = unknown, TError = Error> = Omit<
-  UseMutationOptions<TData, TError, void>,
-  "mutationFn"
->;
+type SendSignInLinkParams = {
+  email: string;
+  actionCodeSettings: ActionCodeSettings;
+};
+
+type AuthUseMutationOptions<
+  TData = unknown,
+  TError = Error,
+  TVariables = void
+> = Omit<UseMutationOptions<TData, TError, TVariables>, "mutationFn">;
 
 export function useSendSignInLinkToEmailMutation(
   auth: Auth,
-  email: string,
-  actionCodeSettings: ActionCodeSettings,
-  options?: AuthUseMutationOptions
+  options?: AuthUseMutationOptions<void, AuthError, SendSignInLinkParams>
 ) {
-  return useMutation<void, AuthError, void>({
+  return useMutation<void, AuthError, SendSignInLinkParams>({
     ...options,
-    mutationFn: () => sendSignInLinkToEmail(auth, email, actionCodeSettings),
+    mutationFn: ({ email, actionCodeSettings }) =>
+      sendSignInLinkToEmail(auth, email, actionCodeSettings),
   });
 }
