@@ -1,135 +1,75 @@
 > [!IMPORTANT]  
-> This project is currently undergoing a overhaul, to support TanStack v5 - this includes a package restructuring, and enables support for other web frameworks!
+> This project is currently a work in progress. Please check back soon for updates!
 
-<h1 align="center">React Query Firebase</h1>
+<h1 align="center">TanStack Query Firebase</h1>
 <p align="center">
-  <span>A set of <a href="https://react-query.tanstack.com">React Query</a> hooks integrating with <a href="https://firebase.google.com/">Firebase</a>.</span>
+  <span>A set of <a href="https://tanstack.com/query/latest">TanStack Query</a> hooks integrating with <a href="https://firebase.google.com/">Firebase</a>.</span>
 </p>
 <p align="center">
   <span><a href="#installation">Installation</a> &bull;
-  <a href="https://react-query-firebase.invertase.dev/"> Documentation</a> &bull;
+  <a href="https://invertase.docs.page/tanstack-query-firebase"> Documentation</a> &bull;
   <a href="/LICENSE.md">License</a></span>
 </p>
 <br />
 
-React Query Firebase provides a set of easy to use hooks for handling asynchronous tasks with Firebase in your React application.
+TanStack Query Firebase provides a set of hooks for handling asynchronous tasks with Firebase in your applications.
+
+> Looking for React Query Firebase? Check out the [old branch](https://github.com/invertase/tanstack-query-firebase/tree/react-query-firebase).
 
 ## Why should I use React Query Firebase?
 
-- **Backed by React Query** - Unlike other solutions, hooks are built on top of [React Query](https://react-query.tanstack.com) which takes care of complex challenges
-  such as caching, automatic refetching, realtime data subscriptions, pagination & infinite queries, mutations, SSR Support, data selectors, side effect handlers and more. You also get [DevTool](https://react-query.tanstack.com/devtools)
-  support out of the box!
-- **Un-opinionated** - You provide the Query Keys, Configuration & Firebase instances, allowing for full control over how your data is integrated and cached. You can also roll it alongside any existing Firebase usage.
-- **Performant & Efficient** - Whether your queries are one-off or realtime, the library is designed to be performant and efficient. Data fetching is handled via [Queries](https://react-query.tanstack.com/guides/queries) and
-  [Query Keys](https://react-query.tanstack.com/guides/query-keys), meaning components can share data throughout your application without needless database reads.
-- **Mutations** - Sign a user in, delete a document, run a transaction, log an event... React Query Firebase takes care of that for you via [Mutations](https://react-query.tanstack.com/guides/mutations), allowing you to focus
-  on your application and not managing complex local loading & error states.
-- **Fully Typed** - The library is built with and has full compatibility with TypeScript.
+When managing Firebase’s asynchronous API calls within your application, state synchronization can become cumbersome in most applications. You will commonly find yourself handling loading states, error states, and data synchronization manually. 
 
-> **Note**: The library supports the Firebase JS SDK v9 - [learn more about it here](https://firebase.googleblog.com/2021/08/the-new-firebase-js-sdk-now-ga.html)!
+This library provides a hands-off approach to these problems, by leveraging the popular [TanStack Query](https://tanstack.com/query/latest) project. Out of the box, you get:
 
-## Example
+- **Automatic Caching**: Avoid redundant Firebase calls with built-in caching.
+- **Out-of-the-box Synchronization**: TanStack Query keeps your UI in sync with the Firebase backend effortlessly.
+- **Background Updates**: Fetch and sync data seamlessly in the background without interrupting the user experience.
+- **Error Handling & Retries**: Get automatic retries on failed Firebase calls, with robust error handling baked in.
+- **Dev Tools for Debugging**: Leverage the React Query Devtools to gain insights into your data-fetching logic and Firebase interactions.
 
-As an example, let's use a Firestore hooks to fetch a document & run a transaction whilst easily handling asynchronous state.
-
-```tsx
-import {
-  useFirestoreDocument,
-  useFirestoreTransaction,
-} from "@react-query-firebase/firestore";
-import { doc } from "firebase/firestore";
-import { firestore } from "./config/firebase";
-
-type Product = {
-  name: string;
-  price: number;
-};
-
-function ProductPage({ id }: { id: string }) {
-  // Create a Firestore document reference
-  const ref = doc(firestore, "products", id);
-
-  // Query a Firestore document using useQuery
-  const product = useFirestoreDocument<Product>(
-    ["product", id],
-    ref,
-    {
-      // Subscribe to realtime changes
-      subscribe: true,
-      // Include metadata changes in the updates
-      includeMetadataChanges: true,
-    },
-    {
-      // Optionally handle side effects with React Query hook options
-      onSuccess(snapshot) {
-        console.log("Successfully fetched product ID: ", snapshot.id);
-      },
-    }
-  );
-
-  // Run a Firestore transaction as Mutation using useMutation
-  const like = useFirestoreTransaction(
-    auth,
-    async (tsx) => {
-      const record = await tsx.get(ref);
-      tsx.update(ref, {
-        likes: record.data().likes + 1,
-      });
-    },
-    {
-      onError(error) {
-        console.error("Failed to like product!", error);
-      },
-    }
-  );
-
-  if (product.isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (product.isError) {
-    return <div>Failed to fetch product: {product.error.message}</div>;
-  }
-
-  const snapshot = product.data; // DocumentSnapshot<Product>
-
-  return (
-    <div>
-      <h1>{snapshot.data().name}</h1>
-      <button disabled={like.isLoading} onClick={() => like.mutate()}>
-        Like Product!
-      </button>
-      {like.isError && <p>Failed to like product: {like.error.message}</p>}
-    </div>
-  );
-}
-```
+By combining Firebase with TanStack Query, you can make your app more resilient, performant, and scalable, all while writing less code.
 
 ## Installation
 
-If you haven't done so already, install `react`, `react-query` & `firebase` (v9):
+This project expects you have `firebase` installed as a peer dependency. If you haven't done so already, install `firebase`:
 
 ```bash
-npm i --save react react-query firebase
+npm i --save firebase
 ```
 
-Before using this library, ensure React Query is setup on your project by following the [Installation](https://react-query.tanstack.com/quick-start) guide.
+Next, install specific packages for your framework of choice:
 
-Next install one of the React Query Firebase packages, e.g:
+### React
 
-```bash
-npm i --save @react-query-firebase/firestore
+```
+npm i --save @tanstack/react-query @tanstack-query-firebase/react
 ```
 
-See below for a full list of available packages.
+See the [Documentation](https://invertase.docs.page/tanstack-query-firebase/react) for more information on how to use the library.
 
-## Packages
+## Status
 
-- [`@react-query-firebase/analytics`](https://react-query-firebase.invertase.dev/analytics)
-- [`@react-query-firebase/auth`](https://react-query-firebase.invertase.dev/auth)
-- [`@react-query-firebase/database`](https://react-query-firebase.invertase.dev/database)
-- [`@react-query-firebase/firestore`](https://react-query-firebase.invertase.dev/firestore)
-- [`@react-query-firebase/functions`](https://react-query-firebase.invertase.dev/functions)
+The status of the following Firebase services and frameworks are as follows:
+
+- ✅ Ready for use
+- 🟠 Work in progress
+- () Not yet started
+
+| Module         | React | Vue | Solid | Angular | Svelte |
+|----------------|:-----:|:---:|:-----:|:-------:|:------:|
+| analytics      |       |     |       |         |        |
+| app-check      |       |     |       |         |        |
+| auth           |   🟠   |     |       |         |        |
+| database       |       |     |       |         |        |
+| firestore      |   🟠   |     |       |         |        |
+| firestore/lite |       |     |       |         |        |
+| functions      |       |     |       |         |        |
+| installations  |       |     |       |         |        |
+| messaging      |       |     |       |         |        |
+| performance    |       |     |       |         |        |
+| remote-config  |       |     |       |         |        |
+| vertexai       |       |     |       |         |        |
 
 ## License
 

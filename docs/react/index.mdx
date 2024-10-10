@@ -1,0 +1,92 @@
+---
+title: React
+description: Using TanStack Query Firebase with React
+---
+
+To get started using TanStack Query Firebase with React, you will need to install the following packages:
+
+```bash
+npm i --save firebase @tanstack/react-query @tanstack-query-firebase/react
+```
+
+Both `firebase` and `@tanstack/react-query` are peer dependencies of `@tanstack-query-firebase/react`.
+
+## Usage
+
+TanStack Query Firebase provides a hands-off approach to integrate with TanStack Query - you are
+still responsible for both setting up Firebase in your application and configuring TanStack Query.
+
+If you haven't already done so, [initialize your Firebase project](https://firebase.google.com/docs/web/setup)
+and [configure TanStack Query](https://tanstack.com/query/latest/docs/framework/react/quick-start):
+
+```jsx
+import { initializeApp } from 'firebase/app';
+import { QueryClientProvider } from '@tanstack/react-query';
+
+// TODO: Replace the following with your app's Firebase project configuration
+const firebaseConfig = {
+  //...
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+// Create a TanStack Query client instance
+const queryClient = new QueryClient()
+
+function App() {
+  return (
+    // Provide the client to your App
+    <QueryClientProvider client={queryClient}>
+      <MyApplication />
+    </QueryClientProvider>
+  )
+}
+
+render(<App />, document.getElementById('root'))
+```
+
+Next, you can start to use the hooks provided by `@tanstack-query-firebase/react`. For example, to
+fetch a document from Firestore:
+
+```jsx
+import { getFirestore, doc } from 'firebase/firestore';
+import { useDocumentQuery } from '@tanstack-query-firebase/react/firestore';
+
+// Get a Firestore instance using the initialized Firebase app instance
+const firestore = getFirestore(app);
+
+function MyApplication() {
+  // Create a document reference using Firestore
+  const docRef = doc(firestore, 'cities', 'SF');
+
+  // Fetch the document using the useDocumentQuery hook
+  const query = useDocumentQuery(docRef);
+
+  if (query.isLoading) {
+    return <p>Loading data...</p>;
+  }
+
+  if (query.isError) {
+    return <p>Error fetching data: {query.error.code}</p>;
+  }
+
+  // The successful result of the query is a DocumentSnapshot from Firebase
+  const snapshot = query.data;
+
+  if (!snapshot.exists()) {
+    return <p>Document does not exist</p>;
+  }
+
+  const data = snapshot.data();
+
+  return (
+    <div>
+      <h1>{data.name}</h1>
+      <p>{data.city}</p>
+    </div>
+  );
+}
+```
+
+TanStack Query Firebase provides hooks for all Firebase services, supporting both mutations and queries.

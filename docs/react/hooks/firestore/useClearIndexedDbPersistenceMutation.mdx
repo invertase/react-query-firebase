@@ -1,0 +1,41 @@
+---
+title: useClearIndexedDbPersistenceMutation
+---
+
+A mutation which wraps the [`clearIndexedDbPersistence`](https://firebase.google.com/docs/reference/js/firestore_.md#clearindexeddbpersistence_231a8e0) function.
+
+## Usage
+
+```jsx
+import { getFirestore } from 'firebase/firestore';
+import { clearIndexedDbPersistence } from '@tanstack-query-firebase/react/firestore';
+
+// Get a Firestore instance using the initialized Firebase app instance
+const firestore = getFirestore(app);
+
+function Component() {
+  const mutation = useClearIndexedDbPersistenceMutation(firestore);
+
+  return (
+    <button disabled={mutation.isPending} onClick={() => mutation.mutate()}>
+      Clear IndexedDB Persistence
+    </button>
+  );
+}
+```
+
+## Mutation Options
+
+The hook also accepts the [`useMutation`](https://tanstack.com/query/latest/docs/framework/react/reference/useMutation)
+options, for example:
+
+```tsx
+const mutation = useClearIndexedDbPersistenceMutation(firestore, {
+  onSuccess() {
+    console.log('IndexedDB persistence cleared');
+  },
+  onError(error) {
+    console.error('Failed to clear IndexedDB persistence', error);
+  },
+});
+```

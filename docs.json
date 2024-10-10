@@ -1,66 +1,94 @@
 {
-  "name": "React Query Firebase",
-  "twitter": "invertaseio",
-  "theme": "#FF4154",
-  "docsearch": {
-    "apiKey": "8838b79166d4839463db6aeafbbaa383",
-    "indexName": "react-query-firebase"
+  "$schema": "https://docs.page/schema.json",
+  "name": "TanStack Query Firebase",
+  "description": "TanStack Query Firebase provides a set of hooks for handling asynchronous tasks with Firebase in your applications.",
+  "theme": {
+    "primary": "#FF4154"
   },
+  "tabs": [
+    {
+      "id": "root",
+      "title": "Documentation",
+      "href": "/"
+    },
+    {
+      "id": "react",
+      "title": "React",
+      "href": "/react"
+    }
+  ],
   "sidebar": [
-    ["Getting Started", "/"],
-    [
-      "Analytics",
-      [
-        ["Getting Started", "/analytics"],
-        ["Logging Events", "/analytics/logging-events"],
-        ["Actions", "/analytics/actions"],
-        ["TypeScript", "/analytics/typescript"]
+    {
+      "tab": "root",
+      "group": "Getting Started",
+      "pages": [
+        {
+          "href": "/",
+          "title": "Introduction"
+        }
       ]
-    ],
-    [
-      "Authentication",
-      [
-        ["Getting Started", "/auth"],
-        ["Authentication State", "/auth/auth-state"],
-        ["ID Token", "/auth/id-token"],
-        ["Auth Actions", "/auth/actions"]
+    },
+    {
+      "tab": "react",
+      "group": "Getting Started",
+      "pages": [
+        {
+          "href": "/react",
+          "title": "Introduction"
+        }
       ]
-    ],
-    [
-      "Database",
-      [
-        ["Getting Started", "/database"],
-        ["Querying Data", "/database/querying"],
-        ["Data Mutation", "/database/data-mutation"],
-        ["TypeScript", "/database/typescript"]
+    },
+    {
+      "tab": "react",
+      "group": "Authentication",
+      "pages": [
+        {
+          "href": "/react/hooks/auth/useSignInAnonymouslyMutation",
+          "title": "useSignInAnonymouslyMutation"
+        }
       ]
-    ],
-    [
-      "Firestore",
-      [
-        ["Getting Started", "/firestore"],
-        ["Querying Collections", "/firestore/querying-collections"],
-        ["Querying Documents", "/firestore/querying-documents"],
-        ["Data Mutation", "/firestore/data-mutation"],
-        ["Prefetching", "/firestore/prefetching"],
-        ["TypeScript", "/firestore/typescript"]
+    },
+    {
+      "tab": "react",
+      "group": "Firestore",
+      "pages": [
+        {
+          "href": "/react/hooks/firestore/useClearIndexedDbPersistenceMutation",
+          "title": "useClearIndexedDbPersistenceMutation"
+        },
+        {
+          "href": "/react/hooks/firestore/useCollectionQuery",
+          "title": "useCollectionQuery"
+        },
+        {
+          "href": "/react/hooks/firestore/useDisableNetworkMutation",
+          "title": "useDisableNetworkMutation"
+        },
+        {
+          "href": "/react/hooks/firestore/useEnableNetworkMutation",
+          "title": "useEnableNetworkMutation"
+        },
+        {
+          "href": "/react/hooks/firestore/useDocumentQuery",
+          "title": "useDocumentQuery"
+        },
+        {
+          "href": "/react/hooks/firestore/useGetAggregateFromServerQuery",
+          "title": "useGetAggregateFromServerQuery"
+        },
+        {
+          "href": "/react/hooks/firestore/useGetCountFromServerQuery",
+          "title": "useGetCountFromServerQuery"
+        },
+        {
+          "href": "/react/hooks/firestore/useRunTransactionMutation",
+          "title": "useRunTransactionMutation"
+        },
+        {
+          "href": "/react/hooks/firestore/useWaitForPendingWritesQuery",
+          "title": "useWaitForPendingWritesQuery"
+        }
       ]
-    ],
-    [
-      "Functions",
-      [
-        ["Getting Started", "/functions"],
-        ["Querying Functions", "/functions/querying"],
-        ["Calling Functions", "/functions/calling"],
-        ["TypeScript", "/functions/typescript"]
-      ]
-    ],
-    [
-      "Examples",
-      [
-        ["Auth: Basic Sign-in/out", "/examples/auth-basic"],
-        ["Functions: Query & Mutate", "/examples/functions-basic"]
-      ]
-    ]
+    }
   ]
 }
