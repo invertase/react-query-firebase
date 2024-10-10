@@ -41,5 +41,11 @@ describe("useRevokeAccessTokenMutation", () => {
     });
 
     const oauthAccessToken = await userCredential.user.getIdToken();
+
+    act(() => {
+      result.current.mutate({ token: oauthAccessToken });
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
   });
 });
