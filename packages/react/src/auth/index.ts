@@ -15,7 +15,7 @@
 // useCreateUserWithEmailAndPasswordMutation
 // useFetchSignInMethodsForEmailQuery
 // useGetRedirectResultQuery
-// useRevokeAccessTokenMutation
+export { useRevokeAccessTokenMutation } from "./useRevokeAccessTokenMutation";
 // useSendPasswordResetEmailMutation
 export { useSendSignInLinkToEmailMutation } from "./useSendSignInLinkToEmailMutation";
 export { useSignInAnonymouslyMutation } from "./useSignInAnonymouslyMutation";
